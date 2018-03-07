@@ -1,10 +1,4 @@
-Help on module spin:
-
-NAME spin
-
-FILE /home/ishanu/Dropbox/ZED/Research/spin\_/bin/spin.py
-
-DESCRIPTION Spatio temporal analysis for inferrence of statistical
+# Spatio temporal analysis for inferrence of statistical
 causality @author zed.uchicago.edu
 
 CLASSES spatioTemporal uNetworkModels
