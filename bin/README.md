@@ -1,5 +1,6 @@
-# Spatio temporal analysis for inferrence of statistical
-causality @author zed.uchicago.edu
+# Spatio temporal analysis for inferrence of statistical causality 
+
+@author zed.uchicago.edu
 
 CLASSES spatioTemporal uNetworkModels
 
