@@ -21,3 +21,10 @@ sp.splitTS('../data/TSme.csv',csvNAME='./data/TSme1',
 sp.showGlobalPlot('./data/TSme1.coords',
                   ts='./data/TSme1.csv',
                   cmap='cool')
+
+
+M=models('../data/model.json')
+
+M.augmentDistance()
+M.select(var='gamma',n=30,store='tmp1.json',reverse=True)
+sp.viz('tmp1.json',jsonfile=True,figname='figx',res='c',drawpoly=True)

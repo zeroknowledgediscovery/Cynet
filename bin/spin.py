@@ -25,6 +25,7 @@ from matplotlib.patches import Polygon
 from matplotlib.collections import PatchCollection
 from matplotlib.patches import PathPatch
 import matplotlib.colors as colors
+from scipy.spatial import ConvexHull
 
 
 
@@ -462,7 +463,7 @@ class uNetworkModels:
     """
 
     def __init__(self,
-                 jsonFile):
+                 jsonFILE):
         with open(jsonFILE) as data_file:
             self._models = json.load(data_file)
 
@@ -472,7 +473,7 @@ class uNetworkModels:
          return self._models
 
 
-    def select(self,var="gamma",n=None,reverse=False, store=False, outFile="modelselection.json"):
+    def select(self,var="gamma",n=None,reverse=False, store=None):
         """
         Utilities for storing and manipulating XPFSA models inferred by XGenESeSS
         @author zed.uchicago.edu
@@ -485,29 +486,29 @@ class uNetworkModels:
             n (int): number of models to return
             reverse (boolean): return in ascending order (True) or descending
                 (False) order
-            store (boolean): whether or not to write out selection to json
-            outFile (string): name of file to store selection json
+            store (string): name of file to store selection json
 
         Returns -
             (dictionary): top n models as ranked by var in ascending/descending
                 order
         """
 
-        assert key in self._models.keys(), "Error: Model parameter specified not valid"
+        #assert var in self._models.keys(), "Error: Model parameter specified not valid"
 
         this_dict={value[var]:key
                    for (key,value) in self._models.iteritems() }
+        
         if n is None:
             n=len(this_dict)
         if n > len(this_dict):
             n=len(this_dict)
-
-        out = {k:self._models[k]
+        
+        out = {this_dict[k]:self._models[this_dict[k]]
                 for k in sorted(this_dict.keys(),
                                 reverse=reverse)[0:n]}
-        if store:
-            with open(outFile, 'w') as outfile:
-                json.dump(self._models, outfile)
+        if store is not None:
+            with open(store, 'w') as outfile:
+                json.dump(out, outfile)
 
         return out
 
@@ -714,7 +715,7 @@ def getalpha(arr,index,F=.9):
 
 
 
-def viz(unet,jsonfile=False,colormap='autumn',res='c',drawpoly=False):
+def viz(unet,jsonfile=False,colormap='autumn',res='c',drawpoly=False,figname='fig'):
     """
       utility function to visualize spatio temporal interaction networks
       @author zed.uchicago.edu
@@ -727,7 +728,7 @@ def viz(unet,jsonfile=False,colormap='autumn',res='c',drawpoly=False):
         colormap (string): colormap
         res (string): 'c' or 'f'
         drawpoly (bool): if True draws transparent patch showing srcs
-
+        figname  (string): prefix of pdf image file
     Returns -
         m (Basemap handle)
         fig (figure handle)
@@ -751,7 +752,7 @@ def viz(unet,jsonfile=False,colormap='autumn',res='c',drawpoly=False):
     gamma=[]
     delay=[]
     NUM=None
-    for key,value in unet.iteritems():    
+    for key,value in unet_.iteritems():    
         src=[float(i) for i in value['src'].replace('#',' ').split()]
         tgt=[float(i) for i in value['tgt'].replace('#',' ').split()]
         if NUM is None:
@@ -782,8 +783,8 @@ def viz(unet,jsonfile=False,colormap='autumn',res='c',drawpoly=False):
 
     fig=plt.figure(figsize=(20,15))
     ax      = fig.add_subplot(111)
-    m.drawcountries(color='w',linewidth=2)
-    m.drawstates(color='w')
+    m.drawcountries(color='w',linewidth=1)
+    #m.drawstates(color='w')
     m.drawmapboundary(fill_color='#5645ec')
     m.fillcontinents(color = 'k',lake_color='#5645ec')
 
@@ -822,7 +823,7 @@ def viz(unet,jsonfile=False,colormap='autumn',res='c',drawpoly=False):
     colx = cm.ScalarMappable(norm=norm,
                          cmap=colormap)
 
-    WIDTH=0.02      # arrow width (scaled by gamma)
+    WIDTH=0.01      # arrow width (scaled by gamma)
     ALPHA=1  # opacity for arrows (scaled by gamma)
     for index in np.arange(len(x)):
         plt.quiver(x_o[index], y_o[index],x[index]-x_o[index],
@@ -837,11 +838,12 @@ def viz(unet,jsonfile=False,colormap='autumn',res='c',drawpoly=False):
                                      norm=mpl.colors.Normalize(vmin=np.min(np.array(gamma)),
                                                                vmax=(np.max(np.array(gamma)))))
     pos1=cax.get_position()
-    pos2 = [pos1.x0-.03, pos1.y0+.15 ,pos1.width, pos1.height/2.5]
+    pos2 = [pos1.x0-.03, pos1.y0+.15 ,pos1.width, pos1.height/4]
     cax.set_position(pos2) # set a new position
     plt.setp(plt.getp(cax, 'yticklabels'), color='k')
     plt.setp(plt.getp(cax, 'yticklabels'), fontweight='bold')
     cax.set_title('$\gamma$',fontsize=18,color='k',y=1.05)
+    plt.savefig(figname+'.pdf',dpi=300,bbox_inches='tight',transparent=True)
 
     return m,fig,ax,cax
     
