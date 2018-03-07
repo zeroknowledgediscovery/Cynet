@@ -666,7 +666,7 @@ def _scaleforsize(a):
             a (ndarray): 
         Returns -
             a (ndarray): 
-        """
+    """
     mx=np.percentile(a,98)
     mn=np.percentile(a,2)
     
@@ -680,6 +680,168 @@ def _scaleforsize(a):
             a[index]=0.001
     
     return a
-   
-def viz(unet=None):
-    pass
+
+
+def draw_screen_poly( lats, lons, m,ax,val,cmap,ALPHA=0.6):
+    """
+      utility function to draw polygons on basemap
+    """
+    
+    norm = mpl.colors.Normalize(vmin=.75, vmax=.82)
+
+    col = cm.ScalarMappable(norm=norm, cmap=cmap)
+    x, y = m( lons, lats )
+    xy = zip(x,y)
+    
+    poly = Polygon( xy, facecolor=col.to_rgba(val), 
+                   alpha=ALPHA, zorder=20,lw=0)
+    ax.add_patch(poly)
+    
+def getalpha(arr,index,F=.9):
+    """
+      utility function to normalize transparency of quiver
+    """
+    
+    mn=np.min(arr)
+    mx=np.max(arr)
+    val=arr[index]
+    
+    v=(val-F*mn)/(mx-mn)
+    
+    if (v>1):
+        v=1
+    return v
+
+
+
+def viz(unet,jsonfile=False,colormap='autumn',res='c',drawpoly=False):
+    """
+      utility function to visualize spatio temporal interaction networks
+      @author zed.uchicago.edu
+
+    
+    Inputs -
+        unet (string): json filename
+        unet (python dict): 
+        jsonfile (bool): True if unet is string  specifying json filename
+        colormap (string): colormap
+        res (string): 'c' or 'f'
+        drawpoly (bool): if True draws transparent patch showing srcs
+
+    Returns -
+        m (Basemap handle)
+        fig (figure handle)
+        ax (axis handle)
+        cax (colorbar handle)
+    """
+
+    if jsonfile:
+         with open(unet) as data_file:
+            unet_ = json.load(data_file)
+    else:
+        unet_=unet
+
+    colormap=colormap
+    colormap1='hot_r'
+    
+    latsrc=[]
+    lonsrc=[]
+    lattgt=[]
+    lontgt=[]
+    gamma=[]
+    delay=[]
+    NUM=None
+    for key,value in unet.iteritems():    
+        src=[float(i) for i in value['src'].replace('#',' ').split()]
+        tgt=[float(i) for i in value['tgt'].replace('#',' ').split()]
+        if NUM is None:
+            NUM=len(src)/2
+        latsrc.append(np.mean(src[0:NUM]))
+        lonsrc.append(np.mean(src[NUM:]))
+        lattgt.append(np.mean(tgt[0:NUM]))
+        lontgt.append(np.mean(tgt[0:NUM]))
+        gamma.append(value['gamma'])
+        delay.append(value['delay'])
+
+    margin = 2 # buffer to add to the range
+    lat_min = min(min(latsrc),min(lattgt)) - margin
+    lat_max = max(max(latsrc),max(lattgt)) + margin
+    lon_min = min(min(lonsrc),min(lontgt)) - margin
+    lon_max = max(max(lonsrc),max(lontgt)) + margin
+
+    m = Basemap(llcrnrlon=lon_min,
+                llcrnrlat=lat_min,
+                urcrnrlon=lon_max,
+                urcrnrlat=lat_max,
+                lat_0=(lat_max - lat_min)/2,
+                lon_0=(lon_max-lon_min)/2,
+                projection='merc',
+                resolution = res,
+                area_thresh=1.)
+
+
+    fig=plt.figure(figsize=(20,15))
+    ax      = fig.add_subplot(111)
+    m.drawcountries(color='w',linewidth=2)
+    m.drawstates(color='w')
+    m.drawmapboundary(fill_color='#5645ec')
+    m.fillcontinents(color = 'k',lake_color='#5645ec')
+
+    x_o, y_o = m(lonsrc,latsrc)
+    x,y = m(lontgt, lattgt)
+
+    CLS={}
+    for index in np.arange(len(lontgt)):
+        CLS[(lontgt[index],lattgt[index])]=[]
+
+    for index in np.arange(len(lontgt)):
+        CLS[(lontgt[index],
+             lattgt[index])].append((latsrc[index],
+                                     lonsrc[index]))
+    
+    if drawpoly:
+        for key, value in CLS.iteritems():
+            a=[]
+            for i in value:
+                a.append(i[0])
+            b=[]
+            for i in value:
+                b.append(i[1])
+        
+            a=np.array(a)
+            b=np.array(b)
+        
+            zP=[[i[0],i[1]] for i in zip(a,b)]
+            hull = ConvexHull(zP)
+            aa=[a[i] for i in hull.vertices]
+            bb=[b[i] for i in hull.vertices]
+            draw_screen_poly(aa,bb,m,ax,0,colormap1,ALPHA=0.3)
+
+    norm = mpl.colors.LogNorm(vmin=(np.min(np.array(gamma))),
+                          vmax=(np.max(np.array(gamma))))
+    colx = cm.ScalarMappable(norm=norm,
+                         cmap=colormap)
+
+    WIDTH=0.02      # arrow width (scaled by gamma)
+    ALPHA=1  # opacity for arrows (scaled by gamma)
+    for index in np.arange(len(x)):
+        plt.quiver(x_o[index], y_o[index],x[index]-x_o[index],
+                   y[index]-y_o[index],color=colx.to_rgba(gamma[index]),
+                   alpha=ALPHA*getalpha(gamma,index,F=.8),
+                   scale_units='xy',angles='xy',scale=1.05,
+                   width=WIDTH*getalpha(gamma,index,F=.7),
+                   headwidth=4,headlength=5,zorder=10)
+
+    cax, _ = mpl.colorbar.make_axes(ax, shrink=0.5)
+    cbar = mpl.colorbar.ColorbarBase(cax, cmap=colormap,
+                                     norm=mpl.colors.Normalize(vmin=np.min(np.array(gamma)),
+                                                               vmax=(np.max(np.array(gamma)))))
+    pos1=cax.get_position()
+    pos2 = [pos1.x0-.03, pos1.y0+.15 ,pos1.width, pos1.height/2.5]
+    cax.set_position(pos2) # set a new position
+    plt.setp(plt.getp(cax, 'yticklabels'), color='k')
+    plt.setp(plt.getp(cax, 'yticklabels'), fontweight='bold')
+    cax.set_title('$\gamma$',fontsize=18,color='k',y=1.05)
+
+    return m,fig,ax,cax
+    
