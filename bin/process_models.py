@@ -8,8 +8,16 @@ from spin import uNetworkModels as models
 import warnings
 warnings.filterwarnings("ignore")
 
-M=models('../data/model.json')
+M=models('../data/Q_102.json')
 M.augmentDistance()
-M.select(var='gamma',n=25,store='tmp1.json',reverse=True)
+M.select(var='gamma',n=5,store='tmp1.json',reverse=True)
+M0=models('tmp1.json')
 
-viz('tmp1.json',jsonfile=True,figname='figx',res='c',drawpoly=True)
+#M1=models('../data/Q_75.json')
+#M1.augmentDistance()
+#M0.append(M1.select(var='gamma',n=5,store='tmp2.json',reverse=True))
+
+
+
+#viz('tmp1.json',jsonfile=True,figname='figx',res='c',drawpoly=True)
+viz(M0.models,jsonfile=False,figname='figx',res='c',drawpoly=False)

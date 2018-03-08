@@ -486,6 +486,13 @@ class uNetworkModels:
          return self._models
 
 
+    def append(self,pydict):
+        """
+        append models
+        @author zed.uchicago.edu
+        """
+        self._models.update(pydict)
+
     def select(self,var="gamma",n=None,reverse=False, store=None):
         """
         Utilities for storing and manipulating XPFSA models 

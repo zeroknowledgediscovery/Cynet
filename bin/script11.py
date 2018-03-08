@@ -1,0 +1,26 @@
+#!/usr/bin/python
+
+from spin import viz
+import spin as sp
+import pandas as pd
+import numpy as np
+from spin import uNetworkModels as models
+import os
+
+import warnings
+warnings.filterwarnings("ignore")
+
+def getModel(jsonfile,n=5):
+    M=models(jsonfile)
+    M.augmentDistance()
+    M.select(var='gamma',n=n,reverse=True,store='tmp.json')
+    
+N=5
+path='../data/'
+jsonFiles = [f for f in os.listdir(path) if f.endswith('.json')]
+M0={}
+
+for f in jsonFiles:
+    print f
+    getModel(path+f,n=N)
+    viz('tmp.json',jsonfile=True,figname='figz'+f,res='c',drawpoly=False,colormap='jet')
