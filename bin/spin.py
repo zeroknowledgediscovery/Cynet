@@ -493,7 +493,9 @@ class uNetworkModels:
         """
         self._models.update(pydict)
 
-    def select(self,var="gamma",n=None,reverse=False, store=None):
+    def select(self,var="gamma",n=None,
+               reverse=False, store=None,
+               high=None,low=None,inplace=False):
         """
         Utilities for storing and manipulating XPFSA models 
         inferred by XGenESeSS
@@ -508,7 +510,9 @@ class uNetworkModels:
             reverse (boolean): return in ascending order (True) 
                 or descending (False) order
             store (string): name of file to store selection json
-
+            high (float): higher cutoff
+            low (float): lower cutoff
+            inplace (bool): update models if true
         Returns -
             (dictionary): top n models as ranked by var 
                          in ascending/descending order
@@ -518,6 +522,11 @@ class uNetworkModels:
 
         this_dict={value[var]:key
                    for (key,value) in self._models.iteritems() }
+
+        if low is not None:
+            this_dict={key:this_dict[key] for key in this_dict.keys() if key >= low }
+        if high is not None:
+            this_dict={key:this_dict[key] for key in this_dict.keys() if key <= high }
         
         if n is None:
             n=len(this_dict)
@@ -527,6 +536,10 @@ class uNetworkModels:
         out = {this_dict[k]:self._models[this_dict[k]]
                 for k in sorted(this_dict.keys(),
                                 reverse=reverse)[0:n]}
+
+        if inplace:
+            self._models=out
+        
         if store is not None:
             with open(store, 'w') as outfile:
                 json.dump(out, outfile)
@@ -723,7 +736,7 @@ def draw_screen_poly( lats, lons, m,ax,val,cmap,ALPHA=0.6):
                    alpha=ALPHA, zorder=20,lw=0)
     ax.add_patch(poly)
     
-def getalpha(arr,index,F=.9):
+def getalpha(arr,index,F=.9,M=0):
     """
       utility function to normalize transparency of quiver
     """
@@ -736,6 +749,10 @@ def getalpha(arr,index,F=.9):
     
     if (v>1):
         v=1
+
+    if (v<=M):
+        v=M
+        
     return v
 
 
@@ -787,7 +804,7 @@ def viz(unet,jsonfile=False,colormap='autumn',res='c',
         latsrc.append(np.mean(src[0:NUM]))
         lonsrc.append(np.mean(src[NUM:]))
         lattgt.append(np.mean(tgt[0:NUM]))
-        lontgt.append(np.mean(tgt[0:NUM]))
+        lontgt.append(np.mean(tgt[NUM:]))
         gamma.append(value['gamma'])
         delay.append(value['delay'])
 
@@ -812,8 +829,8 @@ def viz(unet,jsonfile=False,colormap='autumn',res='c',
     ax      = fig.add_subplot(111)
     m.drawcountries(color='w',linewidth=1)
     #m.drawstates(color='w')
-    m.drawmapboundary(fill_color='#5645ec')
-    m.fillcontinents(color = 'k',lake_color='#5645ec')
+    m.drawmapboundary(fill_color='#554433')#5645ec
+    m.fillcontinents(color = 'k',lake_color='#554433')
 
     x_o, y_o = m(lonsrc,latsrc)
     x,y = m(lontgt, lattgt)
@@ -850,14 +867,14 @@ def viz(unet,jsonfile=False,colormap='autumn',res='c',
     colx = cm.ScalarMappable(norm=norm,
                          cmap=colormap)
 
-    WIDTH=0.01      # arrow width (scaled by gamma)
+    WIDTH=0.005      # arrow width (scaled by gamma)
     ALPHA=1  # opacity for arrows (scaled by gamma)
     for index in np.arange(len(x)):
         plt.quiver(x_o[index], y_o[index],x[index]-x_o[index],
                    y[index]-y_o[index],color=colx.to_rgba(gamma[index]),
-                   alpha=ALPHA*getalpha(gamma,index,F=.8),
+                   alpha=ALPHA*getalpha(gamma,index,F=.1,M=.3),
                    scale_units='xy',angles='xy',scale=1.05,
-                   width=WIDTH*getalpha(gamma,index,F=.7),
+                   width=WIDTH*getalpha(gamma,index,F=.7,M=.4),
                    headwidth=4,headlength=5,zorder=10)
 
     cax, _ = mpl.colorbar.make_axes(ax, shrink=0.5)
@@ -870,7 +887,7 @@ def viz(unet,jsonfile=False,colormap='autumn',res='c',
     plt.setp(plt.getp(cax, 'yticklabels'), color='k')
     plt.setp(plt.getp(cax, 'yticklabels'), fontweight='bold')
     cax.set_title('$\gamma$',fontsize=18,color='k',y=1.05)
-    plt.savefig(figname+'.pdf',dpi=300,bbox_inches='tight',transparent=True)
+    plt.savefig(figname+'.pdf',dpi=300,bbox_inches='tight',transparent=False)
 
     return m,fig,ax,cax
     

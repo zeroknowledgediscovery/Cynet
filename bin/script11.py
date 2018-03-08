@@ -23,4 +23,4 @@ M0={}
 for f in jsonFiles:
     print f
     getModel(path+f,n=N)
-    viz('tmp.json',jsonfile=True,figname='figz'+f,res='c',drawpoly=False,colormap='jet')
+    viz('tmp.json',jsonfile=True,figname='figz'+f,res='f',drawpoly=False,colormap='seismic')
