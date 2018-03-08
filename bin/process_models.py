@@ -8,7 +8,7 @@ from spin import uNetworkModels as models
 import warnings
 warnings.filterwarnings("ignore")
 
-M=models('../data/Q_102.json')
+M=models('../data/Q_109.json')
 M.augmentDistance()
 M.select(var='gamma',n=5,store='tmp1.json',reverse=True)
 M0=models('tmp1.json')
