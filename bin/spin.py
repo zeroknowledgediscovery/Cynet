@@ -867,7 +867,7 @@ def viz(unet,jsonfile=False,colormap='autumn',res='c',
     colx = cm.ScalarMappable(norm=norm,
                          cmap=colormap)
 
-    WIDTH=0.005      # arrow width (scaled by gamma)
+    WIDTH=0.007      # arrow width (scaled by gamma)
     ALPHA=1  # opacity for arrows (scaled by gamma)
     for index in np.arange(len(x)):
         plt.quiver(x_o[index], y_o[index],x[index]-x_o[index],
