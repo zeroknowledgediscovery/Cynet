@@ -26,6 +26,7 @@ from matplotlib.collections import PatchCollection
 from matplotlib.patches import PathPatch
 import matplotlib.colors as colors
 from scipy.spatial import ConvexHull
+import seaborn as sns
 
 
 
@@ -484,6 +485,10 @@ class uNetworkModels:
     @property
     def models(self):
          return self._models
+     
+    @property
+    def df(self):
+         return self._df
 
 
     def append(self,pydict):
@@ -573,7 +578,7 @@ class uNetworkModels:
         return
 
 
-    def to_json(outFile):
+    def to_json(self,outFile):
         """
         Utilities for storing and manipulating XPFSA models 
         inferred by XGenESeSS
@@ -592,6 +597,98 @@ class uNetworkModels:
             json.dump(self._models, outfile)
 
         return
+
+
+    def setDataFrame(self,scatter=None):
+        """
+        Generate dataframe representation of models
+        @author zed.uchicago.edu
+
+        Input -
+            scatter (string) : prefix of filename to plot 3X3 regression
+            matrix between delay, distance and coefficiecient of causality
+        Returns -
+            Dataframe with columns 
+            ['latsrc','lonsrc','lattgt',
+             'lontgtt','gamma','delay','distance']
+        """
+        
+        latsrc=[]
+        lonsrc=[]
+        lattgt=[]
+        lontgt=[]
+        gamma=[]
+        delay=[]
+        distance=[]
+        NUM=None
+        for key,value in self._models.iteritems():    
+            src=[float(i) for i in value['src'].replace('#',' ').split()]
+            tgt=[float(i) for i in value['tgt'].replace('#',' ').split()]
+            if NUM is None:
+                NUM=len(src)/2
+            latsrc.append(np.mean(src[0:NUM]))
+            lonsrc.append(np.mean(src[NUM:]))
+            lattgt.append(np.mean(tgt[0:NUM]))
+            lontgt.append(np.mean(tgt[NUM:]))
+            gamma.append(value['gamma'])
+            delay.append(value['delay'])
+            distance.append(value['distance'])
+        
+        self._df = pd.DataFrame({'latsrc':latsrc,
+                                 'lonsrc':lonsrc,
+                                 'lattgt':lattgt,
+                                 'lontgt':lontgt,
+                                 'gamma':gamma,
+                                 'delay':delay,
+                                 'distance':distance})
+
+        if scatter is not None:
+            sns.set_style('darkgrid')
+            fig=plt.figure(figsize=(12,12))
+            fig.subplots_adjust(hspace=0.25)
+            fig.subplots_adjust(wspace=.25)
+            ax = plt.subplot2grid((3,3), (0,0), colspan=1,rowspan=1)
+            sns.distplot(self._df.gamma,ax=ax,kde=True,color='#9b59b6');
+            ax = plt.subplot2grid((3,3), (0,1), colspan=1,rowspan=1)
+            sns.regplot(ax=ax,x="gamma", y="distance", data=self._df);
+            ax = plt.subplot2grid((3,3), (0,2), colspan=1,rowspan=1)
+            sns.regplot(ax=ax,x="gamma", y="delay", data=self._df);
+            
+            ax = plt.subplot2grid((3,3), (1,0), colspan=1,rowspan=1)
+            sns.regplot(ax=ax,x="distance", y="gamma", data=self._df);
+            ax = plt.subplot2grid((3,3), (1,1), colspan=1,rowspan=1)
+            sns.distplot(self._df.distance,ax=ax,kde=True,color='#9b59b6');
+            ax = plt.subplot2grid((3,3), (1,2), colspan=1,rowspan=1)
+            sns.regplot(ax=ax,x="distance", y="delay", data=self._df);
+            
+            ax = plt.subplot2grid((3,3), (2,0), colspan=1,rowspan=1)
+            sns.regplot(ax=ax,x="delay", y="gamma", data=self._df);
+            ax = plt.subplot2grid((3,3), (2,1), colspan=1,rowspan=1)
+            sns.regplot(ax=ax,x="delay", y="distance", data=self._df);
+            ax = plt.subplot2grid((3,3), (2,2), colspan=1,rowspan=1)
+            sns.distplot(self._df.delay,ax=ax,kde=True,color='#9b59b6');
+
+            plt.savefig(scatter+'.pdf',dpi=300,bbox_inches='tight',transparent=False)
+
+        
+        return self._df
+
+    
+    def iNet(self,init=0):
+        """
+        Utilities for storing and manipulating XPFSA models 
+        inferred by XGenESeSS
+        @author zed.uchicago.edu
+
+        Calculates the distance between all models and stores 
+        them under the
+        distance key of each model;
+
+        No I/O
+        """
+
+        pass
+        
 
 def to_json(pydict,outFile):
     """
