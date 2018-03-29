@@ -1,8 +1,8 @@
 from distutils.core import setup
 
 setup(
-    name='Spin',
-    version='0.1.0',
+    name='spin',
+    version='1.0.0',
     author='zed.uchicago.edu',
     author_email='ishanu@uchicago.edu',
     packages=['spin', 'spin.test'],
