@@ -5,3 +5,8 @@ index-servers =
 [pypi]
 username=aszhang95
 password=Cabbagecavern21
+
+[server-login]
+repository: https://pypi.python.org/pypi
+username: aszhang95
+password: Cabbagecavern21
