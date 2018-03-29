@@ -1,18 +1,19 @@
 from distutils.core import setup
 
 setup(
-    name='TowelStuff',
+    name='Spin',
     version='0.1.0',
-    author='J. Random Hacker',
-    author_email='jrh@example.com',
-    packages=['towelstuff', 'towelstuff.test'],
-    scripts=['bin/stowe-towels.py','bin/wash-towels.py'],
-    url='http://pypi.python.org/pypi/TowelStuff/',
+    author='zed.uchicago.edu',
+    author_email='ishanu@uchicago.edu',
+    packages=['spin', 'spin.test'],
+    scripts=['bin/print_help.py','bin/process_log1.py','bin/process_models.py','bin/read_raw_log1.py','bin/script_test.py'\
+            'bin/script11.py','bin/script2.py'],
+    url='https://github.com/zeroknowledgediscovery/spin_',
     license='LICENSE.txt',
-    description='Useful towel-related stuff.',
+    description='Spatio temporal analysis for inferrence of statistical causality using XGenESeSS',
+    keywords=['spatial','temporal','inference','statistical','causality']
+    download_url=''
     long_description=open('README.txt').read(),
-    install_requires=[
-        "Django >= 1.1.1",
-        "caldav == 0.1.4",
-    ],
+    install_requires=["numpy == 1.13.1","pandas == 0.19.0","matplotlib >= 2.0.2","scipy >= 0.18.1"],
+    classifiers=[],
 )
