@@ -1,14 +1,8 @@
 [distutils]
 index-servers =
-  pypi
-  pypitest
+    pypi
 
 [pypi]
 repository=https://pypi.python.org/pypi
-username=aszhang95
-password=Cabbagecavern21
-
-[pypitest]
-repository=https://testpypi.python.org/pypi
 username=aszhang95
 password=Cabbagecavern21
