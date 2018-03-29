@@ -11,8 +11,8 @@ setup(
     url='https://github.com/zeroknowledgediscovery/spin_',
     license='LICENSE.txt',
     description='Spatio temporal analysis for inferrence of statistical causality using XGenESeSS',
-    keywords=['spatial','temporal','inference','statistical','causality']
-    download_url=''
+    keywords=['spatial','temporal','inference','statistical','causality'],
+    download_url='https://github.com/zeroknowledgediscovery/spin_/archive/1.0.0.tar.gz',
     long_description=open('README.txt').read(),
     install_requires=["numpy == 1.13.1","pandas == 0.19.0","matplotlib >= 2.0.2","scipy >= 0.18.1"],
     classifiers=[],

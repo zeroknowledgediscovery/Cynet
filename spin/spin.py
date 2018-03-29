@@ -30,7 +30,7 @@ import seaborn as sns
 
 
 
-__version__='0.31415'
+__version__='1.0.0'
 __DEBUG__=False
 
 class spatioTemporal:
@@ -46,14 +46,14 @@ class spatioTemporal:
         EVENT (string): column label for category filter
         coord1 (string): first coordinate level type; is column name
         coord2 (string): second coordinate level type; is column name
-        coord3 (string): third coordinate level type; 
+        coord3 (string): third coordinate level type;
                          (z coordinate)
-        end_date (datetime.date): upper bound of daterange 
+        end_date (datetime.date): upper bound of daterange
         freq (string): timeseries increments; e.g. D for date
         columns (list): list of column names to use;
             required at least 2 coordinates and event type
         types (list of strings): event type list of filters
-        value_limits (tuple): boundaries (magnitude of event; 
+        value_limits (tuple): boundaries (magnitude of event;
                               above threshold)
         grid (dict): dict with coord and eps (see example)
         threshold (float): significance threshold
@@ -189,7 +189,7 @@ class spatioTemporal:
 
         Outputs:
             pd.Dataframe of timeseries data to corresponding grid tile
-            pd.DF index is stringified LAT/LON boundaries 
+            pd.DF index is stringified LAT/LON boundaries
             with the type filter  included
         """
 
@@ -228,7 +228,7 @@ class spatioTemporal:
         Utilities for spatio temporal analysis
         @author zed.uchicago.edu
 
-        Creates DataFrame of location tiles and their 
+        Creates DataFrame of location tiles and their
         respective timeseries from
         input datasource with
         significance threshold THRESHOLD
@@ -243,7 +243,7 @@ class spatioTemporal:
             CSVfile (string): path to output file
 
         Output:
-            (None): grid pd.Dataframe written out as CSV file 
+            (None): grid pd.Dataframe written out as CSV file
                     to path specified
         """
         if THRESHOLD is None:
@@ -277,15 +277,15 @@ class spatioTemporal:
         Utilities for spatio temporal analysis
         @author zed.uchicago.edu
 
-        Fit dataproc with specified grid parameters and 
+        Fit dataproc with specified grid parameters and
         create timeseries for
-        date boundaries specified by INIT, THRESHOLD, 
+        date boundaries specified by INIT, THRESHOLD,
         and END which do not have
-        to match the arguments first input 
+        to match the arguments first input
         to the dataproc
 
         Inputs:
-            grid (pd.DataFrame): dataframe of location 
+            grid (pd.DataFrame): dataframe of location
             timeseries data
             INIT (datetime.date): starting timeseries date
             END (datetime.date): ending timeseries date
@@ -342,7 +342,7 @@ class spatioTemporal:
             dataset_id (string): dataset ID to pull
             token (string): Socrata token for increased pull capacity
             store (boolean): whether or not to write out new dataset
-            pull_all (boolean): pull complete dataset 
+            pull_all (boolean): pull complete dataset
             instead of just updating
 
         Output -
@@ -373,7 +373,7 @@ class spatioTemporal:
                 subset=[self._coord1, self._coord2, self._DATE, self._EVENT],\
                 axis=1).sort_values(self._DATE)
             self._logdf.append(pull_df)
-            
+
         if store:
             assert out_fname is not None, "Out filename not specified"
             self._logdf.to_pickle(out_fname)
@@ -384,7 +384,7 @@ def stringify(List):
     Utility function
     @author zed.uchicago.edu
 
-    Converts list into string separated by dashes 
+    Converts list into string separated by dashes
              or empty string if input list
              is not list or is empty
 
@@ -407,7 +407,7 @@ def readTS(TSfile,csvNAME='TS1',BEG=None,END=None):
     Utilities for spatio temporal analysis
     @author zed.uchicago.edu
 
-    Reads in output TS logfile into pd.DF 
+    Reads in output TS logfile into pd.DF
         and then outputs necessary
         CSV files in XgenESeSS-friendly format
 
@@ -468,7 +468,7 @@ def splitTS(TSfile,csvNAME='TS1',dirname='./',prefix="@",
 
 class uNetworkModels:
     """
-    Utilities for storing and manipulating XPFSA models 
+    Utilities for storing and manipulating XPFSA models
     inferred by XGenESeSS
     @author zed.uchicago.edu
 
@@ -485,7 +485,7 @@ class uNetworkModels:
     @property
     def models(self):
          return self._models
-     
+
     @property
     def df(self):
          return self._df
@@ -502,24 +502,24 @@ class uNetworkModels:
                reverse=False, store=None,
                high=None,low=None,inplace=False):
         """
-        Utilities for storing and manipulating XPFSA models 
+        Utilities for storing and manipulating XPFSA models
         inferred by XGenESeSS
         @author zed.uchicago.edu
 
-        Selects the N top models as ranked by var specified value 
+        Selects the N top models as ranked by var specified value
         (in reverse order if reverse is True)
 
         Inputs -
             var (string): model parameter to rank by
             n (int): number of models to return
-            reverse (boolean): return in ascending order (True) 
+            reverse (boolean): return in ascending order (True)
                 or descending (False) order
             store (string): name of file to store selection json
             high (float): higher cutoff
             low (float): lower cutoff
             inplace (bool): update models if true
         Returns -
-            (dictionary): top n models as ranked by var 
+            (dictionary): top n models as ranked by var
                          in ascending/descending order
         """
 
@@ -532,19 +532,19 @@ class uNetworkModels:
             this_dict={key:this_dict[key] for key in this_dict.keys() if key >= low }
         if high is not None:
             this_dict={key:this_dict[key] for key in this_dict.keys() if key <= high }
-        
+
         if n is None:
             n=len(this_dict)
         if n > len(this_dict):
             n=len(this_dict)
-        
+
         out = {this_dict[k]:self._models[this_dict[k]]
                 for k in sorted(this_dict.keys(),
                                 reverse=reverse)[0:n]}
 
         if inplace:
             self._models=out
-        
+
         if store is not None:
             with open(store, 'w') as outfile:
                 json.dump(out, outfile)
@@ -555,11 +555,11 @@ class uNetworkModels:
 
     def augmentDistance(self):
         """
-        Utilities for storing and manipulating XPFSA models 
+        Utilities for storing and manipulating XPFSA models
         inferred by XGenESeSS
         @author zed.uchicago.edu
 
-        Calculates the distance between all models and stores 
+        Calculates the distance between all models and stores
         them under the
         distance key of each model;
 
@@ -580,7 +580,7 @@ class uNetworkModels:
 
     def to_json(self,outFile):
         """
-        Utilities for storing and manipulating XPFSA models 
+        Utilities for storing and manipulating XPFSA models
         inferred by XGenESeSS
         @author zed.uchicago.edu
 
@@ -608,11 +608,11 @@ class uNetworkModels:
             scatter (string) : prefix of filename to plot 3X3 regression
             matrix between delay, distance and coefficiecient of causality
         Returns -
-            Dataframe with columns 
+            Dataframe with columns
             ['latsrc','lonsrc','lattgt',
              'lontgtt','gamma','delay','distance']
         """
-        
+
         latsrc=[]
         lonsrc=[]
         lattgt=[]
@@ -621,7 +621,7 @@ class uNetworkModels:
         delay=[]
         distance=[]
         NUM=None
-        for key,value in self._models.iteritems():    
+        for key,value in self._models.iteritems():
             src=[float(i) for i in value['src'].replace('#',' ').split()]
             tgt=[float(i) for i in value['tgt'].replace('#',' ').split()]
             if NUM is None:
@@ -633,7 +633,7 @@ class uNetworkModels:
             gamma.append(value['gamma'])
             delay.append(value['delay'])
             distance.append(value['distance'])
-        
+
         self._df = pd.DataFrame({'latsrc':latsrc,
                                  'lonsrc':lonsrc,
                                  'lattgt':lattgt,
@@ -653,14 +653,14 @@ class uNetworkModels:
             sns.regplot(ax=ax,x="gamma", y="distance", data=self._df);
             ax = plt.subplot2grid((3,3), (0,2), colspan=1,rowspan=1)
             sns.regplot(ax=ax,x="gamma", y="delay", data=self._df);
-            
+
             ax = plt.subplot2grid((3,3), (1,0), colspan=1,rowspan=1)
             sns.regplot(ax=ax,x="distance", y="gamma", data=self._df);
             ax = plt.subplot2grid((3,3), (1,1), colspan=1,rowspan=1)
             sns.distplot(self._df.distance,ax=ax,kde=True,color='#9b59b6');
             ax = plt.subplot2grid((3,3), (1,2), colspan=1,rowspan=1)
             sns.regplot(ax=ax,x="distance", y="delay", data=self._df);
-            
+
             ax = plt.subplot2grid((3,3), (2,0), colspan=1,rowspan=1)
             sns.regplot(ax=ax,x="delay", y="gamma", data=self._df);
             ax = plt.subplot2grid((3,3), (2,1), colspan=1,rowspan=1)
@@ -670,17 +670,17 @@ class uNetworkModels:
 
             plt.savefig(scatter+'.pdf',dpi=300,bbox_inches='tight',transparent=False)
 
-        
+
         return self._df
 
-    
+
     def iNet(self,init=0):
         """
-        Utilities for storing and manipulating XPFSA models 
+        Utilities for storing and manipulating XPFSA models
         inferred by XGenESeSS
         @author zed.uchicago.edu
 
-        Calculates the distance between all models and stores 
+        Calculates the distance between all models and stores
         them under the
         distance key of each model;
 
@@ -688,7 +688,7 @@ class uNetworkModels:
         """
 
         pass
-        
+
 
 def to_json(pydict,outFile):
     """
@@ -702,7 +702,7 @@ def to_json(pydict,outFile):
         Returns -
             Nonexs
     """
-    
+
     with open(outFile, 'w') as outfile:
         json.dump(pydict, outfile)
 
@@ -731,10 +731,10 @@ def showGlobalPlot(coords,ts=None,fsize=[14,14],cmap='jet',
     if ts is not None:
         num=pd.read_csv(ts,header=None,sep=" ").sum(axis=1).values
         coords_=pd.read_csv(coords,header=None,sep=" ")[0].values
-            
-    if num is not None:    
+
+    if num is not None:
         num=np.array(_scaleforsize(num))
-            
+
     fig=plt.figure(figsize=(14,14))
     ax      = fig.add_subplot(111)
 
@@ -799,22 +799,22 @@ def _scaleforsize(a):
         normalize array for plotting
 
         Inputs -
-            a (ndarray): 
+            a (ndarray):
         Returns -
-            a (ndarray): 
+            a (ndarray):
     """
     mx=np.percentile(a,98)
     mn=np.percentile(a,2)
-    
+
     if mx > mn:
         a=np.array([(i-mn)/(mx-mn+0.0) for i in a])
-        
+
     for index in np.arange(len(a)):
         if a[index] > 1:
             a[index]=1
         if a[index] < 0.001:
             a[index]=0.001
-    
+
     return a
 
 
@@ -822,34 +822,34 @@ def draw_screen_poly( lats, lons, m,ax,val,cmap,ALPHA=0.6):
     """
       utility function to draw polygons on basemap
     """
-    
+
     norm = mpl.colors.Normalize(vmin=.75, vmax=.82)
 
     col = cm.ScalarMappable(norm=norm, cmap=cmap)
     x, y = m( lons, lats )
     xy = zip(x,y)
-    
-    poly = Polygon( xy, facecolor=col.to_rgba(val), 
+
+    poly = Polygon( xy, facecolor=col.to_rgba(val),
                    alpha=ALPHA, zorder=20,lw=0)
     ax.add_patch(poly)
-    
+
 def getalpha(arr,index,F=.9,M=0):
     """
       utility function to normalize transparency of quiver
     """
-    
+
     mn=np.min(arr)
     mx=np.max(arr)
     val=arr[index]
-    
+
     v=(val-F*mn)/(mx-mn)
-    
+
     if (v>1):
         v=1
 
     if (v<=M):
         v=M
-        
+
     return v
 
 
@@ -857,14 +857,14 @@ def getalpha(arr,index,F=.9,M=0):
 def viz(unet,jsonfile=False,colormap='autumn',res='c',
         drawpoly=False,figname='fig'):
     """
-      utility function to visualize spatio temporal 
+      utility function to visualize spatio temporal
       interaction networks
       @author zed.uchicago.edu
 
-    
+
     Inputs -
         unet (string): json filename
-        unet (python dict): 
+        unet (python dict):
         jsonfile (bool): True if unet is string  specifying json filename
         colormap (string): colormap
         res (string): 'c' or 'f'
@@ -885,7 +885,7 @@ def viz(unet,jsonfile=False,colormap='autumn',res='c',
 
     colormap=colormap
     colormap1='hot_r'
-    
+
     latsrc=[]
     lonsrc=[]
     lattgt=[]
@@ -893,7 +893,7 @@ def viz(unet,jsonfile=False,colormap='autumn',res='c',
     gamma=[]
     delay=[]
     NUM=None
-    for key,value in unet_.iteritems():    
+    for key,value in unet_.iteritems():
         src=[float(i) for i in value['src'].replace('#',' ').split()]
         tgt=[float(i) for i in value['tgt'].replace('#',' ').split()]
         if NUM is None:
@@ -940,7 +940,7 @@ def viz(unet,jsonfile=False,colormap='autumn',res='c',
         CLS[(lontgt[index],
              lattgt[index])].append((latsrc[index],
                                      lonsrc[index]))
-    
+
     if drawpoly:
         for key, value in CLS.iteritems():
             a=[]
@@ -949,10 +949,10 @@ def viz(unet,jsonfile=False,colormap='autumn',res='c',
             b=[]
             for i in value:
                 b.append(i[1])
-        
+
             a=np.array(a)
             b=np.array(b)
-        
+
             zP=[[i[0],i[1]] for i in zip(a,b)]
             hull = ConvexHull(zP)
             aa=[a[i] for i in hull.vertices]
@@ -987,4 +987,3 @@ def viz(unet,jsonfile=False,colormap='autumn',res='c',
     plt.savefig(figname+'.pdf',dpi=300,bbox_inches='tight',transparent=False)
 
     return m,fig,ax,cax
-    

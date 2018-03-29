@@ -267,6 +267,6 @@ utility function to draw polygons on basemap
             ax (axis handle)
             cax (colorbar handle)
 
-DATA **DEBUG** = False **version** = '0.31415'
+DATA **DEBUG** = False **version** = '1.0.0'
 
-VERSION 0.31415
+VERSION 1.0.0
