@@ -3,10 +3,6 @@ index-servers =
     pypi
 
 [pypi]
+repository: https://upload.pypi.org/legacy/
 username=aszhang95
 password=Cabbagecavern21
-
-[server-login]
-repository: https://pypi.python.org/pypi
-username: aszhang95
-password: Cabbagecavern21
