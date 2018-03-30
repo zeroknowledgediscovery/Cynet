@@ -4,5 +4,5 @@ index-servers =
 
 [pypi]
 repository: https://upload.pypi.org/legacy/
-username=aszhang95
-password=
+username: aszhang95
+password:
