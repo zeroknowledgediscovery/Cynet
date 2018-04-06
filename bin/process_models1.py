@@ -8,10 +8,13 @@ from spin import uNetworkModels as models
 import warnings
 warnings.filterwarnings("ignore")
 
-M=models('/home/ishanu/jD_1041.json')
+FILE='jD_1041'
+FILEPATH='/home/ishanu/'
+
+M=models(FILEPATH + FILE + '.json')
 M.augmentDistance()
-M.select(var='gamma',n=105,store='tmp1.json',reverse=True)
-M0=models('tmp1.json')
+M.select(var='gamma',n=20,store=FILE+'_short.json',reverse=True)
+M0=models(FILE+'_short.json')
 
 #M1=models('../data/Q_75.json')
 #M1.augmentDistance()
@@ -21,5 +24,5 @@ M0=models('tmp1.json')
 
 #viz('tmp1.json',jsonfile=True,figname='figx',res='c',drawpoly=True)
 viz(M0.models,jsonfile=False,figname='figxxx',res='f',drawpoly=False)
-M0.setDataFrame().to_csv('tmp1.csv',index=False)
+M0.setDataFrame().to_csv(FILE+'.csv',index=False)
  
