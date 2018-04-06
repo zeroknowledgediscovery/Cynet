@@ -30,7 +30,7 @@ import seaborn as sns
 
 
 
-__version__='1.0.0'
+__version__='1.0.1'
 __DEBUG__=False
 
 class spatioTemporal:
