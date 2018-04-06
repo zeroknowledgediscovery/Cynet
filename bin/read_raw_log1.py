@@ -1,9 +1,9 @@
 #!/usr/bin/python
 
-import spin as sp
+import cynet as cn
 import pandas as pd
 import numpy as np
- 
+
 EPS=2
 grid={'latitude':np.arange(-4,49,EPS),
       'longitude':np.arange(-16,84,EPS),

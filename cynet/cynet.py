@@ -552,7 +552,6 @@ class uNetworkModels:
         return out
 
 
-
     def augmentDistance(self):
         """
         Utilities for storing and manipulating XPFSA models
@@ -832,6 +831,7 @@ def draw_screen_poly( lats, lons, m,ax,val,cmap,ALPHA=0.6):
     poly = Polygon( xy, facecolor=col.to_rgba(val),
                    alpha=ALPHA, zorder=20,lw=0)
     ax.add_patch(poly)
+
 
 def getalpha(arr,index,F=.9,M=0):
     """

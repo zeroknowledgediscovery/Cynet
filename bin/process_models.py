@@ -1,9 +1,9 @@
 #!/usr/bin/python
 
-from spin import viz
+from cynet import viz
 import pandas as pd
 import numpy as np
-from spin import uNetworkModels as models
+from cynet import uNetworkModels as models
 
 import warnings
 warnings.filterwarnings("ignore")
