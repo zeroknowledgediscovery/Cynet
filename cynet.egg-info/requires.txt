@@ -1,0 +1,8 @@
+numpy>=1.13.1
+pandas>=0.19.0
+matplotlib>=2.0.2
+scipy>=0.18.1
+tqdm>=4.11.2
+seaborn>=0.8.0
+pickle>=1.71
+sodapy>=1.4.6
