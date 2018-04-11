@@ -40,7 +40,6 @@ setup(
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering :: Information Analysis",
     "Topic :: Software Development :: Libraries",
-    "Topic :: Time Series Processing :: General",
     "License :: OSI Approved :: MIT License",
     'Programming Language :: Python :: 2.7',],
 )

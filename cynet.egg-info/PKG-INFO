@@ -285,7 +285,7 @@ Platform: UNKNOWN
 Classifier: Development Status :: 4 - Beta
 Classifier: Intended Audience :: Developers
 Classifier: Intended Audience :: Science/Research
-Classifier: Topic :: Scientific/Engineering :: Machine Learning
+Classifier: Topic :: Scientific/Engineering :: Information Analysis
 Classifier: Topic :: Software Development :: Libraries
 Classifier: Topic :: Time Series Processing :: General
 Classifier: License :: OSI Approved :: MIT License
