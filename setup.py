@@ -1,20 +1,46 @@
 from setuptools import setup
+from codecs import open
+import glob
+from os import path
+
+datafiles = glob.glob('data/*')
+version = {}
+with open("cynet/version.py") as fp:
+    exec(fp.read(), version)
+
+here = path.abspath(path.dirname(__file__))
+
+# Get the long description from the relevant file
+with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
+    long_description = f.read()
 
 setup(
     name='cynet',
-    version='1.0.3',
     author='zed.uchicago.edu',
     author_email='ishanu@uchicago.edu',
+    version = str(version['__version__']),
     packages=['cynet'],
+    include_package_data=True,
+    package_data={
+        'data':datafiles
+    },
     scripts=['bin/print_help.py','bin/process_log1.py','bin/process_models.py','bin/read_raw_log1.py',\
     'bin/script_test.py','bin/script11.py'],
-    url='https://github.com/zeroknowledgediscovery/Cynet',
+    url='https://github.com/zeroknowledgediscovery/',
     license='LICENSE.txt',
     description='Spatio temporal analysis for inferrence of statistical causality using XGenESeSS',
     keywords=['spatial', 'temporal', 'inference', 'statistical', 'causality'],
-    download_url='https://github.com/zeroknowledgediscovery/Cynet/archive/1.0.3.tar.gz',
+    download_url='https://github.com/zeroknowledgediscovery/Cynet/archive/'+str(version['__version__'])+'.tar.gz',
     long_description=open('README.rst').read(),
     install_requires=["numpy >= 1.13.1","pandas >= 0.19.0","matplotlib >= 2.0.2","scipy >= 0.18.1", \
     "tqdm >= 4.11.2","seaborn >= 0.8.0","pickle >= 1.71", "sodapy >= 1.4.6"],
-    classifiers=[],
+    classifiers=[
+    'Development Status :: 4 - Beta',
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Machine Learning",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Time Series Processing :: General",
+    "License :: OSI Approved :: MIT License",
+    'Programming Language :: Python :: 2.7',],
 )

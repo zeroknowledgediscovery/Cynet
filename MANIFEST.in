@@ -1,2 +1,6 @@
 include *.txt
-recursive-include docs *.txt
+include cynet/*.py
+include cynet/*.pyc
+include data/*.json
+include data/*.csv
+include data/*.coords
