@@ -5,7 +5,7 @@ Spatio temporal analysis for inferrence of statistical causality
 
 import pandas as pd
 import numpy as np
-import pickle
+import cPickle as pickle
 from datetime import datetime
 from datetime import timedelta
 from tqdm import tqdm, tqdm_pandas
@@ -30,7 +30,6 @@ import seaborn as sns
 
 
 
-__version__='1.0.1'
 __DEBUG__=False
 
 class spatioTemporal:
