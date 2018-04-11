@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='cynet',
-    version='1.0.1',
+    version='1.0.2',
     author='zed.uchicago.edu',
     author_email='ishanu@uchicago.edu',
     packages=['cynet'],
