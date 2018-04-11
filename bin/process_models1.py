@@ -1,9 +1,9 @@
 #!/usr/bin/python
 
-from spin import viz
+from cynet import viz
 import pandas as pd
 import numpy as np
-from spin import uNetworkModels as models
+from cynet import uNetworkModels as models
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -25,4 +25,3 @@ M0=models(FILE+'_short.json')
 #viz('tmp1.json',jsonfile=True,figname='figx',res='c',drawpoly=True)
 viz(M0.models,jsonfile=False,figname='figxxx',res='f',drawpoly=False)
 M0.setDataFrame().to_csv(FILE+'.csv',index=False)
- 

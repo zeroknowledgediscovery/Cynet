@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
-import spin as sp
-import pandas as pd 
+import cynet as sp
+import pandas as pd
 import numpy as np
 
 EPS=0.003

@@ -1,10 +1,10 @@
 #!/usr/bin/python
 
-from spin import viz
-import spin as sp
+from cynet import viz
+import cynet as cn
 import pandas as pd
 import numpy as np
-from spin import uNetworkModels as models
+from cynet import uNetworkModels as models
 import os
 from tqdm import tqdm, tqdm_pandas
 
@@ -37,7 +37,7 @@ for f in tqdm(jsonFiles):
     if path+f in files:
         M0.update(getModel(path+f,n=N))
 
-sp.to_json(M0,'models'+str(N)+'.json')
-    
+cn.to_json(M0,'models'+str(N)+'.json')
+
 viz('models'+str(N)+'.json',jsonfile=True,figname='fige',
     res='f',drawpoly=False,colormap='autumn')
