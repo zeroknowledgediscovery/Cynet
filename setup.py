@@ -38,7 +38,7 @@ setup(
     'Development Status :: 4 - Beta',
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
-    "Topic :: Scientific/Engineering :: Machine Learning",
+    "Topic :: Scientific/Engineering :: Information Analysis",
     "Topic :: Software Development :: Libraries",
     "Topic :: Time Series Processing :: General",
     "License :: OSI Approved :: MIT License",
