@@ -1,9 +1,7 @@
 from setuptools import setup
 from codecs import open
-import glob
 from os import path
 
-datafiles = glob.glob('data/*')
 version = {}
 with open("cynet/version.py") as fp:
     exec(fp.read(), version)
@@ -20,12 +18,7 @@ setup(
     author_email='ishanu@uchicago.edu',
     version = str(version['__version__']),
     packages=['cynet'],
-    include_package_data=True,
-    package_data={
-        'data':datafiles
-    },
-    scripts=['bin/print_help.py','bin/process_log1.py','bin/process_models.py','bin/read_raw_log1.py',\
-    'bin/script_test.py','bin/script11.py'],
+    scripts=['bin/print_help.py'],
     url='https://github.com/zeroknowledgediscovery/',
     license='LICENSE.txt',
     description='Spatio temporal analysis for inferrence of statistical causality using XGenESeSS',
