@@ -283,7 +283,7 @@ class spatioTemporal:
             self._trng = pd.date_range(start=self._INIT,
                                        end=self._END,freq=self._FREQ)
 
-        assert (LAT is not None and LON is not None and EPS is not None) or
+        assert (LAT is not None and LON is not None and EPS is not None) or\
                (tiles is not None),\
                 "Error: (LAT, LON, EPS) or tiles not defined."
         if tiles is not None:
@@ -367,12 +367,12 @@ class spatioTemporal:
                     self.timeseries(LAT=self._grid[self._coord1],
                                     LON=self._grid[self._coord2],
                                     EPS=self._grid['Eps'],
-                                    key,
+                                    _types=key,
                                     CSVfile=csvPREF+stringify(key)+'.csv',
                                     THRESHOLD=THRESHOLD)
                 else:
                     self.timeseries(tiles=grid,
-                                    key,
+                                    _types=key,
                                     CSVfile=csvPREF+stringify(key)+'.csv',
                                     THRESHOLD=THRESHOLD)
             return
@@ -383,12 +383,12 @@ class spatioTemporal:
                 self.timeseries(LAT=self._grid[self._coord1],
                                 LON=self._grid[self._coord2],
                                 EPS=self._grid['Eps'],
-                                key,
+                                _types=key,
                                 CSVfile=csvPREF+stringify(key)+'.csv',
                                 THRESHOLD=THRESHOLD)
             else:
                 self.timeseries(tiles=grid,
-                                key,
+                                _types=key,
                                 CSVfile=csvPREF+stringify(key)+'.csv',
                                 THRESHOLD=THRESHOLD)
             return
@@ -1121,12 +1121,12 @@ def bokeh_plot(filepath):
         delay_field = 'delay' + n_str
         delay_title = 'Delay' + ' ' + n_str
 
-        gamma_column = TableColumn(field = gamma_field, title = gamma_title, 
+        gamma_column = TableColumn(field = gamma_field, title = gamma_title,
                         formatter = NumberFormatter(format = '0.0000'), width = 70)
         delay_column = TableColumn(field = delay_field, title = delay_title, width = 50)
         columns.append(gamma_column)
         columns.append(delay_column)
-        
+
     data_table = DataTable(source = source, columns = columns, scroll_to_selection = True, selectable = True,
         sortable = True, fit_columns = False,)
 
