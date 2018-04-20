@@ -54,7 +54,13 @@ class spatioTemporal:
         types (list of strings): event type list of filters
         value_limits (tuple): boundaries (magnitude of event;
                               above threshold)
-        grid (dict): dict with coord and eps (see example)
+        grid (dictionary or list of lists): coordinate dictionary with
+                respective ranges and EPS value OR custom list of lists
+                of custom grid tiles as [coord1_start, coord1_stop,
+                coord2_start, coord2_stop]
+        grid_type (string): parameter to determine if grid should be built up
+                            from a coordinate start/stop range ('auto') or be
+                            built from custom tile coordinates ('custom')
         threshold (float): significance threshold
     """
 
@@ -149,21 +155,30 @@ class spatioTemporal:
         self._types = types
         self._value_limits = value_limits
 
-        # pandas timeseries will be stored as separate entries in a dict with the filter as the name
+        # pandas timeseries will be stored as separate entries in a dict with
+        # the filter as the name
         self._ts_dict = {}
 
-        # grid stores directions on how to create the grid indexes for the final pandas df
-        self._grid = {}
-        if grid is not None:
+        # grid stores directions on how to create the grid indexes for the
+        # final pandas df
+        self._grid = None
+        assert grid is not None, "Error: no grid parameter specified."
+        if isinstance(grid, dict):
+            self._grid = {}
             assert(self._coord1 in grid)
             assert(self._coord2 in grid)
             assert('Eps' in grid)
-
-            # constructing private variable self._grid in the desired format with the values taken from
-            # the input grid
+            # constructing private variable self._grid in the desired format
+            # with the values taken from the input grid
             self._grid[self._coord1]=grid[self._coord1]
             self._grid[self._coord2]=grid[self._coord2]
             self._grid['Eps']=grid['Eps']
+            self._grid_type = "auto"
+        elif isinstance(grid, list):
+            self._grid = grid
+            self._grid_type = "custom"
+        else:
+            raise TypeError("Unsupported grid type.")
 
         self._trng = pd.date_range(start=self._INIT,
                                    end=self._END,freq=self._FREQ)
@@ -222,7 +237,9 @@ class spatioTemporal:
         return pd.DataFrame(ts, columns=[TS_NAME],
                             index=self._trng[:-1]).transpose()
 
-    def timeseries(self,LAT,LON,EPS,_types,CSVfile='TS.csv',THRESHOLD=None):
+
+    def timeseries(self,LAT=None,LON=None,EPS=None,_types=None,CSVfile='TS.csv',
+                   THRESHOLD=None, tiles=None):
         """
         Utilities for spatio temporal analysis
         @author zed.uchicago.edu
@@ -235,11 +252,14 @@ class spatioTemporal:
         calls on getTS for individual tile then concats them together
 
         Input:
-            LAT (float):
-            LON (float):
+            LAT (float or list of floats): singular coordinate float or list of
+                                           coordinate start floats
+            LON (float or list of floats): singular coordinate float or list of
+                                           coordinate start floats
             EPS (float): coordinate increment ESP
             _types (list): event type filter; accepted event type list
             CSVfile (string): path to output file
+            tiles (list of lists): list of tiles to build
 
         Output:
             (None): grid pd.Dataframe written out as CSV file
@@ -255,9 +275,19 @@ class spatioTemporal:
             self._trng = pd.date_range(start=self._INIT,
                                        end=self._END,freq=self._FREQ)
 
-        _TS = pd.concat([self.getTS(tile=[i, i + EPS, j, j + EPS],
-                                    _types=_types) for i in tqdm(LAT)
-                         for j in tqdm(LON)])
+        assert (LAT is not None and LON is not None and EPS is not None) or
+               (tiles is not None),\
+                "Error: (LAT, LON, EPS) or tiles not defined."
+        if tiles is not None:
+            rows = []
+            for coord_set in tqdm(tiles):
+                rows.append(self.getTS(tile=[coord_set[0], coord_set[1], \
+                            coord_set[2], coord_set[3]], _types=_types))
+            _TS = pd.concat(rows)
+        else: # note custom coordinate boundaries takes precedence
+            _TS = pd.concat([self.getTS(tile=[i, i + EPS, j, j + EPS],
+                                        _types=_types) for i in tqdm(LAT)
+                             for j in tqdm(LON)])
 
         LEN=pd.date_range(start=self._INIT,
                           end=self._END,freq=self._FREQ).size+0.0
@@ -270,6 +300,7 @@ class spatioTemporal:
             _TS.to_csv(CSVfile, sep=' ')
 
         return
+
 
     def fit(self,grid=None,INIT=None,END=None,THRESHOLD=None,csvPREF='TS'):
         """
@@ -284,8 +315,10 @@ class spatioTemporal:
         to the dataproc
 
         Inputs:
-            grid (pd.DataFrame): dataframe of location
-            timeseries data
+            grid (dictionary or list of lists): coordinate dictionary with
+                respective ranges and EPS value OR custom list of lists
+                of custom grid tiles as [coord1_start, coord1_stop,
+                coord2_start, coord2_stop]
             INIT (datetime.date): starting timeseries date
             END (datetime.date): ending timeseries date
             THRESHOLD (float): significance threshold
@@ -299,7 +332,21 @@ class spatioTemporal:
         if END is not None:
             self._END=END
         if grid is not None:
-            self._grid=grid
+            if isinstance(grid, dict):
+                assert(self._coord1 in grid)
+                assert(self._coord2 in grid)
+                assert('Eps' in grid)
+                # constructing private variable self._grid in the desired format
+                # with the values taken from the input grid
+                self._grid[self._coord1]=grid[self._coord1]
+                self._grid[self._coord2]=grid[self._coord2]
+                self._grid['Eps']=grid['Eps']
+                self._grid_type = "auto"
+            elif isinstance(grid, list):
+                self._grid = grid
+                self._grid_type = "custom"
+            else:
+                raise TypeError("Unsupported grid type.")
 
         assert(self._END is not None)
         assert(self._coord1 in self._grid)
@@ -308,21 +355,34 @@ class spatioTemporal:
 
         if self._types is not None:
             for key in self._types:
-                self.timeseries(self._grid[self._coord1],
-                                self._grid[self._coord2],
-                                self._grid['Eps'],
+                if self._grid_type == "auto":
+                    self.timeseries(LAT=self._grid[self._coord1],
+                                    LON=self._grid[self._coord2],
+                                    EPS=self._grid['Eps'],
+                                    key,
+                                    CSVfile=csvPREF+stringify(key)+'.csv',
+                                    THRESHOLD=THRESHOLD)
+                else:
+                    self.timeseries(tiles=grid,
+                                    key,
+                                    CSVfile=csvPREF+stringify(key)+'.csv',
+                                    THRESHOLD=THRESHOLD)
+            return
+        else:
+            assert(self._value_limits is not None), \
+            "Error: Neither value_limits nor _types has been defined."
+            if self._grid_type == "auto":
+                self.timeseries(LAT=self._grid[self._coord1],
+                                LON=self._grid[self._coord2],
+                                EPS=self._grid['Eps'],
                                 key,
                                 CSVfile=csvPREF+stringify(key)+'.csv',
                                 THRESHOLD=THRESHOLD)
-            return
-        else:
-            assert(self._value_limits is not None)
-            self.timeseries(self._grid[self._coord1],
-                            self._grid[self._coord2],
-                            self._grid['Eps'],
-                            None,
-                            CSVfile=csvPREF+'.csv',
-                            THRESHOLD=THRESHOLD)
+            else:
+                self.timeseries(tiles=grid,
+                                key,
+                                CSVfile=csvPREF+stringify(key)+'.csv',
+                                THRESHOLD=THRESHOLD)
             return
 
 
@@ -363,9 +423,9 @@ class spatioTemporal:
         else:
             self._logdf.sort_values(self._DATE)
             pull_after_date = "'"+str(self._logdf[self._DATE].iloc[-1]).replace(\
-            " ", "T")+"'"
+                                      " ", "T")+"'"
             new_data = client.get(dataset_id, where=\
-                ("date > "+pull_after_date))
+                       ("date > "+pull_after_date))
             if domain == "data.cityofchicago.org" and dataset_id=="crimes":
                 self._DATE = "date"
             pull_df = pd.DataFrame(new_data).dropna(\
@@ -376,6 +436,7 @@ class spatioTemporal:
         if store:
             assert out_fname is not None, "Out filename not specified"
             self._logdf.to_pickle(out_fname)
+
 
 
 def stringify(List):
@@ -399,6 +460,7 @@ def stringify(List):
         return ''
 
     return '-'.join(str(elem) for elem in List)
+
 
 
 def readTS(TSfile,csvNAME='TS1',BEG=None,END=None):
@@ -431,7 +493,6 @@ def readTS(TSfile,csvNAME='TS1',BEG=None,END=None):
     dfts.to_csv(csvNAME+'.csv',sep=" ",header=None,index=None)
     np.savetxt(csvNAME+'.columns', cols, delimiter=',',fmt='%s')
     np.savetxt(csvNAME+'.coords', dfts.index.values, delimiter=',',fmt='%s')
-
 
     return dfts
 
@@ -791,6 +852,7 @@ def showGlobalPlot(coords,ts=None,fsize=[14,14],cmap='jet',
 
         plt.savefig(figname+'.pdf',dpi=300,bbox_inches='tight',transparent=True)
     return num,fig,ax,cax
+
 
 def _scaleforsize(a):
     """
