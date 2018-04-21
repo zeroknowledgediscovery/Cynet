@@ -256,7 +256,8 @@ class spatioTemporal:
         respective timeseries from
         input datasource with
         significance threshold THRESHOLD
-        latitude, longitude coordinate boundaries given by LAT, LON
+        latitude, longitude coordinate boundaries given by LAT, LON and EPS
+        or the custom boundaries given by tiles
         calls on getTS for individual tile then concats them together
 
         Input:
@@ -318,9 +319,8 @@ class spatioTemporal:
         Fit dataproc with specified grid parameters and
         create timeseries for
         date boundaries specified by INIT, THRESHOLD,
-        and END which do not have
-        to match the arguments first input
-        to the dataproc
+        and END or by the input list of custom coordinate boundaries
+        which do NOT have to match the arguments first input to the dataproc
 
         Inputs:
             grid (dictionary or list of lists): coordinate dictionary with
@@ -395,7 +395,7 @@ class spatioTemporal:
 
 
     def pull(self, domain="data.cityofchicago.org",dataset_id="crimes",\
-        token="ZIgqoPrBu0rsvhRr7WfjyPOzW",store=True, out_fname="pull_df.p",
+        token=None, store=True, out_fname="pull_df.p",
         pull_all=False):
         """
         Utilities for spatio temporal analysis
@@ -407,7 +407,8 @@ class spatioTemporal:
         Input -
             domain (string): Socrata database domain hosting data
             dataset_id (string): dataset ID to pull
-            token (string): Socrata token for increased pull capacity
+            token (string): Socrata token for increased pull capacity;
+                Note: Requires Socrata account
             store (boolean): whether or not to write out new dataset
             pull_all (boolean): pull complete dataset
             instead of just updating

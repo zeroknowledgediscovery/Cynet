@@ -25,12 +25,19 @@ CLASSES spatioTemporal uNetworkModels
      |      types (list of strings): event type list of filters
      |      value_limits (tuple): boundaries (magnitude of event;
      |                            above threshold)
-     |      grid (dict): dict with coord and eps (see example)
+     |      grid (dictionary or list of lists): coordinate dictionary with
+     |            respective ranges and EPS value OR custom list of lists
+     |            of custom grid tiles as [coord1_start, coord1_stop,
+     |            coord2_start, coord2_stop]
+     |      grid_type (string): parameter to determine if grid should be built up
+     |                         from a coordinate start/stop range ('auto') or be
+     |                         built from custom tile coordinates ('custom')
      |      threshold (float): significance threshold
      |
      |  Methods defined here:
      |
      |  __init__(self, log_store='log.p', log_file=None, ts_store=None, DATE='Date', year=None, month=None, day=None, EVENT='Primary Type', coord1='Latitude', coord2='Longitude', coord3=None, init_date=None, end_date=None, freq=None, columns=None, types=None, value_limits=None, grid=None, threshold=None)
+     |
      |
      |  fit(self, grid=None, INIT=None, END=None, THRESHOLD=None, csvPREF='TS')
      |      Utilities for spatio temporal analysis
@@ -39,19 +46,21 @@ CLASSES spatioTemporal uNetworkModels
      |      Fit dataproc with specified grid parameters and
      |      create timeseries for
      |      date boundaries specified by INIT, THRESHOLD,
-     |      and END which do not have
-     |      to match the arguments first input
-     |      to the dataproc
+     |      and END or input list of custom coordinate boundaries which do NOT have
+     |      to match the arguments first input to the dataproc
      |
      |      Inputs:
-     |          grid (pd.DataFrame): dataframe of location
-     |          timeseries data
+     |          grid (dictionary or list of lists): coordinate dictionary with
+     |              respective ranges and EPS value OR custom list of lists
+     |              of custom grid tiles as [coord1_start, coord1_stop,
+     |              coord2_start, coord2_stop]
      |          INIT (datetime.date): starting timeseries date
      |          END (datetime.date): ending timeseries date
      |          THRESHOLD (float): significance threshold
      |
      |      Outputs:
      |          (None)
+     |
      |
      |  getTS(self, _types=None, tile=None)
      |      Utilities for spatio temporal analysis
@@ -74,7 +83,8 @@ CLASSES spatioTemporal uNetworkModels
      |          pd.DF index is stringified LAT/LON boundaries
      |          with the type filter  included
      |
-     |  pull(self, domain='data.cityofchicago.org', dataset_id='crimes', token='ZIgqoPrBu0rsvhRr7WfjyPOzW', store=True, out_fname='pull_df.p', pull_all=False)
+     |
+     |  pull(self, domain='data.cityofchicago.org', dataset_id='crimes', token=None, store=True, out_fname='pull_df.p', pull_all=False)
      |      Utilities for spatio temporal analysis
      |      @author zed.uchicago.edu
      |
@@ -84,7 +94,8 @@ CLASSES spatioTemporal uNetworkModels
      |      Input -
      |          domain (string): Socrata database domain hosting data
      |          dataset_id (string): dataset ID to pull
-     |          token (string): Socrata token for increased pull capacity
+     |          token (string): Socrata token for increased pull capacity;
+                    Note: Requires Socrata account
      |          store (boolean): whether or not to write out new dataset
      |          pull_all (boolean): pull complete dataset
      |          instead of just updating
@@ -92,7 +103,9 @@ CLASSES spatioTemporal uNetworkModels
      |      Output -
      |          None (writes out files if store is True and modifies inplace)
      |
-     |  timeseries(self, LAT, LON, EPS, _types, CSVfile='TS.csv', THRESHOLD=None)
+     |
+     |  timeseries(self, LAT=None, LON=None, EPS=None, _types=None, CSVfile='TS.csv', THRESHOLD=None,
+                   tiles=None)
      |      Utilities for spatio temporal analysis
      |      @author zed.uchicago.edu
      |
@@ -100,7 +113,8 @@ CLASSES spatioTemporal uNetworkModels
      |      respective timeseries from
      |      input datasource with
      |      significance threshold THRESHOLD
-     |      latitude, longitude coordinate boundaries given by LAT, LON
+     |      latitude, longitude coordinate boundaries given by LAT, LON and EPS
+     |      or the custom boundaries given by tiles 
      |      calls on getTS for individual tile then concats them together
      |
      |      Input:
@@ -114,6 +128,8 @@ CLASSES spatioTemporal uNetworkModels
      |          (None): grid pd.Dataframe written out as CSV file
      |                  to path specified
 
+
+
     class uNetworkModels
      |  Utilities for storing and manipulating XPFSA models
      |  inferred by XGenESeSS
@@ -126,6 +142,7 @@ CLASSES spatioTemporal uNetworkModels
      |
      |  __init__(self, jsonFILE)
      |
+     |
      |  augmentDistance(self)
      |      Utilities for storing and manipulating XPFSA models
      |      inferred by XGenESeSS
@@ -136,6 +153,7 @@ CLASSES spatioTemporal uNetworkModels
      |      distance key of each model;
      |
      |      No I/O
+     |
      |
      |  select(self, var='gamma', n=None, reverse=False, store=None)
      |      Utilities for storing and manipulating XPFSA models
@@ -156,6 +174,7 @@ CLASSES spatioTemporal uNetworkModels
      |          (dictionary): top n models as ranked by var
      |                       in ascending/descending order
      |
+     |
      |  to_json(outFile)
      |      Utilities for storing and manipulating XPFSA models
      |      inferred by XGenESeSS
@@ -166,8 +185,8 @@ CLASSES spatioTemporal uNetworkModels
      |      Input -
      |          outFile (string): name of outfile to write json to
      |
-     |      Returns -
-     |          Nonexs
+     |      Output -
+     |          None
      |
      |  ----------------------------------------------------------------------
      |  Data descriptors defined here:
@@ -197,6 +216,7 @@ utility function to draw polygons on basemap
         Returns -
             dfts (pandas.DataFrame)
 
+
     showGlobalPlot(coords, ts=None, fsize=[14, 14], cmap='jet', m=None, figname='fig', F=2)
         plot global distribution of events
         within time period specified
@@ -213,6 +233,7 @@ utility function to draw polygons on basemap
             m (mpl.mpl_toolkits.Basemap): mpl instance of heat map of
                 crimes from fitted data
 
+
     splitTS(TSfile, csvNAME='TS1', dirname='./', prefix='@', BEG=None, END=None)
         Utilities for spatio temporal analysis
         @author zed.uchicago.edu
@@ -221,6 +242,7 @@ utility function to draw polygons on basemap
         For XgenESeSS binary
 
         No I/O
+
 
     stringify(List)
         Utility function
@@ -236,6 +258,7 @@ utility function to draw polygons on basemap
         Output:
             (string)
 
+
     to_json(pydict, outFile)
         Writes dictionary json to file
         @author zed.uchicago.edu
@@ -247,11 +270,11 @@ utility function to draw polygons on basemap
         Returns -
             Nonexs
 
+
     viz(unet, jsonfile=False, colormap='autumn', res='c', drawpoly=False, figname='fig')
           utility function to visualize spatio temporal
           interaction networks
           @author zed.uchicago.edu
-
 
         Inputs -
             unet (string): json filename
@@ -266,6 +289,8 @@ utility function to draw polygons on basemap
             fig (figure handle)
             ax (axis handle)
             cax (colorbar handle)
+
+
 
 DATA **DEBUG** = False **version** = '1.0.7'
 
