@@ -107,6 +107,8 @@ class spatioTemporal:
                          or (month is not None)
                          or (day is not None )))
 
+
+        
         # if log_file is specified, then read
         # else read log_store pickle
         if log_file is not None:
@@ -155,6 +157,26 @@ class spatioTemporal:
         self._coord2 = coord2
         self._coord3 = coord3
 
+
+        if grid is not None:
+            if isinstance(grid, dict):
+                assert(self._coord1 in grid)
+                assert(self._coord2 in grid)
+                assert('Eps' in grid)
+                # constructing private variable self._grid in the desired format
+                # with the values taken from the input grid
+                self._grid[self._coord1]=grid[self._coord1]
+                self._grid[self._coord2]=grid[self._coord2]
+                self._grid['Eps']=grid['Eps']
+                self._grid_type = "auto"
+            elif isinstance(grid, list):
+                self._grid = grid
+                self._grid_type = "custom"
+            else:
+                raise TypeError("Unsupported grid type.")
+
+
+        
         if columns is None:
             self._columns = [EVENT, coord1, coord2, DATE]
         else:
@@ -268,7 +290,7 @@ class spatioTemporal:
             EPS (float): coordinate increment ESP
             _types (list): event type filter; accepted event type list
             CSVfile (string): path to output file
-            tiles (list of lists): list of tiles to build
+            tiles (list of lists): list of tiles to build (list of [lat1 lat2 lon1 lon2])
 
         Output:
             (None): grid pd.Dataframe written out as CSV file
@@ -288,11 +310,14 @@ class spatioTemporal:
                (tiles is not None),\
                 "Error: (LAT, LON, EPS) or tiles not defined."
         if tiles is not None:
-            rows = []
-            for coord_set in tqdm(tiles):
-                rows.append(self.getTS(tile=[coord_set[0], coord_set[1], \
-                            coord_set[2], coord_set[3]], _types=_types))
-            _TS = pd.concat(rows)
+            #rows = []
+            #for coord_set in tqdm(tiles):
+            #    rows.append(self.getTS(tile=[coord_set[0], coord_set[1], \
+            #                coord_set[2], coord_set[3]], _types=_types))
+            #_TS = pd.concat(rows)
+            #
+            _TS = pd.concat([self.getTS(tile=coord_set,_types=_types)
+                             for coord_set in tqdm(tiles)])
         else: # note custom coordinate boundaries takes precedence
             _TS = pd.concat([self.getTS(tile=[i, i + EPS, j, j + EPS],
                                         _types=_types) for i in tqdm(LAT)
@@ -357,9 +382,9 @@ class spatioTemporal:
                 raise TypeError("Unsupported grid type.")
 
         assert(self._END is not None)
-        assert(self._coord1 in self._grid)
-        assert(self._coord2 in self._grid)
-        assert('Eps' in self._grid)
+        #assert(self._coord1 in self._grid)
+        #assert(self._coord2 in self._grid)
+        #assert('Eps' in self._grid)
 
         if self._types is not None:
             for key in self._types:
@@ -371,7 +396,7 @@ class spatioTemporal:
                                     CSVfile=csvPREF+stringify(key)+'.csv',
                                     THRESHOLD=THRESHOLD)
                 else:
-                    self.timeseries(tiles=grid,
+                    self.timeseries(tiles=self._grid,
                                     _types=key,
                                     CSVfile=csvPREF+stringify(key)+'.csv',
                                     THRESHOLD=THRESHOLD)
@@ -383,13 +408,13 @@ class spatioTemporal:
                 self.timeseries(LAT=self._grid[self._coord1],
                                 LON=self._grid[self._coord2],
                                 EPS=self._grid['Eps'],
-                                _types=key,
-                                CSVfile=csvPREF+stringify(key)+'.csv',
+                                _types=None,
+                                CSVfile=csvPREF+'.csv',
                                 THRESHOLD=THRESHOLD)
             else:
-                self.timeseries(tiles=grid,
-                                _types=key,
-                                CSVfile=csvPREF+stringify(key)+'.csv',
+                self.timeseries(tiles=self._grid,
+                                _types=None,
+                                CSVfile=csvPREF+'.csv',
                                 THRESHOLD=THRESHOLD)
             return
 
@@ -507,7 +532,7 @@ def readTS(TSfile,csvNAME='TS1',BEG=None,END=None):
 
 
 
-def splitTS(TSfile,csvNAME='TS1',dirname='./',prefix="@",
+def splitTS(TSfile,dirname='./',prefix="@",
             BEG=None,END=None):
     """
     Utilities for spatio temporal analysis
