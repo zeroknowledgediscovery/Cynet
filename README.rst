@@ -2,7 +2,7 @@
 
 @author zed.uchicago.edu
 
-CLASSES spatioTemporal uNetworkModels
+cynet library classes: spatioTemporal, uNetworkModels
 
     class spatioTemporal
      |  Utilities for spatio temporal analysis
@@ -95,7 +95,7 @@ CLASSES spatioTemporal uNetworkModels
      |          domain (string): Socrata database domain hosting data
      |          dataset_id (string): dataset ID to pull
      |          token (string): Socrata token for increased pull capacity;
-                    Note: Requires Socrata account
+     |              Note: Requires Socrata account
      |          store (boolean): whether or not to write out new dataset
      |          pull_all (boolean): pull complete dataset
      |          instead of just updating
@@ -105,7 +105,7 @@ CLASSES spatioTemporal uNetworkModels
      |
      |
      |  timeseries(self, LAT=None, LON=None, EPS=None, _types=None, CSVfile='TS.csv', THRESHOLD=None,
-                   tiles=None)
+     |             tiles=None)
      |      Utilities for spatio temporal analysis
      |      @author zed.uchicago.edu
      |
@@ -114,7 +114,7 @@ CLASSES spatioTemporal uNetworkModels
      |      input datasource with
      |      significance threshold THRESHOLD
      |      latitude, longitude coordinate boundaries given by LAT, LON and EPS
-     |      or the custom boundaries given by tiles 
+     |      or the custom boundaries given by tiles
      |      calls on getTS for individual tile then concats them together
      |
      |      Input:
@@ -130,6 +130,71 @@ CLASSES spatioTemporal uNetworkModels
 
 
 
+    Utility functions:
+    |  splitTS(TSfile, csvNAME='TS1', dirname='./', prefix='@', BEG=None, END=None)
+    |     Utilities for spatio temporal analysis
+    |     @author zed.uchicago.edu
+    |
+    |     Writes out each row of the pd.DataFrame as a separate CSVfile
+    |     For XgenESeSS binary
+    |
+    |     Inputs -
+    |         TSfile (pd.DataFrame): DataFrame to write out
+    |         csvNAME (string): output filename
+    |         dirname (string): directory for output file
+    |         prefix (string): prefix for files
+    |         BEG (datetime): start date
+    |         END (datetime): end date
+    |
+    |     Outputs -
+    |         (No output)
+    |
+    |
+    |  stringify(List)
+    |     Utility function
+    |     @author zed.uchicago.edu
+    |
+    |     Converts list into string separated by dashes
+    |     or empty string if input list
+    |          is not list or is empty
+    |
+    |     Input:
+    |         List (list): input list to be converted
+    |
+    |     Output:
+    |         (string)
+    |
+    |
+    |  to_json(pydict, outFile)
+    |     Writes dictionary json to file
+    |     @author zed.uchicago.edu
+    |
+    |     Input -
+    |         pydict (dict): ditionary to store
+    |         outFile (string): name of outfile to write json to
+    |
+    |     Output -
+    |         (No output but writes out files)
+    |
+    |
+    |  readTS(TSfile,csvNAME='TS1',BEG=None,END=None):
+    |      Utilities for spatio temporal analysis
+    |      @author zed.uchicago.edu
+    |
+    |      Reads in output TS logfile into pd.DF and outputs necessary
+    |      CSV files in XgenESeSS-friendly format
+    |
+    |      Input -
+    |          TSfile (string): filename input TS to read
+    |          csvNAME (string)
+    |          BEG (string): start datetime
+    |          END (string): end datetime
+    |
+    |      Output -
+    |          dfts (pandas.DataFrame)
+
+
+
     class uNetworkModels
      |  Utilities for storing and manipulating XPFSA models
      |  inferred by XGenESeSS
@@ -141,6 +206,14 @@ CLASSES spatioTemporal uNetworkModels
      |  Methods defined here:
      |
      |  __init__(self, jsonFILE)
+     |
+     |
+     |  append(self,pydict):
+     |      Utilities for storing and manipulating XPFSA models
+     |      inferred by XGenESeSS
+     |      @author zed.uchicago.edu
+     |
+     |      append models to internal dictionary
      |
      |
      |  augmentDistance(self)
@@ -186,112 +259,108 @@ CLASSES spatioTemporal uNetworkModels
      |          outFile (string): name of outfile to write json to
      |
      |      Output -
-     |          None
+     |          (No output but writes out files)
      |
-     |  ----------------------------------------------------------------------
-     |  Data descriptors defined here:
+
+
+
+
+
+viscynet library:
+    Functions
      |
-     |  models
-
-FUNCTIONS draw\_screen\_poly(lats, lons, m, ax, val, cmap, ALPHA=0.6)
-utility function to draw polygons on basemap
-
-    getalpha(arr, index, F=0.9)
-        utility function to normalize transparency of quiver
-
-    readTS(TSfile, csvNAME='TS1', BEG=None, END=None)
-        Utilities for spatio temporal analysis
-        @author zed.uchicago.edu
-
-        Reads in output TS logfile into pd.DF
-            and then outputs necessary
-            CSV files in XgenESeSS-friendly format
-
-        Input -
-            TSfile (string): filename input TS to read
-            csvNAME (string)
-            BEG (string): start datetime
-            END (string): end datetime
-
-        Returns -
-            dfts (pandas.DataFrame)
-
-
-    showGlobalPlot(coords, ts=None, fsize=[14, 14], cmap='jet', m=None, figname='fig', F=2)
-        plot global distribution of events
-        within time period specified
-
-        Inputs -
-            coords (string): filename with coord list as lat1#lat2#lon1#lon2
-            ts (string): time series filename with data in rows, space separated
-            fsize (list):
-            cmap (string):
-            m (mpl.mpl_toolkits.Basemap): mpl instance for plotting
-            figname (string): Name of the Plot
-
-        Returns -
-            m (mpl.mpl_toolkits.Basemap): mpl instance of heat map of
-                crimes from fitted data
-
-
-    splitTS(TSfile, csvNAME='TS1', dirname='./', prefix='@', BEG=None, END=None)
-        Utilities for spatio temporal analysis
-        @author zed.uchicago.edu
-
-        Writes out each row of the pd.DataFrame as a separate CSVfile
-        For XgenESeSS binary
-
-        No I/O
-
-
-    stringify(List)
-        Utility function
-        @author zed.uchicago.edu
-
-        Converts list into string separated by dashes
-                 or empty string if input list
-                 is not list or is empty
-
-        Input:
-            List (list): input list to be converted
-
-        Output:
-            (string)
-
-
-    to_json(pydict, outFile)
-        Writes dictionary json to file
-        @author zed.uchicago.edu
-
-        Input -
-            pydict (dict): ditionary to store
-            outFile (string): name of outfile to write json to
-
-        Returns -
-            Nonexs
-
-
-    viz(unet, jsonfile=False, colormap='autumn', res='c', drawpoly=False, figname='fig')
-          utility function to visualize spatio temporal
-          interaction networks
-          @author zed.uchicago.edu
-
-        Inputs -
-            unet (string): json filename
-            unet (python dict):
-            jsonfile (bool): True if unet is string  specifying json filename
-            colormap (string): colormap
-            res (string): 'c' or 'f'
-            drawpoly (bool): if True draws transparent patch showing srcs
-            figname  (string): prefix of pdf image file
-        Returns -
-            m (Basemap handle)
-            fig (figure handle)
-            ax (axis handle)
-            cax (colorbar handle)
+     |  draw\_screen\_poly(lats, lons, m, ax, val, cmap, ALPHA=0.6)
+     |      utility function to draw polygons on basemap
+     |
+     |      Inputs -
+     |          lats (list of floats): mpl_toolkits.basemap lat parameters
+     |          lons (list of floats): mpl_toolkits.basemap lon parameters
+     |          m (mpl.mpl_toolkits.Basemap): mpl instance for plotting
+     |          ax (axis parent handle)
+     |          cax (colorbar parent handle)
+     |          val (Matplotlib color)
+     |          cmap (string): colormap cmap parameter
+     |          ALPHA (float): alpha value to use for plot
+     |
+     |      Outputs -
+     |          (No outputs - modifies objects in place)
+     |
+     |
+     |  getalpha(arr, index, F=0.9)
+     |      utility function to normalize transparency of quiver
+     |
+     |      Inputs -
+     |          arr (iterable): list of input values
+     |          index (int): index position from which alpha value should be taken from
+     |          F (float): multiplier
+     |          M (float): minimum alpha value
+     |
+     |      Outputs -
+     |          v (float): alpha value
+     |
+     |
+     |  showGlobalPlot(coords, ts=None, fsize=[14, 14], cmap='jet', m=None, figname='fig', F=2)
+     |      plot global distribution of events within time period specified
+     |
+     |      Inputs -
+     |          coords (string): filename with coord list as lat1#lat2#lon1#lon2
+     |          ts (string): time series filename with data in rows, space separated
+     |          fsize (list):
+     |          cmap (string):
+     |          m (mpl.mpl_toolkits.Basemap): mpl instance for plotting
+     |          figname (string): Name of the Plot
+     |          F (int)
+     |
+     |      Output -
+     |         num (np.array): data values
+     |         fig (mpl.figure): heatmap of events from fitted data
+     |         ax (axis handler): output axis handler
+     |         cax (colorbar axis handler): output colorbar axis handler
+     |
+     |
+     |  viz(unet, jsonfile=False, colormap='autumn', res='c', drawpoly=False, figname='fig')
+     |      utility function to visualize spatio temporal
+     |      interaction networks
+     |
+     |      Inputs -
+     |          unet (string): json filename
+     |          unet (python dict):
+     |          jsonfile (bool): True if unet is string  specifying json filename
+     |          colormap (string): colormap
+     |          res (string): 'c' or 'f'
+     |          drawpoly (bool): if True draws transparent patch showing srcs
+     |          figname  (string): prefix of pdf image file
+     |      Outputs -
+     |          m (Basemap handle)
+     |          fig (figure handle)
+     |          ax (axis handle)
+     |          cax (colorbar handle)
+     |
+     |
+     |  _scaleforsize(a)
+     |      normalize array for plotting
+     |
+     |      Inputs -
+     |          a (ndarray): input array
+     |      Output -
+     |          a (ndarray): output array
+     |
+     |
+     |  bokeh_plot(filepath)
+     |      This function takes filepath given by data and produces bokeh plot in
+     |      browser (Google Chrome recommended). Each row represents a point,
+     |      all the lines(sources) connected to it and the gammas and delays associated with
+     |      the lines. The current implementation results in the bokeh plot, and a linked
+     |      table of the data. IMPORTANT: Points are in MERCATOR Coordinates. This is because
+     |      the current tileset for the map is in mercator coordinates.
+     |
+     |      Inputs -
+     |          filepath (string) - path to file
+     |
+     |      Outputs -
+     |          (No outputs, will open up external browser window)
 
 
+DATA **DEBUG** = False **version** = '1.0.8'
 
-DATA **DEBUG** = False **version** = '1.0.7'
-
-VERSION 1.0.7
+VERSION 1.0.8

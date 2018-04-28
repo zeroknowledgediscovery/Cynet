@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import spZED as sp
+import cynet as cn
 import pandas as pd
 import numpy as np
 import cProfile
@@ -12,7 +12,7 @@ grid={'latitude':np.arange(-56,77,EPS),
 
 LOGFILE='../../../../../ZED/Research/DATA_REPO/terror.csv'
 
-S=sp.spatioTemporal(log_store='alldata.p',
+S=cn.spatioTemporal(log_store='alldata.p',
                     log_file=LOGFILE,
                     DATE=None,
                     year='iyear',
