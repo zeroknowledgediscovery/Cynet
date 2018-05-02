@@ -31,6 +31,35 @@ from hull import in_hull
 
 from streamlinef import streamlines
 
+'''
+This file is a first implementation of the bokeh pipeline. It requires the hull.py
+and streamlinef.py files, which is code borrowed from online. We will give an example 
+of how to use this file to get the plots. This code starts from the point
+when the json data files have been obtained.
+
+To get the neighborhood plot:
+    1. run json_to_csv on the batch of json files to get the batch of csv files.
+    2. run combine_merc to combine the batch of csv files into one csv file
+        in mercator coordinates.
+    3. run neighbor_plot on the combined csv file to get the neighbor hood plot.
+
+To get the streamline plot:
+    1. same as step 1 of neighborhood plot (can be skipped if already done)
+    2. run streamheat_combine to combine the batch of csv files into one csv
+    file. THIS IS IN A FORMAT DIFFERENT FROM THAT OF THE NEIGHBORHOOD PLOT.
+    3. run crime_stream.py on the combined file.
+
+To get the heatplot:
+    1. same as streamline plot.
+    2. same as streamline plot.
+    3. run heat_map on the combined file.
+
+We have provided two sample datasets for use. 'crime_filtered_data.csv' can be considered
+the combined file for the neighborhood plot. 'contourmerc.csv' can be considered
+the combined file for the streamline plot and the heatplot.
+
+'''
+
 
 def json_to_csv(FILEPATH, DEST):
     '''
@@ -265,10 +294,7 @@ def streamheat_combine(DIR, filename):
     df['lontgt'] = new_lontgt
     df['lattgt'] = new_lattgt
 
-    ####df.to_csv('merc_merged_full.csv')
 
-
-    #df = pd.read_csv(filename1, index_col = 'index')
     df['theta'] = np.arctan((df['lattgt'] - df['latsrc']) / (df['lontgt'] - df['lonsrc']))
 
     df['uvector'] = df['gamma'] * np.cos(df['theta'])
