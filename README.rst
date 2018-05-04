@@ -1,12 +1,11 @@
-# Spatio temporal analysis for inferrence of statistical causality
-
+cynet
+Spatio temporal analysis for inferrence of statistical causality
 @author zed.uchicago.edu
 
 cynet library classes: spatioTemporal, uNetworkModels
 
     class spatioTemporal
      |  Utilities for spatio temporal analysis
-     |  @author zed.uchicago.edu
      |
      |  Attributes:
      |      log_store (Pickle): Pickle storage of class data & dataframes
@@ -41,7 +40,6 @@ cynet library classes: spatioTemporal, uNetworkModels
      |
      |  fit(self, grid=None, INIT=None, END=None, THRESHOLD=None, csvPREF='TS')
      |      Utilities for spatio temporal analysis
-     |      @author zed.uchicago.edu
      |
      |      Fit dataproc with specified grid parameters and
      |      create timeseries for
@@ -64,10 +62,8 @@ cynet library classes: spatioTemporal, uNetworkModels
      |
      |  getTS(self, _types=None, tile=None)
      |      Utilities for spatio temporal analysis
-     |      @author zed.uchicago.edu
      |
      |      Utilities for spatio temporal analysis
-     |      @author zed.uchicago.edu
      |
      |      Given location tile boundaries and type category filter, creates the
      |      corresponding timeseries as a pandas DataFrame
@@ -86,7 +82,6 @@ cynet library classes: spatioTemporal, uNetworkModels
      |
      |  pull(self, domain='data.cityofchicago.org', dataset_id='crimes', token=None, store=True, out_fname='pull_df.p', pull_all=False)
      |      Utilities for spatio temporal analysis
-     |      @author zed.uchicago.edu
      |
      |      Pulls new entries from datasource
      |      NOTE: should make flexible but for now use city of Chicago data
@@ -107,7 +102,6 @@ cynet library classes: spatioTemporal, uNetworkModels
      |  timeseries(self, LAT=None, LON=None, EPS=None, _types=None, CSVfile='TS.csv', THRESHOLD=None,
      |             tiles=None)
      |      Utilities for spatio temporal analysis
-     |      @author zed.uchicago.edu
      |
      |      Creates DataFrame of location tiles and their
      |      respective timeseries from
@@ -133,7 +127,6 @@ cynet library classes: spatioTemporal, uNetworkModels
     Utility functions:
     |  splitTS(TSfile, csvNAME='TS1', dirname='./', prefix='@', BEG=None, END=None)
     |     Utilities for spatio temporal analysis
-    |     @author zed.uchicago.edu
     |
     |     Writes out each row of the pd.DataFrame as a separate CSVfile
     |     For XgenESeSS binary
@@ -152,7 +145,6 @@ cynet library classes: spatioTemporal, uNetworkModels
     |
     |  stringify(List)
     |     Utility function
-    |     @author zed.uchicago.edu
     |
     |     Converts list into string separated by dashes
     |     or empty string if input list
@@ -167,7 +159,6 @@ cynet library classes: spatioTemporal, uNetworkModels
     |
     |  to_json(pydict, outFile)
     |     Writes dictionary json to file
-    |     @author zed.uchicago.edu
     |
     |     Input -
     |         pydict (dict): ditionary to store
@@ -179,7 +170,6 @@ cynet library classes: spatioTemporal, uNetworkModels
     |
     |  readTS(TSfile,csvNAME='TS1',BEG=None,END=None):
     |      Utilities for spatio temporal analysis
-    |      @author zed.uchicago.edu
     |
     |      Reads in output TS logfile into pd.DF and outputs necessary
     |      CSV files in XgenESeSS-friendly format
@@ -198,7 +188,6 @@ cynet library classes: spatioTemporal, uNetworkModels
     class uNetworkModels
      |  Utilities for storing and manipulating XPFSA models
      |  inferred by XGenESeSS
-     |  @author zed.uchicago.edu
      |
      |  Attributes:
      |      jsonFile (string): path to json file containing models
@@ -211,7 +200,6 @@ cynet library classes: spatioTemporal, uNetworkModels
      |  append(self,pydict):
      |      Utilities for storing and manipulating XPFSA models
      |      inferred by XGenESeSS
-     |      @author zed.uchicago.edu
      |
      |      append models to internal dictionary
      |
@@ -219,7 +207,6 @@ cynet library classes: spatioTemporal, uNetworkModels
      |  augmentDistance(self)
      |      Utilities for storing and manipulating XPFSA models
      |      inferred by XGenESeSS
-     |      @author zed.uchicago.edu
      |
      |      Calculates the distance between all models and stores
      |      them under the
@@ -231,7 +218,6 @@ cynet library classes: spatioTemporal, uNetworkModels
      |  select(self, var='gamma', n=None, reverse=False, store=None)
      |      Utilities for storing and manipulating XPFSA models
      |      inferred by XGenESeSS
-     |      @author zed.uchicago.edu
      |
      |      Selects the N top models as ranked by var specified value
      |      (in reverse order if reverse is True)
@@ -251,7 +237,6 @@ cynet library classes: spatioTemporal, uNetworkModels
      |  to_json(outFile)
      |      Utilities for storing and manipulating XPFSA models
      |      inferred by XGenESeSS
-     |      @author zed.uchicago.edu
      |
      |      Writes out updated models json to file
      |

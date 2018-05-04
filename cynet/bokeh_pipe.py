@@ -27,13 +27,13 @@ from bokeh.util.hex import hexbin
 from scipy.interpolate import griddata
 from scipy.spatial import Delaunay
 
-from hull import in_hull
+from bokeh_utilities import in_hull, streamlines
 
-from streamlinef import streamlines
+
 
 '''
-This file is a first implementation of the bokeh pipeline. It requires the hull.py
-and streamlinef.py files, which is code borrowed from online. We will give an example 
+This file is a first implementation of the bokeh pipeline. It requires the bokeh_utilities.py
+file, which is code borrowed from online. We will give an example
 of how to use this file to get the plots. This code starts from the point
 when the json data files have been obtained.
 
@@ -67,7 +67,7 @@ def json_to_csv(FILEPATH, DEST):
     them into csv files for use. Edit the selection variables as
     you see fit. It is very important that you set DEST to a folder,
     as it generates many csv files. WARNING: Run this function in
-    python2. The rest of the code should use python3. 
+    python2. The rest of the code should use python3.
     THIS TAKES QUITE A BIT OF TIME.
 
     Inputs:
@@ -77,10 +77,10 @@ def json_to_csv(FILEPATH, DEST):
     warnings.filterwarnings("ignore")
     maxdistance=3.5
 
-    file_count = 1
+    file_count=1
     for filename in os.listdir(FILEPATH):
 
-        FILE= filename
+        FILE=filename
 
         M=models(FILEPATH + FILE)
         M.augmentDistance()
@@ -106,7 +106,7 @@ def combine_merc(DIR, filename, N = 20):
     This function combines the csv's into a single file. At the same time,
     this function will convert the format of the coordinates from longitude
     and latitude which is necessary to make our neighborhood plot. Our tileset
-    accepts mercator coordinates. This generates one combined csv in the 
+    accepts mercator coordinates. This generates one combined csv in the
     current directory. USE PYTHON 3.
 
     Inputs:
@@ -223,12 +223,12 @@ def neighbor_plot(filepath= 'crime_filtered_data.csv'):
         delay_field = 'delay' + n_str
         delay_title = 'Delay' + ' ' + n_str
 
-        gamma_column = TableColumn(field = gamma_field, title = gamma_title, 
+        gamma_column = TableColumn(field = gamma_field, title = gamma_title,
                         formatter = NumberFormatter(format = '0.0000'), width = 70)
         delay_column = TableColumn(field = delay_field, title = delay_title, width = 50)
         columns.append(gamma_column)
         columns.append(delay_column)
-        
+
     data_table = DataTable(source = source, columns = columns, scroll_to_selection = True, selectable = True,
         sortable = True, fit_columns = False,)
 
@@ -240,7 +240,7 @@ def neighbor_plot(filepath= 'crime_filtered_data.csv'):
     show(page)
 
 '''
-From this point on, we define the functions necessary for a streamline plot and a 
+From this point on, we define the functions necessary for a streamline plot and a
 heat plot.
 '''
 
@@ -338,7 +338,7 @@ def streamheat_combine(DIR, filename):
 def crime_stream(datafile='contourmerc.csv',density=4, npoints=10, output_name='streamplot.html', method = 'cubic'):
     '''
     This function takes a csv datafile of crime vectors, reads it into
-    a pandas dataframe and plots the streamplot using Delanuay 
+    a pandas dataframe and plots the streamplot using Delanuay
     interpolation. Function will open the plot in a new browser. Use chrome.
     Inputs:
         datafile: name of the csv file. Example file is 'contourmerc.csv'
@@ -445,7 +445,7 @@ def heat_map(datafile='contourmerc.csv', npoints=300, output_name='heatmap.html'
 
     filtered_x = []
     filtered_y = []
-    filtered_g = [] 
+    filtered_g = []
     for n in range(0, npoints**2):
         if hull_array[n] == True:
             filtered_x.append(predict_x[n])
@@ -458,7 +458,7 @@ def heat_map(datafile='contourmerc.csv', npoints=300, output_name='heatmap.html'
 
     TOOLS = ['pan','wheel_zoom','reset','hover','save']
 
-    p2 = figure(x_range=(-9770511,-9746021), y_range=(5108694,5146011), tools = TOOLS, 
+    p2 = figure(x_range=(-9770511,-9746021), y_range=(5108694,5146011), tools = TOOLS,
         x_axis_type = 'mercator',
         y_axis_type = 'mercator')
     p2.add_tile(CARTODBPOSITRON)
