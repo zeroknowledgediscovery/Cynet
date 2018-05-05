@@ -8,7 +8,9 @@ EPS=0.003
 grid={'Latitude':np.arange(41.5,42,EPS),
       'Longitude':np.arange(-87.75,-87.2,EPS),
       'Eps':EPS}
+
 #log_file='/home/ishanu/Dropbox/ZED/Research/DATA_REPO/Crimes_-_2001_to_present.csv',
+
 S=sp.spatioTemporal(log_store='alldata_crime.p',
                     types=[['BURGLARY','THEFT'],['HOMICIDE']],
                     value_limits=None,

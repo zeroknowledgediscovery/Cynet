@@ -57,7 +57,7 @@ class spatioTemporal:
         end_date (datetime.date): upper bound of daterange
         freq (string): timeseries increments; e.g. D for date
         columns (list): list of column names to use;
-            required at least 2 coordinates and event type
+                        required at least 2 coordinates and event type
         types (list of strings): event type list of filters
         value_limits (tuple): boundaries (magnitude of event;
                               above threshold)
@@ -361,7 +361,7 @@ class spatioTemporal:
         return df
 
 
-    def get_opt_freq(df,incr=6,max_incr=48):
+    def get_opt_freq(df,incr=6,max_incr=24):
         '''
         Utilities for spatio temporal analysis
         @author zed.uchicago.edu
@@ -407,8 +407,7 @@ class spatioTemporal:
 
         Creates DataFrame of location tiles and their
         respective timeseries from
-        input datasource with
-        significance threshold THRESHOLD
+        input datasource with significance threshold THRESHOLD
         latitude, longitude coordinate boundaries given by LAT, LON and EPS
         or the custom boundaries given by tiles
         calls on getTS for individual tile then concats them together
@@ -428,9 +427,9 @@ class spatioTemporal:
             max_incr (int): user-specified maximum increment
 
         Output:
-            (None): grid pd.Dataframe written out as CSV file
-                    to path specified
+            No Output grid pd.Dataframe written out as CSV file to path specified
         """
+
         if THRESHOLD is None:
             if self._THRESHOLD is None:
                 THRESHOLD=0.1
@@ -482,7 +481,8 @@ class spatioTemporal:
         return
 
 
-    def fit(self,grid=None,INIT=None,END=None,THRESHOLD=None,csvPREF='TS'):
+    def fit(self,grid=None,INIT=None,END=None,THRESHOLD=None,csvPREF='TS',
+            auto_adjust_time=False,incr=6,max_incr=24):
         """
         Utilities for spatio temporal analysis
         @author zed.uchicago.edu
@@ -501,9 +501,14 @@ class spatioTemporal:
             INIT (datetime.date): starting timeseries date
             END (datetime.date): ending timeseries date
             THRESHOLD (float): significance threshold
+            auto_adjust_time (boolean): if True, within increments specified (6H default),
+                determine optimal temporal frequency for timeseries data
+            incr (int): frequency increment
+            max_incr (int): user-specified maximum increment
 
         Outputs:
-            (None)
+            (No output) grid pd.Dataframe written out as CSV file
+                    to path specified
         """
 
         if INIT is not None:
@@ -540,12 +545,16 @@ class spatioTemporal:
                                     EPS=self._grid['Eps'],
                                     _types=key,
                                     CSVfile=csvPREF+stringify(key)+'.csv',
-                                    THRESHOLD=THRESHOLD)
+                                    THRESHOLD=THRESHOLD,
+                                    auto_adjust_time=auto_adjust_time,
+                                    incr=incr,max_incr=max_incr)
                 else:
                     self.timeseries(tiles=self._grid,
                                     _types=key,
                                     CSVfile=csvPREF+stringify(key)+'.csv',
-                                    THRESHOLD=THRESHOLD)
+                                    THRESHOLD=THRESHOLD,
+                                    auto_adjust_time=auto_adjust_time,
+                                    incr=incr,max_incr=max_incr)
             return
         else:
             assert(self._value_limits is not None), \
@@ -556,12 +565,16 @@ class spatioTemporal:
                                 EPS=self._grid['Eps'],
                                 _types=None,
                                 CSVfile=csvPREF+'.csv',
-                                THRESHOLD=THRESHOLD)
+                                THRESHOLD=THRESHOLD,
+                                auto_adjust_time=auto_adjust_time,
+                                incr=incr,max_incr=max_incr)
             else:
                 self.timeseries(tiles=self._grid,
                                 _types=None,
                                 CSVfile=csvPREF+'.csv',
-                                THRESHOLD=THRESHOLD)
+                                THRESHOLD=THRESHOLD,
+                                auto_adjust_time=auto_adjust_time,
+                                incr=incr,max_incr=max_incr)
             return
 
 

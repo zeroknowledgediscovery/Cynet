@@ -55,8 +55,8 @@ cynet library classes:
         __init__(self, log_store='log.p', log_file=None, ts_store=None, DATE='Date', year=None, month=None, day=None, EVENT='Primary Type', coord1='Latitude', coord2='Longitude', coord3=None, init_date=None, end_date=None, freq=None, columns=None, types=None, value_limits=None, grid=None, threshold=None)
 
 
-        fit(self, grid=None, INIT=None, END=None, THRESHOLD=None, csvPREF='TS')
-            Utilities for spatio temporal analysis
+        fit(self, grid=None, INIT=None, END=None, THRESHOLD=None, csvPREF='TS',
+            auto_adjust_time=False,incr=6,max_incr=24):
 
             Fit dataproc with specified grid parameters and
             create timeseries for
@@ -64,7 +64,7 @@ cynet library classes:
             and END or input list of custom coordinate boundaries which do NOT have
             to match the arguments first input to the dataproc
 
-            Inputs:
+            Inputs -
                 grid (dictionary or list of lists): coordinate dictionary with
                     respective ranges and EPS value OR custom list of lists
                     of custom grid tiles as [coord1_start, coord1_stop,
@@ -72,16 +72,17 @@ cynet library classes:
                 INIT (datetime.date): starting timeseries date
                 END (datetime.date): ending timeseries date
                 THRESHOLD (float): significance threshold
+                auto_adjust_time (boolean): if True, within increments specified (6H default),
+                    determine optimal temporal frequency for timeseries data
+                incr (int): frequency increment
+                max_incr (int): user-specified maximum increment
 
-            Outputs:
-                (None)
+            Outputs -
+                (No output) grid pd.Dataframe written out as CSV file
+                        to path specified
 
 
-        getTS(self, _types=None, tile=None)
-            Utilities for spatio temporal analysis
-
-            Utilities for spatio temporal analysis
-
+        getTS(self, _types=None, tile=None, freq=None)
             Given location tile boundaries and type category filter, creates the
             corresponding timeseries as a pandas DataFrame
             (Note: can reassign type filter, does not have to be the same one
@@ -90,6 +91,7 @@ cynet library classes:
             Inputs:
                 _types (list of strings): list of category filters
                 tile (list of floats): location boundaries for tile
+                freq (string): intervals of time between timeseries columns
 
             Outputs:
                 pd.Dataframe of timeseries data to corresponding grid tile
@@ -97,11 +99,39 @@ cynet library classes:
                 with the type filter  included
 
 
-        pull(self, domain='data.cityofchicago.org', dataset_id='crimes', token=None, store=True, out_fname='pull_df.p', pull_all=False)
-            Utilities for spatio temporal analysis
+        get_rand_tile(tiles=None,LAT=None,LON=None,EPS=None,_types=None)
+            Picks random tile from options fed into timeseries method which maps to a
+            non-empty subset within the larger dataset
 
+            Inputs -
+                LAT (float or list of floats): singular coordinate float or list of
+                                               coordinate start floats
+                LON (float or list of floats): singular coordinate float or list of
+                                               coordinate start floats
+                EPS (float): coordinate increment ESP
+                _types (list): event type filter; accepted event type list
+                tiles (list of lists): list of tiles to build (list of [lat1 lat2 lon1 lon2])
+
+            Outputs -
+                tile dataframe (pd.DataFrame)
+
+
+        get_opt_freq(df,incr=6,max_incr=24):
+            Returns the optimal frequency for timeseries based on highest non-zero
+            to zero timeseries event count
+
+            Input -
+                df (pd.DataFrame): filtered subset of dataset corresponding to
+                random tile from get_rand_tile
+                incr (int): frequency increment
+                max_incr (int): user-specified maximum increment
+
+            Output -
+                (string) to pass to pd.date_range(freq=) argument
+
+
+        pull(self, domain='data.cityofchicago.org', dataset_id='crimes', token=None, store=True, out_fname='pull_df.p', pull_all=False)
             Pulls new entries from datasource
-            NOTE: should make flexible but for now use city of Chicago data
 
             Input -
                 domain (string): Socrata database domain hosting data
@@ -116,26 +146,30 @@ cynet library classes:
                 None (writes out files if store is True and modifies inplace)
 
 
-        timeseries(self, LAT=None, LON=None, EPS=None, _types=None, CSVfile='TS.csv', THRESHOLD=None,tiles=None)
-            Utilities for spatio temporal analysis
+        timeseries(self, LAT=None, LON=None, EPS=None,_types=None,CSVfile='TS.csv',THRESHOLD=None,tiles=None,incr=6,max_incr=24):
             Creates DataFrame of location tiles and their
-            respective timeseries from
-            input datasource with
+            respective timeseries from input datasource with
             significance threshold THRESHOLD
             latitude, longitude coordinate boundaries given by LAT, LON and EPS
             or the custom boundaries given by tiles
             calls on getTS for individual tile then concats them together
 
-            Input:
-                LAT (float):
-                LON (float):
+            Input -
+                LAT (float or list of floats): singular coordinate float or list of
+                                               coordinate start floats
+                LON (float or list of floats): singular coordinate float or list of
+                                               coordinate start floats
                 EPS (float): coordinate increment ESP
                 _types (list): event type filter; accepted event type list
                 CSVfile (string): path to output file
+                tiles (list of lists): list of tiles to build (list of [lat1 lat2 lon1 lon2])
+                auto_adjust_time (boolean): if True, within increments specified (6H default),
+                    determine optimal temporal frequency for timeseries data
+                incr (int): frequency increment
+                max_incr (int): user-specified maximum increment
 
             Output:
-                (None): grid pd.Dataframe written out as CSV file
-                        to path specified
+                No Output grid pd.Dataframe written out as CSV file to path specified
 
 
 **Utility functions:**
@@ -249,7 +283,7 @@ cynet library classes:
                   or descending (False) order
               store (string): name of file to store selection json
 
-          Returns -
+          Output -
               (dictionary): top n models as ranked by var
                            in ascending/descending order
 
