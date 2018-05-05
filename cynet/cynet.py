@@ -34,6 +34,7 @@ from matplotlib.patches import PathPatch
 import matplotlib.colors as colors
 from scipy.spatial import ConvexHull
 import seaborn as sns
+import pdb
 
 
 
@@ -156,6 +157,7 @@ class spatioTemporal:
 
         if grid is not None:
             if isinstance(grid, dict):
+                self._grid = {}
                 assert(self._coord1 in grid)
                 assert(self._coord2 in grid)
                 assert('Eps' in grid)
@@ -271,7 +273,7 @@ class spatioTemporal:
         return out
 
 
-    def get_rand_tile(tiles=None,LAT=None,LON=None,EPS=None,_types=None):
+    def get_rand_tile(self,tiles=None,LAT=None,LON=None,EPS=None,_types=None):
         '''
         Utilities for spatio temporal analysis
         @author zed.uchicago.edu
@@ -294,23 +296,24 @@ class spatioTemporal:
 
         if tiles is not None:
             stop = False
+
+            if self._value_limits is None:
+                df = self._logdf[self._columns]\
+                         .loc[self._logdf[self._EVENT].isin(_types)]\
+                         .sort_values(by=self._DATE).dropna()
+            else:
+                df = self._logdf[self._columns]\
+                         .loc[self._logdf[self._EVENT]\
+                              .between(self._value_limits[0],
+                                       self._value_limits[1])]\
+                         .sort_values(by=self._DATE).dropna()
+
             while not stop:
                 tile = random.choice(tiles)
 
                 TS_NAME = ('#'.join(str(x) for x in tile))+"#"+stringify(_types)
                 lat_ = tile[0:2]
                 lon_ = tile[2:4]
-
-                if self._value_limits is None:
-                    df = self._logdf[self._columns]\
-                             .loc[self._logdf[self._EVENT].isin(_types)]\
-                             .sort_values(by=self._DATE).dropna()
-                else:
-                    df = self._logdf[self._columns]\
-                             .loc[self._logdf[self._EVENT]\
-                                  .between(self._value_limits[0],
-                                           self._value_limits[1])]\
-                             .sort_values(by=self._DATE).dropna()
 
                 df = df.loc[(df[self._coord1] > lat_[0])
                             & (df[self._coord1] <= lat_[1])
@@ -321,30 +324,33 @@ class spatioTemporal:
                     stop = True
         else:
             stop = False
+            # pdb.set_trace()
+
+            if self._value_limits is None:
+                df = self._logdf[self._columns]\
+                         .loc[self._logdf[self._EVENT].isin(_types)]\
+                         .sort_values(by=self._DATE).dropna()
+            else:
+                df = self._logdf[self._columns]\
+                         .loc[self._logdf[self._EVENT]\
+                              .between(self._value_limits[0],
+                                       self._value_limits[1])]\
+                         .sort_values(by=self._DATE).dropna()
+
             for i in LAT:
-                if not stop:
+                if stop:
                     break
 
                 for j in LON:
-                    if not stop:
+                    if stop:
                         break
 
                     tile = [i, i + EPS, j, j + EPS]
+                    # print(tile)
 
                     TS_NAME = ('#'.join(str(x) for x in tile))+"#"+stringify(_types)
                     lat_ = tile[0:2]
                     lon_ = tile[2:4]
-
-                    if self._value_limits is None:
-                        df = self._logdf[self._columns]\
-                                 .loc[self._logdf[self._EVENT].isin(_types)]\
-                                 .sort_values(by=self._DATE).dropna()
-                    else:
-                        df = self._logdf[self._columns]\
-                                 .loc[self._logdf[self._EVENT]\
-                                      .between(self._value_limits[0],
-                                               self._value_limits[1])]\
-                                 .sort_values(by=self._DATE).dropna()
 
                     df = df.loc[(df[self._coord1] > lat_[0])
                                 & (df[self._coord1] <= lat_[1])
@@ -352,16 +358,18 @@ class spatioTemporal:
                                 & (df[self._coord2] <= lon_[1])]
 
                     if df.shape[0] > 0:
+                        print("Found non-empty subset!")
                         stop = True
 
-            # make the DATE the index and keep only the event col
+        # make the DATE the index and keep only the event col
+        print("Exited out of get_rand_tile method loop")
         df.index = df[self._DATE]
         df=df[[self._EVENT]]
 
-        return df
+        return df,TS_NAME
 
 
-    def get_opt_freq(df,incr=6,max_incr=24):
+    def get_opt_freq(self,df,TS_NAME,incr=6,max_incr=24):
         '''
         Utilities for spatio temporal analysis
         @author zed.uchicago.edu
@@ -374,6 +382,7 @@ class spatioTemporal:
             random tile from get_rand_tile
             incr (int): frequency increment
             max_incr (int): user-specified maximum increment
+            TS_NAME
 
         Output -
             (string) to pass to pd.date_range(freq=) argument
@@ -395,6 +404,7 @@ class spatioTemporal:
 
         ratios.sort(key=operator.itemgetter(1))
 
+        print("Optimal frequency: " + str(ratios[-1][0]))
         return ratios[-1][0]
 
 
@@ -446,9 +456,9 @@ class spatioTemporal:
 
         if tiles is not None:
             if auto_adjust_time:
-                rand_tile_df = get_rand_tile(tiles=tiles,_types=_types)
-                opt_freq = get_opt_freq(df=rand_tile_df,incr=incr,\
-                max_incr=max_incr)
+                rand_tile_df,ts_name=self.get_rand_tile(tiles=tiles,_types=_types)
+                opt_freq = self.get_opt_freq(df=rand_tile_df,incr=incr,\
+                                             max_incr=max_incr,TS_NAME=ts_name)
                 _TS = pd.concat([self.getTS(tile=coord_set,_types=_types,\
                                 freq=opt_freq) for coord_set in tqdm(tiles)])
             else:
@@ -456,10 +466,9 @@ class spatioTemporal:
                                 for coord_set in tqdm(tiles)])
         else: # note custom coordinate boundaries takes precedence
             if auto_adjust_time:
-                rand_tile_df=get_rand_tile(LAT=LAT,LON=LON,EPS=EPS,_types=_types)
-                opt_freq = get_opt_freq(df=rand_tile_df,incr=incr,\
-                max_incr=max_incr)
-
+                rand_tile_df,ts_name=self.get_rand_tile(LAT=LAT,LON=LON,EPS=EPS,_types=_types)
+                opt_freq = self.get_opt_freq(df=rand_tile_df,incr=incr,\
+                                             max_incr=max_incr,TS_NAME=ts_name)
                 _TS = pd.concat([self.getTS(tile=[i,i+EPS,j,j+EPS],freq=opt_freq,\
                                             _types=_types) for i in tqdm(LAT)
                                             for j in tqdm(LON)])

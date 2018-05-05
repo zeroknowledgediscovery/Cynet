@@ -159,7 +159,7 @@ def combine_merc(DIR, filename, N = 20):
                 wr.writerow(new_row)
 
 
-def neighbor_plot(filepath= 'crime_filtered_data.csv'):
+def neighbor_plot(filepath='crime_filtered_data.csv'):
     '''
     This is the first implementation of our Bokeh plot. The function takes the filepath
     of the data and opens the bokeh plot in a browser. Google Chrome seems to be the

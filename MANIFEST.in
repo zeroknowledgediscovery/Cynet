@@ -1,3 +1,4 @@
 include *.txt
 include cynet/*.py
 include cynet/*.pyc
+include cynet/*.csv

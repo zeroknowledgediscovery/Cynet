@@ -5,8 +5,12 @@ v.1.0.7 April 20, 2018 -- spatioTemporal class updated to accept custom grid
                            tile definitions (list of lists in the form of
                            [coord1_start,coord1_stop,coord2_start,coord2_stop])
                            in addition to original range + increment arguments
-v.1.0.8 April 27, 2018 -- separated visualization methods out of main cynet
-                          packages and added support for Python 3
-                          Note: if failures with Python 3 install, make sure
-                          tkinter library installed or run
-                          'sudo apt-get install python3-tk'
+v.1.0.8 May 4, 2018 -- separated visualization methods out of main cynet
+                          module into viscynet and bokeh_pipe;
+                          added parameter into fit and timeseries methods
+                          to auto-calculate optimal timeseries increment
+                          given a maximum increment;
+                          updated README (now README2) to be much prettier
+                          (and proper rst)
+                          changed to require python 2.7.* because of bokeh_pipe
+                          dependency in json_to_csv() method
