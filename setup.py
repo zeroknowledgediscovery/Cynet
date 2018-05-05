@@ -3,7 +3,7 @@ from codecs import open
 from os import path
 
 version = {}
-with open("cynet/version.py") as fp:
+with open("version.py") as fp:
     exec(fp.read(), version)
 
 here = path.abspath(path.dirname(__file__))
