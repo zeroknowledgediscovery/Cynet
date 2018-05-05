@@ -17,7 +17,7 @@ setup(
     author='zed.uchicago.edu',
     author_email='ishanu@uchicago.edu',
     version = str(version['__version__']),
-    packages=['cynet.cynet','cynet.viscynet','cynet.bokeh_pipe'],
+    packages=['cynet','cynet.viscynet','cynet.bokeh_pipe'],
     scripts=['bin/print_help.py','bin/read_raw_log.py'],
     url='https://github.com/zeroknowledgediscovery/',
     license='LICENSE.txt',
