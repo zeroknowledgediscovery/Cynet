@@ -4,6 +4,7 @@ MANIFEST.in
 README.rst
 setup.cfg
 setup.py
+version.py
 bin/print_help.py
 bin/process_log1.py
 bin/process_models.py
