@@ -1,11 +1,12 @@
 v1.0.0, Mar 4 2018 -- Initial release; DO NOT USE.
 v1.0.1-v1.0.5 -- BROKEN RELEASES; DO NOT USE.
 v1.0.6, April 11 2018 -- Stable release.
-v.1.0.7 April 20, 2018 -- spatioTemporal class updated to accept custom grid
-                           tile definitions (list of lists in the form of
-                           [coord1_start,coord1_stop,coord2_start,coord2_stop])
-                           in addition to original range + increment arguments
-v.1.0.8 May 4, 2018 -- separated visualization methods out of main cynet
+v1.0.7 April 20, 2018 -- SpatioTemporal class updated to accept custom grid
+                            tile definitions (list of lists in the form of
+                            [coord1_start,coord1_stop,coord2_start,coord2_stop])
+                            in addition to original range + increment arguments
+v1.0.8 May 4, 2018 --  [BROKEN RELEASE; DO NOT USE]
+                          separated visualization methods out of main cynet
                           module into viscynet and bokeh_pipe;
                           added parameter into fit and timeseries methods
                           to auto-calculate optimal timeseries increment
@@ -14,3 +15,6 @@ v.1.0.8 May 4, 2018 -- separated visualization methods out of main cynet
                           (and proper rst)
                           changed to require python 2.7.* because of bokeh_pipe
                           dependency in json_to_csv() method
+v1.0.9 May 18, 2018 -- Newest stable release;
+                          v.1.0.8  DOES NOT WORK, this fixes PyPI versions
+                          errors

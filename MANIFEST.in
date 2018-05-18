@@ -4,3 +4,4 @@ include cynet/*.pyc
 include bokeh_pipe/*.csv
 include bokeh_pipe/*.py
 include viscynet/*.py
+include *.py

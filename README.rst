@@ -1,7 +1,7 @@
 ===============
 cynet
 ===============
-  **``cynet`` is a spatial-temporal analysis library for inferrence of statistical causality**
+  **`cynet` is a spatial-temporal analysis library for inferrence of statistical causality**
 
 .. class:: no-web no-pdf
 
@@ -503,4 +503,4 @@ bokeh_pipe library:
             method (string): method for interpolation. 'cubic','linear', or 'nearest'
 
 
-VERSION 1.0.8
+VERSION 1.0.9
