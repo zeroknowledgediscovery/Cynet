@@ -211,7 +211,7 @@ class spatioTemporal:
                                    end=self._END,freq=self._FREQ)
 
 
-    def getTS(self,_types=None,polygon=None,freq=None):
+    def getTS(self,_types=None,tile=None,freq=None):
         """
         Utilities for spatio temporal analysis
         @author zed.uchicago.edu
@@ -223,7 +223,7 @@ class spatioTemporal:
 
         Inputs:
             _types (list of strings): list of category filters
-            polygon (list of floats): location boundaries of the polygon
+            tile (list of floats): location boundaries of the polygon
             freq (string): intervals of time between timeseries columns
 
         Outputs:
@@ -231,11 +231,12 @@ class spatioTemporal:
             pd.DF index is stringified LAT/LON boundaries
             with the type filter included
         """
-
+        print("Called getTS")
         assert(self._END is not None)
         TS_NAME = ('#'.join(str(x) for x in tile))+"#"+stringify(_types)
-
-        num_of_coordinates = float(len(polygon) / 2)
+        print(tile)
+        num_of_coordinates = int(len(tile) / 2)
+        print(num_of_coordinates)
         lat_ = tile[:num_of_coordinates]
         lon_ = tile[num_of_coordinates:]
         hull_points = np.column_stack((lon_,lat_))
@@ -252,6 +253,7 @@ class spatioTemporal:
                      .sort_values(by=self._DATE).dropna()
 
         points = np.column_stack((df[self._coord2], df[self._coord1]))
+        print(hull_points)
         hull_array = in_hull(points, hull_points)
         df = df[hull_array]
 
