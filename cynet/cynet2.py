@@ -231,16 +231,17 @@ class spatioTemporal:
             pd.DF index is stringified LAT/LON boundaries
             with the type filter included
         """
-        print("Called getTS")
         assert(self._END is not None)
         TS_NAME = ('#'.join(str(x) for x in tile))+"#"+stringify(_types)
-        print(tile)
         num_of_coordinates = int(len(tile) / 2)
-        print(num_of_coordinates)
         lat_ = tile[:num_of_coordinates]
         lon_ = tile[num_of_coordinates:]
+        if len(lat_) < 4:
+            lat_.append(lat_[1])
+            lat_.append(lat_[0])
+            lon_.append(lon_[0])
+            lon_.append(lon_[1])
         hull_points = np.column_stack((lon_,lat_))
-
         if self._value_limits is None:
             df = self._logdf[self._columns]\
                      .loc[self._logdf[self._EVENT].isin(_types)]\
@@ -253,7 +254,6 @@ class spatioTemporal:
                      .sort_values(by=self._DATE).dropna()
 
         points = np.column_stack((df[self._coord2], df[self._coord1]))
-        print(hull_points)
         hull_array = in_hull(points, hull_points)
         df = df[hull_array]
 
