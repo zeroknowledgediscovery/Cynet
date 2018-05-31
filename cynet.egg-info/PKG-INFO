@@ -1,12 +1,12 @@
 Metadata-Version: 1.2
 Name: cynet
-Version: 1.0.9
+Version: 1.0.10
 Summary: Spatio temporal analysis for inferrence of statistical causality using XGenESeSS
 Home-page: https://github.com/zeroknowledgediscovery/
 Author: zed.uchicago.edu
 Author-email: ishanu@uchicago.edu
 License: LICENSE.txt
-Download-URL: https://github.com/zeroknowledgediscovery/Cynet/archive/1.0.8.tar.gz
+Download-URL: https://github.com/zeroknowledgediscovery/Cynet/archive/1.0.9.tar.gz
 Description: ===============
         cynet
         ===============
@@ -512,7 +512,7 @@ Description: ===============
                     method (string): method for interpolation. 'cubic','linear', or 'nearest'
 
 
-        VERSION 1.0.9
+        VERSION 1.0.10
 
 Keywords: spatial,temporal,inference,statistical,causality
 Platform: UNKNOWN

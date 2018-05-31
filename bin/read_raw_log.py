@@ -4,7 +4,7 @@ import cynet as cn
 import pandas as pd
 import numpy as np
 
-# define grid parameters 
+# define grid parameters
 EPS=0.003
 grid={'Latitude':np.arange(41.5,42,EPS),
       'Longitude':np.arange(-87.75,-87.2,EPS),
@@ -26,7 +26,7 @@ S=cn.spatioTemporal(log_file=_log_file,
 # and no value limits and auto-detect for best frequency interval
 # deafault max frequency is 24 Hrs and can be adjusted using max_incr=
 # as a parameter to fit() or timeseries() methods
-S.fit(csvPREF='TScrime',auto_adjust_time=True)
+S.fit(csvPREF='TScrime',auto_adjust_time=True,max_incr=48)
 
 # Now re-use the same instance fit with new filters to generate a neighbor map
 # and visualize it

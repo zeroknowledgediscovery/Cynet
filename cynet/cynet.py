@@ -19,6 +19,7 @@ from haversine import haversine
 import json
 from sodapy import Socrata
 import operator
+import warnings
 
 import matplotlib as mpl
 mpl.use('Agg')
@@ -39,6 +40,7 @@ import pdb
 
 
 __DEBUG__=False
+PRECISION=5
 
 class spatioTemporal:
     """
@@ -542,9 +544,6 @@ class spatioTemporal:
                 raise TypeError("Unsupported grid type.")
 
         assert(self._END is not None)
-        #assert(self._coord1 in self._grid)
-        #assert(self._coord2 in self._grid)
-        #assert('Eps' in self._grid)
 
         if self._types is not None:
             for key in self._types:
@@ -585,6 +584,31 @@ class spatioTemporal:
                                 auto_adjust_time=auto_adjust_time,
                                 incr=incr,max_incr=max_incr)
             return
+
+
+    def getGrid(self):
+        '''
+        Returns the tile coordinates of the working as a list of lists
+
+        Input -
+            (No inputs)
+        Output -
+            TILE (list of lists): the grid tiles
+        '''
+
+        cols=self._TS.index.values
+        f=lambda x: x[:-1] if len(x)%2==1  else x
+        TILE=None
+
+        for word in cols:
+            tile=[float(i) for i in f(word.replace('#',' ').split())]
+            if TILE is None:
+                TILE=[tile]
+            else:
+                TILE.append(tile)
+        # get grid from TSfile tiles
+        # and return in list form
+        return TILE
 
 
     def pull(self, domain="data.cityofchicago.org",dataset_id="crimes",\
@@ -675,7 +699,8 @@ def readTS(TSfile,csvNAME='TS1',BEG=None,END=None):
         CSV files in XgenESeSS-friendly format
 
     Input -
-        TSfile (string): filename input TS to read
+        TSfile (string or list of strings): filename of input TS to read
+            or list of filenames to read in and concatenate into one TS
         csvNAME (string)
         BEG (string): start datetime
         END (string): end datetime
@@ -683,8 +708,19 @@ def readTS(TSfile,csvNAME='TS1',BEG=None,END=None):
     Output -
         dfts (pandas.DataFrame)
     """
+    # adjustment to make readTS oeprate on a list of input files
+    # instead of just one
+    dfts = None
+    if isinstance(TSfile, list):
+        for tsfile in TSfile:
+            if dfts is None:
+                dfts=pd.read_csv(tsfile,sep=" ",index_col=0)
+            else:
+                dfts=dfts.append(pd.read_csv(tsfile,sep=" ",index_col=0))
+    else:
+        dfts=pd.read_csv(TSfile,sep=" ",index_col=0)
 
-    dfts=pd.read_csv(TSfile,sep=" ",index_col=0)
+
     dfts.columns = pd.to_datetime(dfts.columns)
 
     cols=dfts.columns[np.logical_and(dfts.columns >= pd.to_datetime(BEG),
@@ -701,7 +737,7 @@ def readTS(TSfile,csvNAME='TS1',BEG=None,END=None):
 
 
 def splitTS(TSfile,dirname='./',prefix="@",
-            BEG=None,END=None):
+            BEG=None,END=None,VARNAME=''):
     """
     Utilities for spatio temporal analysis
     @author zed.uchicago.edu
@@ -716,24 +752,32 @@ def splitTS(TSfile,dirname='./',prefix="@",
         prefix (string): prefix for files
         BEG (datetime): start date
         END (datetime): end date
+        VARNAME (string): specifer variable for row
 
     Outputs -
         (No output)
     """
 
-    dfts=pd.read_csv(TSfile,sep=" ",index_col=0)
+    dfts=None
+    if isinstance(TSfile, list):
+        for tsfile in TSfile:
+            if dfts is None:
+                dfts=pd.read_csv(tsfile,sep=" ",index_col=0)
+            else:
+                dfts=dfts.append(pd.read_csv(tsfile,sep=" ",index_col=0))
+    else:
+        dfts=pd.read_csv(TSfile,sep=" ",index_col=0)
     dfts.columns = pd.to_datetime(dfts.columns)
 
     cols=dfts.columns[np.logical_and(dfts.columns >= pd.to_datetime(BEG),
                                      dfts.columns <= pd.to_datetime(END))]
-
     dfts=dfts[cols]
 
     for row in dfts.index:
-        dfts.loc[[row]].to_csv(dirname+"/"+prefix+row,header=None,index=None,sep=" ")
+        dfts.loc[[row]].to_csv(dirname+"/"+prefix+row+VARNAME,
+                               header=None,index=None,sep=" ")
 
     return
-
 
 
 class uNetworkModels:
@@ -775,7 +819,7 @@ class uNetworkModels:
 
     def select(self,var="gamma",n=None,
                reverse=False, store=None,
-               high=None,low=None,inplace=False):
+               high=None,low=None,equal=None,inplace=False):
         """
         Utilities for storing and manipulating XPFSA models
         inferred by XGenESeSS
@@ -791,6 +835,8 @@ class uNetworkModels:
                 or descending (False) order
             store (string): name of file to store selection json
             high (float): higher cutoff
+            equal (float): choose models with selection values
+                equal to the given value
             low (float): lower cutoff
             inplace (bool): update models if true
         Output -
@@ -799,31 +845,59 @@ class uNetworkModels:
         """
 
         #assert var in self._models.keys(), "Error: Model parameter specified not valid"
-        this_dict={value[var]:key
-                   for (key,value) in self._models.iteritems() }
+        if equal is not None:
+            out={key:value
+                 for (key,value) in self._models.iteritems() if value[var]==equal }
+        else:
+            this_dict={value[var]:key
+                       for (key,value) in self._models.iteritems() }
 
-        if low is not None:
-            this_dict={key:this_dict[key] for key in this_dict.keys() if key >= low }
-        if high is not None:
-            this_dict={key:this_dict[key] for key in this_dict.keys() if key <= high }
+            if low is not None:
+                this_dict={key:this_dict[key] for key in this_dict.keys() if key >= low }
+            if high is not None:
+                this_dict={key:this_dict[key] for key in this_dict.keys() if key <= high }
 
-        if n is None:
-            n=len(this_dict)
-        if n > len(this_dict):
-            n=len(this_dict)
+            if n is None:
+                n=len(this_dict)
+            if n > len(this_dict):
+                n=len(this_dict)
 
-        out = {this_dict[k]:self._models[this_dict[k]]
-                for k in sorted(this_dict.keys(),
-                                reverse=reverse)[0:n]}
-
-        if inplace:
-            self._models=out
-
-        if store is not None:
-            with open(store, 'w') as outfile:
-                json.dump(out, outfile)
+            out = {this_dict[k]:self._models[this_dict[k]]
+                   for k in sorted(this_dict.keys(),
+                                   reverse=reverse)[0:n]}
+        if dict:
+            if inplace:
+                self._models=out
+            if store is not None:
+                with open(store, 'w') as outfile:
+                    json.dump(out, outfile)
+        else:
+            warnings.warn("Selection creates empty model dict")
 
         return out
+
+
+    def setVarname(self):
+        """
+        Utilities for storing and manipulating XPFSA models
+        inferred by XGenESeSS
+        @author zed.uchicago.edu
+
+        Extracts the varname for src and tgt of
+        each model and stores under src_var and tgt_var
+        keys of each model
+
+        No I/O
+        """
+
+        VARNAME='var'
+        f=lambda x: x[-1] if len(x)%2==1  else VARNAME
+
+        for key,value in self._models.iteritems():
+            self._models[key]['src_var']=f(value['src'].replace('#',' ').split())
+            self._models[key]['tgt_var']=f(value['tgt'].replace('#',' ').split())
+
+        return
 
 
     def augmentDistance(self):

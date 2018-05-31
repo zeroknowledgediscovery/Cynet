@@ -130,6 +130,15 @@ cynet library classes:
                 (string) to pass to pd.date_range(freq=) argument
 
 
+        getGrid(self):
+            Returns the tile coordinates of the working as a list of lists
+
+            Input -
+                (No inputs)
+            Output -
+                TILE (list of lists): the grid tiles
+
+
         pull(self, domain='data.cityofchicago.org', dataset_id='crimes', token=None, store=True, out_fname='pull_df.p', pull_all=False)
             Pulls new entries from datasource
 
@@ -176,7 +185,7 @@ cynet library classes:
 
     .. code:: python
 
-      splitTS(TSfile, csvNAME='TS1', dirname='./', prefix='@', BEG=None, END=None)
+      splitTS(TSfile, csvNAME='TS1', dirname='./', prefix='@', BEG=None, END=None, VARNAME='')
         Utilities for spatio temporal analysis
 
         Writes out each row of the pd.DataFrame as a separate CSVfile
@@ -187,6 +196,7 @@ cynet library classes:
             csvNAME (string): output filename
             dirname (string): directory for output file
             prefix (string): prefix for files
+            VARNAME (string): string to append to file names
             BEG (datetime): start date
             END (datetime): end date
 
@@ -226,7 +236,8 @@ cynet library classes:
          CSV files in XgenESeSS-friendly format
 
          Input -
-             TSfile (string): filename input TS to read
+             TSfile (string or list of strings): filename of input TS to read
+                 or list of filenames to read in and concatenate into one TS
              csvNAME (string)
              BEG (string): start datetime
              END (string): end datetime
@@ -269,7 +280,9 @@ cynet library classes:
           No I/O
 
 
-      select(self, var='gamma', n=None, reverse=False, store=None)
+      select(self,var="gamma",n=None,
+          reverse=False, store=None,
+          high=None,low=None,equal=None,inplace=False):
           Utilities for storing and manipulating XPFSA models
           inferred by XGenESeSS
 
@@ -282,10 +295,25 @@ cynet library classes:
               reverse (boolean): return in ascending order (True)
                   or descending (False) order
               store (string): name of file to store selection json
-
+              high (float): higher cutoff
+              equal (float): choose models with selection values
+                  equal to the given value
+              low (float): lower cutoff
+              inplace (bool): update models if true
           Output -
               (dictionary): top n models as ranked by var
                            in ascending/descending order
+
+
+      setVarname(self):
+          Utilities for storing and manipulating XPFSA models
+          inferred by XGenESeSS
+
+          Extracts the varname for src and tgt of
+          each model and stores under src_var and tgt_var
+          keys of each model;
+
+          No I/O
 
 
       to_json(outFile)
@@ -299,6 +327,19 @@ cynet library classes:
 
           Output -
               (No output but writes out files)
+
+
+      setDataFrame(self,scatter=None):
+          Generate dataframe representation of models
+
+          Input -
+              scatter (string) : prefix of filename to plot 3X3 regression
+              matrix between delay, distance and coefficiecient of causality
+          Output -
+              Dataframe with columns
+              ['latsrc','lonsrc','lattgt',
+               'lontgtt','gamma','delay','distance']
+
 
 
 
@@ -503,4 +544,4 @@ bokeh_pipe library:
             method (string): method for interpolation. 'cubic','linear', or 'nearest'
 
 
-VERSION 1.0.9
+VERSION 1.0.10
