@@ -1,4 +1,4 @@
-
+#!/usr/bin/python
 import cynet as sp
 import pandas as pd
 import numpy as np

@@ -310,6 +310,7 @@ class spatioTemporal:
                                        self._value_limits[1])]\
                          .sort_values(by=self._DATE).dropna()
 
+            TS_NAME=None
             while not stop:
                 tile = random.choice(tiles)
 
@@ -317,16 +318,15 @@ class spatioTemporal:
                 lat_ = tile[0:2]
                 lon_ = tile[2:4]
 
-                df = df.loc[(df[self._coord1] > lat_[0])
+                test = df.loc[(df[self._coord1] > lat_[0])
                             & (df[self._coord1] <= lat_[1])
                             & (df[self._coord2] > lon_[0])
                             & (df[self._coord2] <= lon_[1])]
 
-                if df.shape[0] > 0:
+                if test.shape[0] > 0:
                     stop = True
         else:
             stop = False
-            # pdb.set_trace()
 
             if self._value_limits is None:
                 df = self._logdf[self._columns]\
@@ -339,32 +339,31 @@ class spatioTemporal:
                                        self._value_limits[1])]\
                          .sort_values(by=self._DATE).dropna()
 
+            # pdb.set_trace()
+            TS_NAME=None
+            stop=False
             for i in LAT:
                 if stop:
                     break
-
                 for j in LON:
-                    if stop:
-                        break
-
                     tile = [i, i + EPS, j, j + EPS]
-                    # print(tile)
 
                     TS_NAME = ('#'.join(str(x) for x in tile))+"#"+stringify(_types)
                     lat_ = tile[0:2]
                     lon_ = tile[2:4]
 
-                    df = df.loc[(df[self._coord1] > lat_[0])
+                    test = df.loc[(df[self._coord1] > lat_[0])
                                 & (df[self._coord1] <= lat_[1])
                                 & (df[self._coord2] > lon_[0])
                                 & (df[self._coord2] <= lon_[1])]
 
-                    if df.shape[0] > 0:
-                        print("Found non-empty subset!")
-                        stop = True
+                    if test.shape[0] > 0:
+                        stop=True
+                        # print("Found non-empty subset!")
+                        break
 
         # make the DATE the index and keep only the event col
-        print("Exited out of get_rand_tile method loop")
+        # print("Exited out of get_rand_tile method loop")
         df.index = df[self._DATE]
         df=df[[self._EVENT]]
 
@@ -406,6 +405,7 @@ class spatioTemporal:
 
         ratios.sort(key=operator.itemgetter(1))
 
+        print(ratios)
         print("Optimal frequency: " + str(ratios[-1][0]))
         return ratios[-1][0]
 
