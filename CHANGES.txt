@@ -23,3 +23,4 @@ v1.0.10 May 31, 2018 -- Newest stable release;
                           adds equal parameter to select method within uNetworkModels
                           adds VARNAME parameter to splitTS within cynet
                           adds method getGrid within cynet
+                          fixed bugs with auto_adjust_time parameter
