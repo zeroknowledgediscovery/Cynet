@@ -4,8 +4,11 @@ Spatio temporal analysis for inferrence of statistical causality
 """
 
 import pandas as pd
+from shapely.geometry import Point, Polygon
+import geopandas as gpd
 import numpy as np
 import random
+import os.path
 
 try:
     import cPickle as pickle
@@ -112,15 +115,25 @@ class spatioTemporal:
         # if log_file is specified, then read
         # else read log_store pickle
         if log_file is not None:
+            assert os.path.exists(log_file), "Error: File not found."
             # if date is not specified, then year month and day are individually specified
             if year is not None and month is not None and day is not None:
                 df=pd.read_csv(log_file, parse_dates={DATE: [year, month, day]})
+                for filter_subset in types:
+                    for a_filter in filter_subset:
+                        if not a_filter in df[EVENT].unique():
+                            warnings.warn("{} filter not in dataset, will produce empty dataframe".format(filter_subset))
                 # Line originally read df[DATE] = pd.to_datetime(df['DATE'], errors='coerce'), changed
                 # column name to match for consistency
                 df[DATE] = pd.to_datetime(df[DATE], errors= 'coerce')
             else: # DATE variable was renamed or could be 'Date'
+                assert os.path.exists(log_file), "Error: File not found."
                 df = pd.read_csv(log_file)
                 df[DATE] = pd.to_datetime(df[DATE])
+                for filter_subset in types:
+                    for a_filter in filter_subset:
+                        if not a_filter in df[EVENT].unique():
+                            warnings.warn("{} filter not in dataset, will produce empty dataframe".format(filter_subset))
             # will be stored in logfile called "log.p" from csv
             df.to_pickle(log_store)
         # at this point the column name corresponding to date will be stored in the variable DATE
@@ -212,7 +225,7 @@ class spatioTemporal:
                                    end=self._END,freq=self._FREQ)
 
 
-    def getTS(self,_types=None,tile=None,freq=None):
+    def getTS(self,_types=None,tile=None,freq=None,poly_tile=False):
         """
         Utilities for spatio temporal analysis
         @author zed.uchicago.edu
@@ -224,20 +237,22 @@ class spatioTemporal:
 
         Inputs:
             _types (list of strings): list of category filters
-            tile (list of floats): location boundaries for tile
+            tile (list of floats): location boundaries for tile OR
+            if poly_tile is TRUE, tile is a list of tuples defining the polygon
             freq (string): intervals of time between timeseries columns
+            poly_tile (boolean): whether or not input for tiles defines
+            a polygon filter
 
         Outputs:
             pd.Dataframe of timeseries data to corresponding grid tile
-            pd.DF index is stringified LAT/LON boundaries
+            pd.DF index is stringified LON/LAT boundaries
             with the type filter included
         """
 
         assert(self._END is not None)
         TS_NAME = ('#'.join(str(x) for x in tile))+"#"+stringify(_types)
 
-        lat_ = tile[0:2]
-        lon_ = tile[2:4]
+
 
         if self._value_limits is None:
             df = self._logdf[self._columns]\
@@ -250,10 +265,22 @@ class spatioTemporal:
                                    self._value_limits[1])]\
                      .sort_values(by=self._DATE).dropna()
 
-        df = df.loc[(df[self._coord1] > lat_[0])
-                    & (df[self._coord1] <= lat_[1])
-                    & (df[self._coord2] > lon_[0])
-                    & (df[self._coord2] <= lon_[1])]
+        if poly_tile:
+            geopoints = gpd.GeoDataFrame(\
+            geometry=[Point(x) for x in list((zip(df[self._coord1], df[self.coord2])))])
+            if not isinstance(tile, Polygon):
+                tile = Polygon(tile)
+            df["poly_filter"] = geopoints.within(polygon)
+            df = df.loc[df["poly_filter"]]
+
+        else:
+            lat_ = tile[0:2]
+            lon_ = tile[2:4]
+
+            df = df.loc[(df[self._coord1] > lat_[0])
+                        & (df[self._coord1] <= lat_[1])
+                        & (df[self._coord2] > lon_[0])
+                        & (df[self._coord2] <= lon_[1])]
 
         # make the DATE the index and keep only the event col
         df.index = df[self._DATE]
@@ -275,7 +302,7 @@ class spatioTemporal:
         return out
 
 
-    def get_rand_tile(self,tiles=None,LAT=None,LON=None,EPS=None,_types=None):
+    def get_rand_tile(self,tiles=None,LAT=None,LON=None,EPS=None,_types=None,poly_tile=False):
         '''
         Utilities for spatio temporal analysis
         @author zed.uchicago.edu
@@ -290,58 +317,51 @@ class spatioTemporal:
                                            coordinate start floats
             EPS (float): coordinate increment ESP
             _types (list): event type filter; accepted event type list
-            tiles (list of lists): list of tiles to build (list of [lat1 lat2 lon1 lon2])
+            tiles (list of lists): list of tiles to build where tile can be
+            a (list of floats i.e. [lat1 lat2 lon1 lon2]) or tuples (i.e. [(x1,y1),(x2,y2)])
+            defining polygons
+            poly_tile (boolean): whether input for tile specifies a polygon
 
         Outputs -
             tile dataframe (pd.DataFrame)
         '''
 
-        if tiles is not None:
-            stop = False
-
-            if self._value_limits is None:
-                df = self._logdf[self._columns]\
-                         .loc[self._logdf[self._EVENT].isin(_types)]\
-                         .sort_values(by=self._DATE).dropna()
-            else:
-                df = self._logdf[self._columns]\
-                         .loc[self._logdf[self._EVENT]\
-                              .between(self._value_limits[0],
-                                       self._value_limits[1])]\
-                         .sort_values(by=self._DATE).dropna()
-
-            TS_NAME=None
-            while not stop:
-                tile = random.choice(tiles)
-
-                TS_NAME = ('#'.join(str(x) for x in tile))+"#"+stringify(_types)
-                lat_ = tile[0:2]
-                lon_ = tile[2:4]
-
-                test = df.loc[(df[self._coord1] > lat_[0])
-                            & (df[self._coord1] <= lat_[1])
-                            & (df[self._coord2] > lon_[0])
-                            & (df[self._coord2] <= lon_[1])]
-
-                if test.shape[0] > 0:
-                    stop = True
+        if self._value_limits is None:
+            df = self._logdf[self._columns]\
+                     .loc[self._logdf[self._EVENT].isin(_types)]\
+                     .sort_values(by=self._DATE).dropna()
         else:
-            stop = False
+            df = self._logdf[self._columns]\
+                     .loc[self._logdf[self._EVENT]\
+                          .between(self._value_limits[0],
+                                   self._value_limits[1])]\
+                     .sort_values(by=self._DATE).dropna()
+        TS_NAME=None
+        stop = False
 
-            if self._value_limits is None:
-                df = self._logdf[self._columns]\
-                         .loc[self._logdf[self._EVENT].isin(_types)]\
-                         .sort_values(by=self._DATE).dropna()
-            else:
-                df = self._logdf[self._columns]\
-                         .loc[self._logdf[self._EVENT]\
-                              .between(self._value_limits[0],
-                                       self._value_limits[1])]\
-                         .sort_values(by=self._DATE).dropna()
+        if tiles is not None:
+                while not stop:
+                    tile = random.choice(tiles)
+                    TS_NAME = ('#'.join(str(x) for x in tile))+"#"+stringify(_types)
+                    if not poly_tile:
+                        lat_ = tile[0:2]
+                        lon_ = tile[2:4]
 
-            # pdb.set_trace()
-            TS_NAME=None
-            stop=False
+                        test = df.loc[(df[self._coord1] > lat_[0])
+                                    & (df[self._coord1] <= lat_[1])
+                                    & (df[self._coord2] > lon_[0])
+                                    & (df[self._coord2] <= lon_[1])]
+
+                        if test.shape[0] > 0:
+                            stop = True
+                    else: #poly_tile is true
+                        geopoints = gpd.GeoDataFrame(\
+                        geometry=[Point(x) for x in list((zip(df[self._coord1], df[self.coord2])))])
+                        if not isinstance(tile, Polygon):
+                            tile = Polygon(tile)
+                        if True in geopoints.within(polygon):
+                            stop = True
+        else:
             for i in LAT:
                 if stop:
                     break
@@ -359,11 +379,9 @@ class spatioTemporal:
 
                     if test.shape[0] > 0:
                         stop=True
-                        # print("Found non-empty subset!")
                         break
 
         # make the DATE the index and keep only the event col
-        # print("Exited out of get_rand_tile method loop")
         df.index = df[self._DATE]
         df=df[[self._EVENT]]
 
@@ -405,14 +423,12 @@ class spatioTemporal:
 
         ratios.sort(key=operator.itemgetter(1))
 
-        print(ratios)
-        print("Optimal frequency: " + str(ratios[-1][0]))
         return ratios[-1][0]
 
 
     def timeseries(self,LAT=None,LON=None,EPS=None,_types=None,CSVfile='TS.csv',
                    THRESHOLD=None,tiles=None,auto_adjust_time=False,incr=6,
-                   max_incr=24):
+                   max_incr=24,poly_tile=False):
         """
         Utilities for spatio temporal analysis
         @author zed.uchicago.edu
@@ -432,7 +448,9 @@ class spatioTemporal:
             EPS (float): coordinate increment ESP
             _types (list): event type filter; accepted event type list
             CSVfile (string): path to output file
-            tiles (list of lists): list of tiles to build (list of [lat1 lat2 lon1 lon2])
+            tiles (list of lists): list of tiles to build where tile can be
+            a (list of floats i.e. [lat1 lat2 lon1 lon2]) or tuples (i.e. [(x1,y1),(x2,y2)])
+            defining polygons
             auto_adjust_time (boolean): if True, within increments specified (6H default),
                 determine optimal temporal frequency for timeseries data
             incr (int): frequency increment
@@ -458,13 +476,14 @@ class spatioTemporal:
 
         if tiles is not None:
             if auto_adjust_time:
-                rand_tile_df,ts_name=self.get_rand_tile(tiles=tiles,_types=_types)
+                rand_tile_df,ts_name=self.get_rand_tile(\
+                tiles=tiles,_types=_types,poly_tile=poly_tile)
                 opt_freq = self.get_opt_freq(df=rand_tile_df,incr=incr,\
                                              max_incr=max_incr,TS_NAME=ts_name)
                 _TS = pd.concat([self.getTS(tile=coord_set,_types=_types,\
-                                freq=opt_freq) for coord_set in tqdm(tiles)])
+                                freq=opt_freq,poly_tile=poly_tile) for coord_set in tqdm(tiles)])
             else:
-                _TS = pd.concat([self.getTS(tile=coord_set,_types=_types)\
+                _TS = pd.concat([self.getTS(tile=coord_set,_types=_types,poly_tile=poly_tile)\
                                 for coord_set in tqdm(tiles)])
         else: # note custom coordinate boundaries takes precedence
             if auto_adjust_time:
