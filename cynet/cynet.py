@@ -266,11 +266,11 @@ class spatioTemporal:
                      .sort_values(by=self._DATE).dropna()
 
         if poly_tile:
-            geopoints = gpd.GeoDataFrame(\
-            geometry=[Point(x) for x in list((zip(df[self._coord1], df[self.coord2])))])
+            data_geopoints = gpd.GeoDataFrame(\
+            geometry=[Point(x) for x in list((zip(df[self._coord1], df[self._coord2])))])
             if not isinstance(tile, Polygon):
                 tile = Polygon(tile)
-            df["poly_filter"] = geopoints.within(polygon)
+            df["poly_filter"] = data_geopoints.within(tile)
             df = df.loc[df["poly_filter"]]
 
         else:
@@ -340,27 +340,28 @@ class spatioTemporal:
         stop = False
 
         if tiles is not None:
-                while not stop:
-                    tile = random.choice(tiles)
-                    TS_NAME = ('#'.join(str(x) for x in tile))+"#"+stringify(_types)
-                    if not poly_tile:
-                        lat_ = tile[0:2]
-                        lon_ = tile[2:4]
+            while not stop:
+                tile = random.choice(tiles)
+                TS_NAME = ('#'.join(str(x) for x in tile))+"#"+stringify(_types)
+                if not poly_tile:
+                    lat_ = tile[0:2]
+                    lon_ = tile[2:4]
 
-                        test = df.loc[(df[self._coord1] > lat_[0])
-                                    & (df[self._coord1] <= lat_[1])
-                                    & (df[self._coord2] > lon_[0])
-                                    & (df[self._coord2] <= lon_[1])]
+                    test = df.loc[(df[self._coord1] > lat_[0])
+                                & (df[self._coord1] <= lat_[1])
+                                & (df[self._coord2] > lon_[0])
+                                & (df[self._coord2] <= lon_[1])]
 
-                        if test.shape[0] > 0:
-                            stop = True
-                    else: #poly_tile is true
-                        geopoints = gpd.GeoDataFrame(\
-                        geometry=[Point(x) for x in list((zip(df[self._coord1], df[self.coord2])))])
-                        if not isinstance(tile, Polygon):
-                            tile = Polygon(tile)
-                        if True in geopoints.within(polygon):
-                            stop = True
+                    if test.shape[0] > 0:
+                        stop = True
+                else: #poly_tile is true
+                    data_geopoints = gpd.GeoDataFrame(\
+                    geometry=[Point(x) for x in list((zip(df[self._coord1], df[self._coord2])))])
+                    pdb.set_trace()
+                    if not isinstance(tile, Polygon):
+                        tile = Polygon(tile)
+                    if True in data_geopoints.within(tile):
+                        stop = True
         else:
             for i in LAT:
                 if stop:
@@ -455,6 +456,7 @@ class spatioTemporal:
                 determine optimal temporal frequency for timeseries data
             incr (int): frequency increment
             max_incr (int): user-specified maximum increment
+            poly_tile (boolean): whether or tiles define polygons
 
         Output:
             No Output grid pd.Dataframe written out as CSV file to path specified
@@ -512,7 +514,7 @@ class spatioTemporal:
 
 
     def fit(self,grid=None,INIT=None,END=None,THRESHOLD=None,csvPREF='TS',
-            auto_adjust_time=False,incr=6,max_incr=24):
+            auto_adjust_time=False,incr=6,max_incr=24,poly_tile=False):
         """
         Utilities for spatio temporal analysis
         @author zed.uchicago.edu
@@ -535,6 +537,7 @@ class spatioTemporal:
                 determine optimal temporal frequency for timeseries data
             incr (int): frequency increment
             max_incr (int): user-specified maximum increment
+            poly_tile (boolean): whether or not tiles define polygons
 
         Outputs:
             (No output) grid pd.Dataframe written out as CSV file
@@ -574,14 +577,14 @@ class spatioTemporal:
                                     CSVfile=csvPREF+stringify(key)+'.csv',
                                     THRESHOLD=THRESHOLD,
                                     auto_adjust_time=auto_adjust_time,
-                                    incr=incr,max_incr=max_incr)
+                                    incr=incr,max_incr=max_incr,poly_tile=poly_tile)
                 else:
                     self.timeseries(tiles=self._grid,
                                     _types=key,
                                     CSVfile=csvPREF+stringify(key)+'.csv',
                                     THRESHOLD=THRESHOLD,
                                     auto_adjust_time=auto_adjust_time,
-                                    incr=incr,max_incr=max_incr)
+                                    incr=incr,max_incr=max_incr,poly_tile=poly_tile)
             return
         else:
             assert(self._value_limits is not None), \
@@ -594,14 +597,14 @@ class spatioTemporal:
                                 CSVfile=csvPREF+'.csv',
                                 THRESHOLD=THRESHOLD,
                                 auto_adjust_time=auto_adjust_time,
-                                incr=incr,max_incr=max_incr)
+                                incr=incr,max_incr=max_incr,poly_tile=poly_tile)
             else:
                 self.timeseries(tiles=self._grid,
                                 _types=None,
                                 CSVfile=csvPREF+'.csv',
                                 THRESHOLD=THRESHOLD,
                                 auto_adjust_time=auto_adjust_time,
-                                incr=incr,max_incr=max_incr)
+                                incr=incr,max_incr=max_incr,poly_tile=poly_tile)
             return
 
 
