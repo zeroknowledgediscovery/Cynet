@@ -4,8 +4,6 @@ Spatio temporal analysis for inferrence of statistical causality
 """
 
 import pandas as pd
-from shapely.geometry import Point, Polygon
-import geopandas as gpd
 import numpy as np
 import random
 import os.path
@@ -37,6 +35,7 @@ from matplotlib.collections import PatchCollection
 from matplotlib.patches import PathPatch
 import matplotlib.colors as colors
 from scipy.spatial import ConvexHull
+from scipy.spatial import Delaunay
 import seaborn as sns
 import pdb
 
@@ -245,7 +244,7 @@ class spatioTemporal:
 
         Outputs:
             pd.Dataframe of timeseries data to corresponding grid tile
-            pd.DF index is stringified LON/LAT boundaries
+            pd.DF index is stringified LAT/LON boundaries
             with the type filter included
         """
 
@@ -266,12 +265,15 @@ class spatioTemporal:
                      .sort_values(by=self._DATE).dropna()
 
         if poly_tile:
-            data_geopoints = gpd.GeoDataFrame(\
-            geometry=[Point(x) for x in list((zip(df[self._coord1], df[self._coord2])))])
-            if not isinstance(tile, Polygon):
-                tile = Polygon(tile)
-            df["poly_filter"] = data_geopoints.within(tile)
-            df = df.loc[df["poly_filter"]]
+                poly_lat = [point[0] for point in tile]
+                poly_lon = [point[1] for point in tile]
+                hull_pts = np.column_stack((poly_lat, poly_lon))
+                pred_pt = np.column_stack((df[self._coord1], df[self._coord2]))
+
+                if not isinstance(hull_pts, Delaunay):
+                    hull = Delaunay(hull_pts)
+                mask = hull.find_simplex(pred_pt)>=0
+                df = df[mask]
 
         else:
             lat_ = tile[0:2]
@@ -355,12 +357,16 @@ class spatioTemporal:
                     if test.shape[0] > 0:
                         stop = True
                 else: #poly_tile is true
-                    data_geopoints = gpd.GeoDataFrame(\
-                    geometry=[Point(x) for x in list((zip(df[self._coord1], df[self._coord2])))])
                     pdb.set_trace()
-                    if not isinstance(tile, Polygon):
-                        tile = Polygon(tile)
-                    if True in data_geopoints.within(tile):
+                    poly_lat = [point[0] for point in tile]
+                    poly_lon = [point[1] for point in tile]
+                    hull_pts = np.column_stack((poly_lat, poly_lon))
+                    pred_pt = np.column_stack((df[self._coord1], df[self._coord2]))
+
+                    if not isinstance(hull_pts, Delaunay):
+                        hull = Delaunay(hull_pts)
+                    mask = hull.find_simplex(pred_pt)>=0
+                    if df[mask].shape[0] > 0:
                         stop = True
         else:
             for i in LAT:
