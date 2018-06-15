@@ -6,7 +6,6 @@ Spatio temporal analysis for inferrence of statistical causality
 import pandas as pd
 import numpy as np
 import random
-import os.path
 
 try:
     import cPickle as pickle
@@ -21,6 +20,7 @@ import json
 from sodapy import Socrata
 import operator
 import warnings
+import os
 
 import matplotlib as mpl
 mpl.use('Agg')
@@ -28,16 +28,8 @@ mpl.use('Agg')
 from matplotlib import pyplot as plt
 plt.ioff()
 
-import matplotlib.cm as cm
-from mpl_toolkits.basemap import Basemap
-from matplotlib.patches import Polygon
-from matplotlib.collections import PatchCollection
-from matplotlib.patches import PathPatch
-import matplotlib.colors as colors
-from scipy.spatial import ConvexHull
 from scipy.spatial import Delaunay
 import seaborn as sns
-import pdb
 
 
 
@@ -169,23 +161,24 @@ class spatioTemporal:
         self._coord2 = coord2
         self._coord3 = coord3
 
-        if grid is not None:
-            if isinstance(grid, dict):
-                self._grid = {}
-                assert(self._coord1 in grid)
-                assert(self._coord2 in grid)
-                assert('Eps' in grid)
-                # constructing private variable self._grid in the desired format
-                # with the values taken from the input grid
-                self._grid[self._coord1]=grid[self._coord1]
-                self._grid[self._coord2]=grid[self._coord2]
-                self._grid['Eps']=grid['Eps']
-                self._grid_type = "auto"
-            elif isinstance(grid, list):
-                self._grid = grid
-                self._grid_type = "custom"
-            else:
-                raise TypeError("Unsupported grid type.")
+        # if grid is not None:
+        #     if isinstance(grid, dict):
+        #         # self._grid = {}
+        #         assert(self._coord1 in grid)
+        #         assert(self._coord2 in grid)
+        #         assert('Eps' in grid)
+        #         # constructing private variable self._grid in the desired format
+        #         # with the values taken from the input grid
+        #         # self._grid[self._coord1]=grid[self._coord1]
+        #         # self._grid[self._coord2]=grid[self._coord2]
+        #         self._grid = grid
+        #         # self._grid['Eps']=grid['Eps']
+        #         self._grid_type = "auto"
+        #     elif isinstance(grid, list):
+        #         self._grid = grid
+        #         self._grid_type = "custom"
+        #     else:
+        #         raise TypeError("Unsupported grid type.")
 
         if columns is None:
             self._columns = [EVENT, coord1, coord2, DATE]
@@ -357,7 +350,6 @@ class spatioTemporal:
                     if test.shape[0] > 0:
                         stop = True
                 else: #poly_tile is true
-                    pdb.set_trace()
                     poly_lat = [point[0] for point in tile]
                     poly_lon = [point[1] for point in tile]
                     hull_pts = np.column_stack((poly_lat, poly_lon))
@@ -709,11 +701,11 @@ def stringify(List):
         (string)
     """
     if List is None:
-        return ''
+        return 'VAR'
     if not List:
         return ''
-
-    return '-'.join(str(elem) for elem in List)
+    whole_string = '-'.join(str(elem) for elem in List)
+    return whole_string.replace(' ','_').replace('/','_').replace('(','').replace(')','')
 
 
 
@@ -748,12 +740,9 @@ def readTS(TSfile,csvNAME='TS1',BEG=None,END=None):
     else:
         dfts=pd.read_csv(TSfile,sep=" ",index_col=0)
 
-
     dfts.columns = pd.to_datetime(dfts.columns)
-
     cols=dfts.columns[np.logical_and(dfts.columns >= pd.to_datetime(BEG),
                                      dfts.columns <= pd.to_datetime(END))]
-
     dfts=dfts[cols]
 
     dfts.to_csv(csvNAME+'.csv',sep=" ",header=None,index=None)
@@ -1044,7 +1033,6 @@ class uNetworkModels:
             sns.distplot(self._df.delay,ax=ax,kde=True,color='#9b59b6');
 
             plt.savefig(scatter+'.pdf',dpi=300,bbox_inches='tight',transparent=False)
-
 
         return self._df
 
