@@ -1,7 +1,7 @@
 from setuptools import setup
 from codecs import open
 from os import path
-import subprocess as sp
+# import subprocess as sp
 
 version = {}
 with open("version.py") as fp:
@@ -37,6 +37,8 @@ setup(
     install_requires=["numpy >= 1.6","pandas >= 0.19.0","matplotlib >= 2.0.2","scipy >= 0.18.1", \
     "tqdm >= 4.11.2","seaborn >= 0.8.0", "sodapy >= 1.4.6", "bokeh >= 0.12.14", "pyproj >= 1.9.5.1",\
     "pyshp >= 1.2.12", "cython >= 0.15.1", "geos >= 3.3.3", "Shapely >= 1.5.6", "six >= 1.3.0"],
+    dependency_links=['https://github.com/OSGeo/proj.4/tarball/master#egg=5.1.0',
+    'https://github.com/SciTools/cartopy/tarball/master#egg=0.16.0'],
     python_requires='==2.7.*',
     classifiers=[
     'Development Status :: 4 - Beta',
@@ -45,6 +47,6 @@ setup(
     "Topic :: Scientific/Engineering :: Information Analysis",
     "Topic :: Software Development :: Libraries",
     "License :: OSI Approved :: MIT License",
-    'Programming Language :: Python :: 2.7',
-    "Operating System :: POSIX :: Linux"],
+    "Programming Language :: Python :: 2.7"]
+    # "Operating System :: POSIX :: Linux"],
 )

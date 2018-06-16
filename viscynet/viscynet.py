@@ -3,16 +3,23 @@ Visualization library for cynet
 @author zed.uchicago.edu
 """
 
+
+
 import pandas as pd
 import numpy as np
 import json
+import os
+import warnings
 
 # import subprocess as sp
 # sp.call('source $HOME/miniconda/bin/activate', shell=True)
 
-import cartopy.crs as ccrs
-import cartopy as crt
-import os
+try:
+    import cartopy.crs as ccrs
+    import cartopy as crt
+except ImportError:
+    raise ImportError('Error: Please ensure cartopy is installed.')
+
 
 import matplotlib as mpl
 mpl.use('Agg')
