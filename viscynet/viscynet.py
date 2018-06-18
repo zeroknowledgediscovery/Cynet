@@ -18,7 +18,9 @@ try:
     import cartopy.crs as ccrs
     import cartopy as crt
 except ImportError:
-    raise ImportError('Error: Please ensure cartopy is installed.')
+    raise ImportError('Error: Please ensure cartopy is installed.\
+    Due to failing builds of cartopy, this package cannot guarantee\
+    correct installation of the cartopy dependency.')
 
 
 import matplotlib as mpl
