@@ -1,2 +1,1 @@
-https://github.com/OSGeo/proj.4/tarball/master#egg=5.1.0
-https://github.com/SciTools/cartopy/tarball/master#egg=0.16.0
+

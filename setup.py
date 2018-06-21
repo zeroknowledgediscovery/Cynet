@@ -41,9 +41,9 @@ setup(
     keywords=['spatial', 'temporal', 'inference', 'statistical', 'causality'],
     download_url='https://github.com/zeroknowledgediscovery/Cynet/archive/'+str(version['__version__'])+'.tar.gz',
     long_description=open('README.rst').read(),
-    install_requires=["numpy >= 1.6","pandas >= 0.19.0","matplotlib >= 2.0.2","scipy >= 0.18.1", \
-    "tqdm >= 4.11.2","seaborn >= 0.8.0", "sodapy >= 1.4.6", "bokeh >= 0.12.14", "pyproj >= 1.9.5.1",\
-    "pyshp >= 1.2.12"],
+    install_requires=["numpy >= 1.6","pandas == 0.22.0","matplotlib >= 2.0.2","scipy >= 0.18.1", \
+    "tqdm >= 4.11.2","seaborn >= 0.8.0","sodapy >= 1.4.6","bokeh >= 0.12.14","pyproj >= 1.9.5.1",\
+    "pyshp >= 1.2.12","haversine >= 0.4.5"],
     python_requires='==2.7.*',
     classifiers=[\
     'Development Status :: 4 - Beta',
