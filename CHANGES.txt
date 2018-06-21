@@ -30,6 +30,8 @@ v1.0.10 June 15, 2018 -- [BROKEN RELEASE; DO NOT USE]
                           removes showGlobalPlot method due to Basemap break
                           library no longer requires Basemap as a prerequisite,
                           instead requires cartopy
-v.1.0.11 June 20, 2018 -- Newest stable release;
+v.1.0.11 June 20, 2018 -- [INCOMPLETE RELEASE; DO NOT USE]
                           viscynet module cartopy dependency left to user to satisfy
-                          fixes None type filter issue and cynet class bug 
+                          fixes None type filter issue and cynet class bug
+v.1.0.12 June 21, 2018 -- Newest stable release;
+                          fixes dependencies for pandas (== 0.22.0) and haversine (>= 0.4.5)
