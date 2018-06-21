@@ -2,6 +2,7 @@ from setuptools import setup
 from codecs import open
 from os import path
 # import subprocess as sp
+import warnings
 
 version = {}
 with open("version.py") as fp:
@@ -21,6 +22,12 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 
 
+warnings.warn("WARNING: Please ensure cartopy is installed - the viscynet library depends on cartopy.\
+ Due to failing builds of cartopy, this package cannot autoinstall the cartopy dependency.\
+ See https://scitools.org.uk/cartopy/docs/latest/installing.html#id2 for instructions.")
+
+
+
 setup(
     name='cynet',
     author='zed.uchicago.edu',
@@ -36,11 +43,9 @@ setup(
     long_description=open('README.rst').read(),
     install_requires=["numpy >= 1.6","pandas >= 0.19.0","matplotlib >= 2.0.2","scipy >= 0.18.1", \
     "tqdm >= 4.11.2","seaborn >= 0.8.0", "sodapy >= 1.4.6", "bokeh >= 0.12.14", "pyproj >= 1.9.5.1",\
-    "pyshp >= 1.2.12", "cython >= 0.15.1", "geos >= 3.3.3", "Shapely >= 1.5.6", "six >= 1.3.0"],
-    dependency_links=['https://github.com/OSGeo/proj.4/tarball/master#egg=5.1.0',
-    'https://github.com/SciTools/cartopy/tarball/master#egg=0.16.0'],
+    "pyshp >= 1.2.12"],
     python_requires='==2.7.*',
-    classifiers=[
+    classifiers=[\
     'Development Status :: 4 - Beta',
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",

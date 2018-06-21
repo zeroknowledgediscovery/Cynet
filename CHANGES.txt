@@ -18,7 +18,8 @@ v1.0.8 May 4, 2018 --  [BROKEN RELEASE; DO NOT USE]
 v1.0.9 May 18, 2018 -- Newest stable release;
                           v.1.0.8  DOES NOT WORK, this fixes PyPI versions
                           errors
-v1.0.10 June 15, 2018 -- Newest stable release;
+v1.0.10 June 15, 2018 -- [BROKEN RELEASE; DO NOT USE]
+                          > fails because geos dependency never satisfied by auto-pip install;
                           adds new methods setDataFrame, setVarname to uNetworkModels
                           adds equal parameter to select method within uNetworkModels
                           adds VARNAME parameter to splitTS within cynet
@@ -29,3 +30,6 @@ v1.0.10 June 15, 2018 -- Newest stable release;
                           removes showGlobalPlot method due to Basemap break
                           library no longer requires Basemap as a prerequisite,
                           instead requires cartopy
+v.1.0.11 June 20, 2018 -- Newest stable release;
+                          viscynet module cartopy dependency left to user to satisfy
+                          fixes None type filter issue and cynet class bug 

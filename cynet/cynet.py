@@ -106,25 +106,21 @@ class spatioTemporal:
         # if log_file is specified, then read
         # else read log_store pickle
         if log_file is not None:
-            assert os.path.exists(log_file), "Error: File not found."
             # if date is not specified, then year month and day are individually specified
             if year is not None and month is not None and day is not None:
                 df=pd.read_csv(log_file, parse_dates={DATE: [year, month, day]})
-                for filter_subset in types:
-                    for a_filter in filter_subset:
-                        if not a_filter in df[EVENT].unique():
-                            warnings.warn("{} filter not in dataset, will produce empty dataframe".format(filter_subset))
-                # Line originally read df[DATE] = pd.to_datetime(df['DATE'], errors='coerce'), changed
+                if not types is None:
+                    for filter_subset in types:
+                        for a_filter in filter_subset:
+                            if not a_filter in df[EVENT].unique():
+                                warnings.warn("{} filter not in dataset, will produce empty dataframe".format(filter_subset))
+                # Line originally read df[DATE]
+                #        = pd.to_datetime(df['DATE'], errors='coerce'), changed
                 # column name to match for consistency
                 df[DATE] = pd.to_datetime(df[DATE], errors= 'coerce')
             else: # DATE variable was renamed or could be 'Date'
-                assert os.path.exists(log_file), "Error: File not found."
                 df = pd.read_csv(log_file)
                 df[DATE] = pd.to_datetime(df[DATE])
-                for filter_subset in types:
-                    for a_filter in filter_subset:
-                        if not a_filter in df[EVENT].unique():
-                            warnings.warn("{} filter not in dataset, will produce empty dataframe".format(filter_subset))
             # will be stored in logfile called "log.p" from csv
             df.to_pickle(log_store)
         # at this point the column name corresponding to date will be stored in the variable DATE
@@ -504,6 +500,8 @@ class spatioTemporal:
         statbool = _TS.astype(bool).sum(axis=1) / LEN
         _TS = _TS.loc[statbool > THRESHOLD]
         self._ts_dict[repr(_types)] = _TS
+
+        self._TS=_TS
 
         if CSVfile is not None:
             _TS.to_csv(CSVfile, sep=' ')
