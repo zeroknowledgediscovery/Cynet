@@ -404,9 +404,10 @@ viscynet library classes:
              cax (colorbar axis handler): output colorbar axis handler
 
 
-      viz(unet, jsonfile=False, colormap='autumn', res='c', drawpoly=False, figname='fig')
-          utility function to visualize spatio temporal
-          interaction networks
+      viz(unet,jsonfile=False,colormap='autumn',res='c',
+        drawpoly=False,figname='fig',BGIMAGE=None,BGIMGNAME='BM',IMGRES='high',WIDTH=0.007):
+
+          Utility function to visualize spatio temporal interaction networks
 
           Inputs -
               unet (string): json filename

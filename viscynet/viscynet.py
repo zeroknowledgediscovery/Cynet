@@ -129,7 +129,7 @@ def getalpha(arr,index,F=.9,M=0):
 
 
 def viz(unet,jsonfile=False,colormap='autumn',res='c',
-        drawpoly=False,figname='fig'):
+        drawpoly=False,figname='fig',BGIMAGE=None,BGIMGNAME='BM',IMGRES='high',WIDTH=0.007):
     """
     utility function to visualize spatio temporal interaction networks
     @author zed.uchicago.edu
