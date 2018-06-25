@@ -38,4 +38,5 @@ v.1.0.12 June 21, 2018 -- Stable release;
 v.1.0.13 June 24, 2018 -- stable release;
                           fixes parameters of viscynet.viz method
 v.1.0.14 June 24, 2018 -- Newest stable release;
-                          General consistency updates for cynet with pipeline version 
+                          General consistency updates for cynet with pipeline version
+                          (bugfixes to augmentDistance and stringify)
