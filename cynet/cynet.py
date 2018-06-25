@@ -213,6 +213,7 @@ class spatioTemporal:
                                    end=self._END,freq=self._FREQ)
 
 
+
     def getTS(self,_types=None,tile=None,freq=None,poly_tile=False):
         """
         Utilities for spatio temporal analysis
@@ -489,7 +490,7 @@ class spatioTemporal:
                 _TS = pd.concat([self.getTS(tile=[i,i+EPS,j,j+EPS],freq=opt_freq,\
                                             _types=_types) for i in tqdm(LAT)
                                             for j in tqdm(LON)])
-            else:
+            else: # note custom coordinate boundaries takes precedence
                 _TS = pd.concat([self.getTS(tile=[i,i+EPS,j,j+EPS],\
                                             _types=_types) for i in tqdm(LAT)
                                             for j in tqdm(LON)])
@@ -738,9 +739,12 @@ def readTS(TSfile,csvNAME='TS1',BEG=None,END=None):
     else:
         dfts=pd.read_csv(TSfile,sep=" ",index_col=0)
 
+
     dfts.columns = pd.to_datetime(dfts.columns)
+
     cols=dfts.columns[np.logical_and(dfts.columns >= pd.to_datetime(BEG),
                                      dfts.columns <= pd.to_datetime(END))]
+
     dfts=dfts[cols]
 
     dfts.to_csv(csvNAME+'.csv',sep=" ",header=None,index=None)
@@ -773,7 +777,7 @@ def splitTS(TSfile,dirname='./',prefix="@",
         (No output)
     """
 
-    dfts=None
+    dfts = None
     if isinstance(TSfile, list):
         for tsfile in TSfile:
             if dfts is None:
@@ -815,7 +819,6 @@ class uNetworkModels:
     def models(self):
          return self._models
 
-
     @property
     def df(self):
          return self._df
@@ -823,11 +826,8 @@ class uNetworkModels:
 
     def append(self,pydict):
         """
-        Utilities for storing and manipulating XPFSA models
-        inferred by XGenESeSS
+        append models
         @author zed.uchicago.edu
-
-        append models to internal dictionary
         """
         self._models.update(pydict)
 
@@ -850,20 +850,21 @@ class uNetworkModels:
                 or descending (False) order
             store (string): name of file to store selection json
             high (float): higher cutoff
-            equal (float): choose models with selection values
-                equal to the given value
             low (float): lower cutoff
             inplace (bool): update models if true
+
         Output -
             (dictionary): top n models as ranked by var
                          in ascending/descending order
         """
 
         #assert var in self._models.keys(), "Error: Model parameter specified not valid"
+
         if equal is not None:
             out={key:value
                  for (key,value) in self._models.iteritems() if value[var]==equal }
         else:
+
             this_dict={value[var]:key
                        for (key,value) in self._models.iteritems() }
 
@@ -900,7 +901,7 @@ class uNetworkModels:
 
         Extracts the varname for src and tgt of
         each model and stores under src_var and tgt_var
-        keys of each model
+        keys of each model;
 
         No I/O
         """
@@ -928,9 +929,11 @@ class uNetworkModels:
         No I/O
         """
 
+        f=lambda x: x[:-1] if len(x)%2==1  else x
+
         for key,value in self._models.iteritems():
-            src=[float(i) for i in value['src'].replace('#',' ').split()]
-            tgt=[float(i) for i in value['tgt'].replace('#',' ').split()]
+            src=[float(i) for i in f(value['src'].replace('#',' ').split())]
+            tgt=[float(i) for i in f(value['tgt'].replace('#',' ').split())]
 
             dist = haversine((np.mean(src[0:2]),np.mean(src[2:])),
                            (np.mean(tgt[0:2]),np.mean(tgt[2:])),
@@ -947,12 +950,11 @@ class uNetworkModels:
         @author zed.uchicago.edu
 
         Writes out updated models json to file
-
         Input -
             outFile (string): name of outfile to write json to
 
         Output -
-            (No output but writes out files)
+            No output
         """
 
         with open(outFile, 'w') as outfile:
@@ -969,8 +971,9 @@ class uNetworkModels:
         Input -
             scatter (string) : prefix of filename to plot 3X3 regression
             matrix between delay, distance and coefficiecient of causality
+
         Output -
-            Dataframe with columns
+            Pandas.DataFrame with columns
             ['latsrc','lonsrc','lattgt',
              'lontgtt','gamma','delay','distance']
         """
@@ -982,10 +985,15 @@ class uNetworkModels:
         gamma=[]
         delay=[]
         distance=[]
+        src_var=[]
+        tgt_var=[]
+
         NUM=None
+        f=lambda x: x[:-1] if len(x)%2==1  else x
+
         for key,value in self._models.iteritems():
-            src=[float(i) for i in value['src'].replace('#',' ').split()]
-            tgt=[float(i) for i in value['tgt'].replace('#',' ').split()]
+            src=[float(i) for i in f(value['src'].replace('#',' ').split())]
+            tgt=[float(i) for i in f(value['tgt'].replace('#',' ').split())]
             if NUM is None:
                 NUM=len(src)/2
             latsrc.append(np.mean(src[0:NUM]))
@@ -995,6 +1003,8 @@ class uNetworkModels:
             gamma.append(value['gamma'])
             delay.append(value['delay'])
             distance.append(value['distance'])
+            src_var.append(value['src_var'])
+            tgt_var.append(value['tgt_var'])
 
         self._df = pd.DataFrame({'latsrc':latsrc,
                                  'lonsrc':lonsrc,
@@ -1002,7 +1012,9 @@ class uNetworkModels:
                                  'lontgt':lontgt,
                                  'gamma':gamma,
                                  'delay':delay,
-                                 'distance':distance})
+                                 'distance':distance,
+                                 'src':src_var,
+                                 'tgt':tgt_var})
 
         if scatter is not None:
             sns.set_style('darkgrid')
@@ -1032,6 +1044,7 @@ class uNetworkModels:
 
             plt.savefig(scatter+'.pdf',dpi=300,bbox_inches='tight',transparent=False)
 
+
         return self._df
 
 
@@ -1051,18 +1064,17 @@ class uNetworkModels:
         pass
 
 
-
 def to_json(pydict,outFile):
     """
         Writes dictionary json to file
         @author zed.uchicago.edu
 
         Input -
-            pydict (dict): dictionary to store
+            pydict (dict): ditionary to store
             outFile (string): name of outfile to write json to
 
         Output -
-            (No output but writes out files)
+            No output
     """
 
     with open(outFile, 'w') as outfile:

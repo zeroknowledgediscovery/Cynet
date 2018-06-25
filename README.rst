@@ -10,9 +10,19 @@ cynet
 **NOTE:** if issues arise with dependencies in python3, be sure that tkinter is installed
   if not, please run:
 
-  .. code-block::
+  .. code-block:: 
 
     sudo apt-get install python3-tk
+
+**Usage:**
+
+  .. code-block:: python
+
+    from cynet import cynet
+    from cynet.cynet import uNetworkModels as models
+    from viscynet import viscynet as vcn
+
+
 
 cynet module includes:
   * cynet

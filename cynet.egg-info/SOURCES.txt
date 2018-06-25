@@ -21,6 +21,7 @@ bokeh_pipe/crime_filtered_data.csv
 bokeh_pipe/hull.py
 bokeh_pipe/streamlinef.py
 cynet/__init__.py
+cynet/__init__.pyc
 cynet/cynet.py
 cynet/cynet.pyc
 cynet/spin.py

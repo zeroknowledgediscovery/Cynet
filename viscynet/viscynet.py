@@ -88,10 +88,10 @@ def draw_screen_poly(lats,lons,m,ax,val,cmap,ALPHA=0.6):
     norm = mpl.colors.Normalize(vmin=.75, vmax=.82)
 
     col = cm.ScalarMappable(norm=norm, cmap=cmap)
-    x, y = m(lons, lats)
+    x, y = m( lons, lats )
     xy = zip(x,y)
 
-    poly = Polygon(xy, facecolor=col.to_rgba(val),
+    poly = Polygon( xy, facecolor=col.to_rgba(val),
                    alpha=ALPHA, zorder=20,lw=0)
     ax.add_patch(poly)
 
@@ -148,6 +148,7 @@ def viz(unet,jsonfile=False,colormap='autumn',res='c',
             ax (axis handle)
             cax (colorbar handle)
     """
+
     if BGIMAGE is not None:
         os.environ['CARTOPY_USER_BACKGROUNDS'] = BGIMAGE
 
@@ -205,32 +206,33 @@ def viz(unet,jsonfile=False,colormap='autumn',res='c',
     y=lattgt
     x=lontgt
 
-    #    CLS={}
-    #    for index in np.arange(len(lontgt)):
-    #        CLS[(lontgt[index],lattgt[index])]=[]
 
-    #    for index in np.arange(len(lontgt)):
-    #        CLS[(lontgt[index],
-    #             lattgt[index])].append((latsrc[index],
-    #                                     lonsrc[index]))
+#    CLS={}
+#    for index in np.arange(len(lontgt)):
+#        CLS[(lontgt[index],lattgt[index])]=[]
 
-    #    if drawpoly:
-    #        for key, value in CLS.iteritems():
-    #            a=[]
-    #            for i in value:
-    #                a.append(i[0])
-    #            b=[]
-    #            for i in value:
-    #                b.append(i[1])
-    #
-    #            a=np.array(a)
-    #            b=np.array(b)
-    #
-    #            zP=[[i[0],i[1]] for i in zip(a,b)]
-    #            hull = ConvexHull(zP)
-    #            aa=[a[i] for i in hull.vertices]
-    #            bb=[b[i] for i in hull.vertices]
-    #            draw_screen_poly(aa,bb,m,ax,0,colormap1,ALPHA=0.3)
+#    for index in np.arange(len(lontgt)):
+#        CLS[(lontgt[index],
+#             lattgt[index])].append((latsrc[index],
+#                                     lonsrc[index]))
+
+#    if drawpoly:
+#        for key, value in CLS.iteritems():
+#            a=[]
+#            for i in value:
+#                a.append(i[0])
+#            b=[]
+#            for i in value:
+#                b.append(i[1])
+#
+#            a=np.array(a)
+#            b=np.array(b)
+#
+#            zP=[[i[0],i[1]] for i in zip(a,b)]
+#            hull = ConvexHull(zP)
+#            aa=[a[i] for i in hull.vertices]
+#            bb=[b[i] for i in hull.vertices]
+#            draw_screen_poly(aa,bb,m,ax,0,colormap1,ALPHA=0.3)
 #
     norm = mpl.colors.LogNorm(vmin=(np.min(np.array(gamma))),
                           vmax=(np.max(np.array(gamma))))
