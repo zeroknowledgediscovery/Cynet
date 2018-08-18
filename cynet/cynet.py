@@ -21,6 +21,8 @@ from sodapy import Socrata
 import operator
 import warnings
 import os
+import glob
+import subprocess
 
 import matplotlib as mpl
 mpl.use('Agg')
@@ -1081,3 +1083,93 @@ def to_json(pydict,outFile):
         json.dump(pydict, outfile)
 
     return
+
+class simulateModel:
+    '''
+    Use the subprocess library to call cynet on a model to process
+    it and then run flexroc on it to obtain statistics: auc, tpr, fuc.
+    Inputs:
+        MODEL_PATH(string)- The path to the model being processed.
+        DATA_PATH(string)- Path to the split file.
+        RUNLEN(integer)- Length of the run.
+        READLEN(integer)- Length of split data to read from begining
+        CYNET_PATH - path to cynet binary.
+        FLEXROC_PATH - path to flexroc binary.
+    Returns:
+        auc, tpr, and fpr statistics from flexroc.
+    '''
+
+    def __init__(self, MODEL_PATH,
+                 DATA_PATH,
+                 RUNLEN,
+                 CYNET_PATH,
+                 FLEXROC_PATH,
+                 READLEN=None):
+
+        assert os.path.exists(CYNET_PATH), "cynet binary cannot be found."
+        assert os.path.exists(FLEXROC_PATH), "roc binary cannot be found."
+        assert os.path.exists(MODEL_PATH), "model file cannot be found."
+        assert any(glob.iglob(DATA_PATH+"*")), \
+            "split data files cannot be found."
+
+        self.MODEL_PATH = MODEL_PATH
+        self.DATA_PATH = DATA_PATH
+        self.RUNLEN = RUNLEN
+        self.CYNET_PATH = CYNET_PATH
+        self.FLEXROC_PATH = FLEXROC_PATH
+        self.RUNLEN = RUNLEN
+
+        if READLEN is None:
+            self.READLEN = RUNLEN
+        else:
+            self.READLEN = READLEN
+
+    def run(self, LOG_PATH=None,
+            PARTITION=0.5,
+            DATA_TYPE='continuous',
+            FLEXWIDTH=1,
+            FLEX_TAIL_LEN=100,
+            POSITIVE_CLASS_COLUMN=5,
+            EVENTCOL=3,
+            tpr_thrshold=0.85,
+            fpr_threshold=0.15):
+
+
+        '''
+        This function is intended to replace the cynrun.sh shell script. This
+        function will use the subprocess library to call cynet on a model to process
+        it and then run flexroc on it to obtain statistics: auc, tpr, fuc.
+        Inputs:
+           LOG_PATH(string)- Logfile from cynet run
+           PARTITION(string)- Partition to use on split data
+           FLEXWIDTH(int)-  Parameter to specify flex in flwxroc
+           FLEX_TAIL_LEN(int)- tail length of input file to consider [0: all]
+           POSITIVE_CLASS_COLUMN(int)- positive class column
+           EVENTCOL(int)- event column
+           tpr_thershold(float)- tpr threshold
+           fpr_threshold(float)- fpr threshold
+        Returns:
+        auc, tpr, and fpr statistics from flexroc.
+        '''
+
+        if LOG_PATH is None:
+            LOG_PATH = self.MODEL_PATH + '-XX.log'
+
+        cystr = self.CYNET_PATH + ' -J ' + self.MODEL_PATH\
+            + ' -T ' + DATA_TYPE + ' -p ' + str(PARTITION) + ' -N '\
+            + str(self.RUNLEN) + ' -x ' + str(self.READLEN)\
+            + ' -l ' + LOG_PATH\
+            + ' -w ' + self.DATA_PATH
+        subprocess.check_call(cystr, shell=True)
+        flexroc_str = self.FLEXROC_PATH + ' -i ' + LOG_PATH\
+            + ' -w ' + str(FLEXWIDTH) + ' -x '\
+            + str(FLEX_TAIL_LEN) + ' -C '\
+            + str(POSITIVE_CLASS_COLUMN) + ' -E ' + str(EVENTCOL)\
+            + ' -t ' + str(tpr_thrshold) + ' -f ' + str(fpr_threshold)
+        output_str = subprocess.check_output(flexroc_str, shell=True)
+        results = np.array(output_str.split())
+        auc = float(results[1])
+        tpr = float(results[7])
+        fpr = float(results[13])
+
+        return auc, tpr, fpr
