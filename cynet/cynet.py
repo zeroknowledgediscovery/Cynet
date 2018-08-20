@@ -748,6 +748,11 @@ def readTS(TSfile,csvNAME='TS1',BEG=None,END=None):
                                      dfts.columns <= pd.to_datetime(END))]
 
     dfts=dfts[cols]
+    indices = []
+    for index, row in dfts.iterrows():
+        if len(row.unique()) != 1:
+            indices.append(index)
+    dfts = dfts.loc[indices]
 
     dfts.to_csv(csvNAME+'.csv',sep=" ",header=None,index=None)
     np.savetxt(csvNAME+'.columns', cols, delimiter=',',fmt='%s')
