@@ -351,48 +351,6 @@ cynet library classes:
               ['latsrc','lonsrc','lattgt',
                'lontgtt','gamma','delay','distance']
 
-**class simulateModel**
-    Utilities for generating statistical analysis after processing models
-
-    **Attributes:**
-        * MODEL_PATH(string)- The path to the model being processed.
-        * DATA_PATH(string)- Path to the split file.
-        * RUNLEN(integer)- Length of the run.
-        * READLEN(integer)- Length of split data to read from begining
-        * CYNET_PATH - path to cynet binary.
-        * FLEXROC_PATH - path to flexroc binary.
-
-  **Methods:**
-
-    .. code-block:: python
-        def run(self, LOG_PATH=None,
-                PARTITION=0.5,
-                DATA_TYPE='continuous',
-                FLEXWIDTH=1,
-                FLEX_TAIL_LEN=100,
-                POSITIVE_CLASS_COLUMN=5,
-                EVENTCOL=3,
-                tpr_thrshold=0.85,
-                fpr_threshold=0.15):
-
-
-            '''
-            This function is intended to replace the cynrun.sh shell script. This
-            function will use the subprocess library to call cynet on a model to process
-            it and then run flexroc on it to obtain statistics: auc, tpr, fuc.
-            Inputs:
-               LOG_PATH(string)- Logfile from cynet run
-               PARTITION(string)- Partition to use on split data
-               FLEXWIDTH(int)-  Parameter to specify flex in flwxroc
-               FLEX_TAIL_LEN(int)- tail length of input file to consider [0: all]
-               POSITIVE_CLASS_COLUMN(int)- positive class column
-               EVENTCOL(int)- event column
-               tpr_thershold(float)- tpr threshold
-               fpr_threshold(float)- fpr threshold
-            Returns:
-            auc, tpr, and fpr statistics from flexroc.
-            '''
-
 
 
 viscynet library classes:
