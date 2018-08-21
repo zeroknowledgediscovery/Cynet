@@ -364,34 +364,34 @@ cynet library classes:
 
     **Methods:**
 
-    .. code-block:: python
-        def run(self, LOG_PATH=None,
-                PARTITION=0.5,
-                DATA_TYPE='continuous',
-                FLEXWIDTH=1,
-                FLEX_TAIL_LEN=100,
-                POSITIVE_CLASS_COLUMN=5,
-                EVENTCOL=3,
-                tpr_thrshold=0.85,
-                fpr_threshold=0.15):
+        .. code-block:: python
+            def run(self, LOG_PATH=None,
+                    PARTITION=0.5,
+                    DATA_TYPE='continuous',
+                    FLEXWIDTH=1,
+                    FLEX_TAIL_LEN=100,
+                    POSITIVE_CLASS_COLUMN=5,
+                    EVENTCOL=3,
+                    tpr_thrshold=0.85,
+                    fpr_threshold=0.15):
 
 
-            '''
-            This function is intended to replace the cynrun.sh shell script. This
-            function will use the subprocess library to call cynet on a model to process
-            it and then run flexroc on it to obtain statistics: auc, tpr, fuc.
-            Inputs:
-               LOG_PATH(string)- Logfile from cynet run
-               PARTITION(string)- Partition to use on split data
-               FLEXWIDTH(int)-  Parameter to specify flex in flwxroc
-               FLEX_TAIL_LEN(int)- tail length of input file to consider [0: all]
-               POSITIVE_CLASS_COLUMN(int)- positive class column
-               EVENTCOL(int)- event column
-               tpr_thershold(float)- tpr threshold
-               fpr_threshold(float)- fpr threshold
-            Returns:
-            auc, tpr, and fpr statistics from flexroc.
-            '''
+                '''
+                This function is intended to replace the cynrun.sh shell script. This
+                function will use the subprocess library to call cynet on a model to process
+                it and then run flexroc on it to obtain statistics: auc, tpr, fuc.
+                Inputs:
+                   LOG_PATH(string)- Logfile from cynet run
+                   PARTITION(string)- Partition to use on split data
+                   FLEXWIDTH(int)-  Parameter to specify flex in flwxroc
+                   FLEX_TAIL_LEN(int)- tail length of input file to consider [0: all]
+                   POSITIVE_CLASS_COLUMN(int)- positive class column
+                   EVENTCOL(int)- event column
+                   tpr_thershold(float)- tpr threshold
+                   fpr_threshold(float)- fpr threshold
+                Returns:
+                auc, tpr, and fpr statistics from flexroc.
+                '''
 
 
 viscynet library classes:
