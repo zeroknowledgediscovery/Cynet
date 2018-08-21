@@ -364,7 +364,7 @@ cynet library classes:
 
     **Methods:**
 
-    ..code-block: python
+    .. code-block: python
         def run(self, LOG_PATH=None,
                 PARTITION=0.5,
                 DATA_TYPE='continuous',
