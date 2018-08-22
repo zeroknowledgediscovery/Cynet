@@ -440,7 +440,7 @@ viscynet library classes:
           plot global distribution of events within time period specified
 
           Inputs -
-              coords (string): filename with coord list as lat1#lat2#lon1#lon2
+              coords (string): filename with coord list as lat1.lat2.lon1.lon2
               ts (string): time series filename with data in rows, space separated
               fsize (list):
               cmap (string):
