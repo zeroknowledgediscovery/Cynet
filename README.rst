@@ -5,7 +5,6 @@ cynet
 
 .. class:: no-web no-pdf
 
-  |pypi|
 
 **NOTE:** if issues arise with dependencies in python3, be sure that tkinter is installed
   if not, please run:
