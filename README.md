@@ -6,7 +6,7 @@ cynet
 **NOTE:** if issues arise with dependencies in python3, be sure that tkinter is installed  
 if not, please run:
 
-``` {.sourceCode .}
+``` 
 sudo apt-get install python3-tk
 ```
 
@@ -53,7 +53,7 @@ Utilities for spatial-temporal analysis
 
 **Methods:**
 
- ``` {.sourceCode .python
+ ``` 
   __init__(self, log_store='log.p', log_file=None, ts_store=None, DATE='Date', year=None, month=None, day=None, EVENT='Primary Type', coord1='Latitude', coord2='Longitude', coord3=None, init_date=None, end_date=None, freq=None, columns=None, types=None, value_limits=None, grid=None, threshold=None)}
  fit(self, grid=None, INIT=None, END=None, THRESHOLD=None, csvPREF='TS',
      auto_adjust_time=False,incr=6,max_incr=24):
@@ -183,7 +183,7 @@ Utilities for spatial-temporal analysis
 
 **Utility functions:**
 
- ``` {.sourceCode .python}
+ ``` 
  splitTS(TSfile, csvNAME='TS1', dirname='./', prefix='@', BEG=None, END=None, VARNAME='')
    Utilities for spatio temporal analysis
 
@@ -247,14 +247,14 @@ Utilities for spatial-temporal analysis
 
 **class uNetworkModels:**
 
- Utilities for storing and manipulating XPFSA models inferred by XGenESeSS
+Utilities for storing and manipulating XPFSA models inferred by XGenESeSS
 
- Attributes:  
- jsonFile (string): path to json file containing models
+Attributes:  
+-   jsonFile (string): path to json file containing models
 
- Methods defined here:
+**Methods**
 
- ``` {.sourceCode .python}
+ ``` 
  __init__(self, jsonFILE)
 
 
@@ -337,10 +337,12 @@ Utilities for spatial-temporal analysis
           'lontgtt','gamma','delay','distance']
  ```
 
-**class simulateModel**  
+**class simulateModel**
+
 Utilities for generating statistical analysis after processing models
 
 **Attributes:**  
+
 -   MODEL\_PATH(string)- The path to the model being processed.
 -   DATA\_PATH(string)- Path to the split file.
 -   RUNLEN(integer)- Length of the run.
@@ -348,47 +350,48 @@ Utilities for generating statistical analysis after processing models
 -   CYNET\_PATH - path to cynet binary.
 -   FLEXROC\_PATH - path to flexroc binary.
 
- **Methods:**
+**Methods:**
 
- > ``` {.sourceCode .python}
- > run(self, LOG_PATH=None,
- >     PARTITION=0.5,
- >     DATA_TYPE='continuous',
- >     FLEXWIDTH=1,
- >     FLEX_TAIL_LEN=100,
- >     POSITIVE_CLASS_COLUMN=5,
- >     EVENTCOL=3,
- >     tpr_thrshold=0.85,
- >     fpr_threshold=0.15):
- >
- >
- > This function is intended to replace the cynrun.sh shell script. This
- > function will use the subprocess library to call cynet on a model to process
- > it and then run flexroc on it to obtain statistics: auc, tpr, fuc.
- > Inputs:
- >    LOG_PATH(string)- Logfile from cynet run
- >    PARTITION(string)- Partition to use on split data
- >    FLEXWIDTH(int)-  Parameter to specify flex in flwxroc
- >    FLEX_TAIL_LEN(int)- tail length of input file to consider [0: all]
- >    POSITIVE_CLASS_COLUMN(int)- positive class column
- >    EVENTCOL(int)- event column
- >    tpr_thershold(float)- tpr threshold
- >    fpr_threshold(float)- fpr threshold
- > Returns:
- > auc, tpr, and fpr statistics from flexroc.
- > ```
+ ```
+  run(self, LOG_PATH=None,
+      PARTITION=0.5,
+      DATA_TYPE='continuous',
+      FLEXWIDTH=1,
+      FLEX_TAIL_LEN=100,
+      POSITIVE_CLASS_COLUMN=5,
+      EVENTCOL=3,
+      tpr_thrshold=0.85,
+      fpr_threshold=0.15):
+ 
+ 
+ This function is intended to replace the cynrun.sh shell script. This
+  function will use the subprocess library to call cynet on a model to process
+  it and then run flexroc on it to obtain statistics: auc, tpr, fuc.
+  Inputs:
+     LOG_PATH(string)- Logfile from cynet run
+     PARTITION(string)- Partition to use on split data
+     FLEXWIDTH(int)-  Parameter to specify flex in flwxroc
+     FLEX_TAIL_LEN(int)- tail length of input file to consider [0: all]
+     POSITIVE_CLASS_COLUMN(int)- positive class column
+     EVENTCOL(int)- event column
+     tpr_thershold(float)- tpr threshold
+     fpr_threshold(float)- fpr threshold
+  Returns:
+  auc, tpr, and fpr statistics from flexroc.
+ ```
 
 viscynet library classes:
 -------------------------
 
  -   viscynet
 
- **viscynet library:**
+**viscynet library:**
 
  visualization library for Network Models produced by uNetworkModels based on matplotlib
 
- Functions:  
- ``` {.sourceCode .python}
+**Functions**
+
+ ``` 
  draw_screen_poly(lats, lons, m, ax, val, cmap, ALPHA=0.6)
      utility function to draw polygons on basemap
 
@@ -493,7 +496,7 @@ bokeh\_pipe library:
  We have provided two sample datasets for use. 'crime\_filtered\_data.csv' can be considered the combined file for the neighborhood plot. 'contourmerc.csv' can be considered the combined file for the streamline plot and the heatplot.
 
  Functions:  
- ``` {.sourceCode .python}
+ ``` 
  json_to_csv(FILEPATH, DEST):
    This function takes a group of json data files and transforms
    them into csv files for use. Edit the selection variables as
@@ -573,4 +576,4 @@ bokeh\_pipe library:
        method (string): method for interpolation. 'cubic','linear', or 'nearest'
  ```
 
-VERSION 1.0.17
+VERSION 1.0.21

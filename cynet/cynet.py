@@ -3,7 +3,6 @@ Spatio temporal analysis for inferrence of statistical causality
 @author zed.uchicago.edu
 """
 
-import pandas as pd
 import numpy as np
 import random
 
@@ -32,8 +31,6 @@ plt.ioff()
 
 from scipy.spatial import Delaunay
 import seaborn as sns
-
-
 
 __DEBUG__=False
 PRECISION=5
@@ -159,25 +156,6 @@ class spatioTemporal:
         self._coord2 = coord2
         self._coord3 = coord3
 
-        # if grid is not None:
-        #     if isinstance(grid, dict):
-        #         # self._grid = {}
-        #         assert(self._coord1 in grid)
-        #         assert(self._coord2 in grid)
-        #         assert('Eps' in grid)
-        #         # constructing private variable self._grid in the desired format
-        #         # with the values taken from the input grid
-        #         # self._grid[self._coord1]=grid[self._coord1]
-        #         # self._grid[self._coord2]=grid[self._coord2]
-        #         self._grid = grid
-        #         # self._grid['Eps']=grid['Eps']
-        #         self._grid_type = "auto"
-        #     elif isinstance(grid, list):
-        #         self._grid = grid
-        #         self._grid_type = "custom"
-        #     else:
-        #         raise TypeError("Unsupported grid type.")
-
         if columns is None:
             self._columns = [EVENT, coord1, coord2, DATE]
         else:
@@ -242,8 +220,6 @@ class spatioTemporal:
 
         assert(self._END is not None)
         TS_NAME = ('#'.join(str(x) for x in tile))+"#"+stringify(_types)
-
-
 
         if self._value_limits is None:
             df = self._logdf[self._columns]\
@@ -685,7 +661,6 @@ class spatioTemporal:
             self._logdf.to_pickle(out_fname)
 
 
-
 def stringify(List):
     """
     Utility function
@@ -707,7 +682,6 @@ def stringify(List):
         return ''
     whole_string = '-'.join(str(elem) for elem in List)
     return whole_string.replace(' ','_').replace('/','_').replace('(','').replace(')','')
-
 
 
 def readTS(TSfile,csvNAME='TS1',BEG=None,END=None):
@@ -759,7 +733,6 @@ def readTS(TSfile,csvNAME='TS1',BEG=None,END=None):
     np.savetxt(csvNAME+'.coords', dfts.index.values, delimiter=',',fmt='%s')
 
     return dfts
-
 
 
 def splitTS(TSfile,dirname='./',prefix="@",
@@ -1093,15 +1066,13 @@ class simulateModel:
     '''
     Use the subprocess library to call cynet on a model to process
     it and then run flexroc on it to obtain statistics: auc, tpr, fuc.
-    Inputs:
+    Input -
         MODEL_PATH(string)- The path to the model being processed.
         DATA_PATH(string)- Path to the split file.
         RUNLEN(integer)- Length of the run.
         READLEN(integer)- Length of split data to read from begining
         CYNET_PATH - path to cynet binary.
-        FLEXROC_PATH - path to flexroc binary.
-    Returns:
-        auc, tpr, and fpr statistics from flexroc.
+        FLEXROC_PATH - path to flexroc binary.    
     '''
 
     def __init__(self, MODEL_PATH,
@@ -1139,22 +1110,25 @@ class simulateModel:
             tpr_thrshold=0.85,
             fpr_threshold=0.15):
 
-
         '''
         This function is intended to replace the cynrun.sh shell script. This
         function will use the subprocess library to call cynet on a model to process
         it and then run flexroc on it to obtain statistics: auc, tpr, fuc.
-        Inputs:
-           LOG_PATH(string)- Logfile from cynet run
-           PARTITION(string)- Partition to use on split data
-           FLEXWIDTH(int)-  Parameter to specify flex in flwxroc
-           FLEX_TAIL_LEN(int)- tail length of input file to consider [0: all]
-           POSITIVE_CLASS_COLUMN(int)- positive class column
-           EVENTCOL(int)- event column
-           tpr_thershold(float)- tpr threshold
-           fpr_threshold(float)- fpr threshold
-        Returns:
-        auc, tpr, and fpr statistics from flexroc.
+        Input -
+           LOG_PATH (string)- Logfile from cynet run
+           PARTITION (string)- Partition to use on split data
+           FLEXWIDTH (int)-  Parameter to specify flex in flwxroc
+           FLEX_TAIL_LEN (int)- tail length of input file to consider [0: all]
+           POSITIVE_CLASS_COLUMN (int)- positive class column
+           EVENTCOL (int)- event column
+           tpr_thershold (float)- minimum tpr threshold
+           fpr_threshold (float)- maximum fpr threshold
+        
+        Output -
+            auc (float)- Area under the curve
+            tpr (float)- True positive rate at specified maximum false positive rate
+            fpr (float)- False positive rate at specified minimum true positive rate
+
         '''
 
         if LOG_PATH is None:
