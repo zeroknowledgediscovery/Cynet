@@ -1,12 +1,12 @@
 Metadata-Version: 1.2
 Name: cynet
-Version: 1.0.18
+Version: 1.0.20
 Summary: Spatio temporal analysis for inferrence of statistical causality using XGenESeSS
 Home-page: https://github.com/zeroknowledgediscovery/
 Author: zed.uchicago.edu
 Author-email: ishanu@uchicago.edu
 License: LICENSE.txt
-Download-URL: https://github.com/zeroknowledgediscovery/Cynet/archive/1.0.18.tar.gz
+Download-URL: https://github.com/zeroknowledgediscovery/Cynet/archive/1.0.20.tar.gz
 Description: ===============
         cynet
         ===============
@@ -14,7 +14,6 @@ Description: ===============
         
         .. class:: no-web no-pdf
         
-          |pypi|
         
         **NOTE:** if issues arise with dependencies in python3, be sure that tkinter is installed
           if not, please run:
