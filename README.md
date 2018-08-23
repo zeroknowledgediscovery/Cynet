@@ -6,17 +6,17 @@ cynet
 **NOTE:** if issues arise with dependencies in python3, be sure that tkinter is installed  
 if not, please run:
 
-``` {.sourceCode .}
-sudo apt-get install python3-tk
+```
+	sudo apt-get install python3-tk
 ```
 
 **Usage:**
 
- ``` {.sourceCode .python}
- from cynet import cynet
- from cynet.cynet import uNetworkModels as models
- from viscynet import viscynet as vcn
- ```
+```
+	from cynet import cynet
+	from cynet.cynet import uNetworkModels as models
+	from viscynet import viscynet as vcn
+```
 
 cynet module includes:  
 -   cynet
@@ -31,9 +31,11 @@ cynet library classes:
 -   simulateModels
 
 **class spatioTemporal**  
+
 Utilities for spatial-temporal analysis
 
 **Attributes:**  
+
 -   log\_store (Pickle): Pickle storage of class data & dataframes
 -   log\_file (string): path to CSV of legacy dataframe
 -   ts\_store (string): path to CSV containing most recent ts export
