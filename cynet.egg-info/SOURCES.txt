@@ -1,7 +1,6 @@
 CHANGES.txt
 LICENSE.txt
 MANIFEST.in
-README.rst
 setup.cfg
 setup.py
 version.py
