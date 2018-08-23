@@ -6,9 +6,9 @@ cynet
 **NOTE:** if issues arise with dependencies in python3, be sure that tkinter is installed  
 if not, please run:
 
-``` 
-sudo apt-get install python3-tk
-```
+
+	sudo apt-get install python3-tk
+
 
 **Usage:**
 
