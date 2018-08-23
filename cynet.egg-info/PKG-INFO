@@ -1,12 +1,12 @@
 Metadata-Version: 1.2
 Name: cynet
-Version: 1.0.26
+Version: 1.0.27
 Summary: Spatio temporal analysis for inferrence of statistical causality using XGenESeSS
 Home-page: https://github.com/zeroknowledgediscovery/
 Author: zed.uchicago.edu
 Author-email: ishanu@uchicago.edu
 License: LICENSE.txt
-Download-URL: https://github.com/zeroknowledgediscovery/Cynet/archive/1.0.26.tar.gz
+Download-URL: https://github.com/zeroknowledgediscovery/Cynet/archive/1.0.27.tar.gz
 Description: cynet
         =====
         
@@ -16,16 +16,16 @@ Description: cynet
         if not, please run:
         
         ``` 
-        sudo apt-get install python3-tk
+        	sudo apt-get install python3-tk
         ```
         
         **Usage:**
         
-         ``` {.sourceCode .python}
+        ``` 
          from cynet import cynet
          from cynet.cynet import uNetworkModels as models
          from viscynet import viscynet as vcn
-         ```
+        ```
         
         cynet module includes:  
         -   cynet
