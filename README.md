@@ -57,28 +57,5 @@ Utilities for spatial-temporal analysis
 
 	__init__(self, log_store='log.p', log_file=None, ts_store=None, DATE='Date', year=None, month=None, day=None, EVENT='Primary Type', coord1='Latitude', coord2='Longitude', coord3=None, init_date=None, end_date=None, freq=None, columns=None, types=None, value_limits=None, grid=None, threshold=None)}
 
-	fit(self, grid=None, INIT=None, END=None, THRESHOLD=None, csvPREF='TS',auto_adjust_time=False,incr=6,max_incr=24):
-
-     Fit dataproc with specified grid parameters and
-     create timeseries for
-     date boundaries specified by INIT, THRESHOLD,
-     and END or input list of custom coordinate boundaries which do NOT have
-     to match the arguments first input to the dataproc
-
-     Inputs -
-         grid (dictionary or list of lists): coordinate dictionary with
-             respective ranges and EPS value OR custom list of lists
-             of custom grid tiles as [coord1_start, coord1_stop,
-             coord2_start, coord2_stop]
-         INIT (datetime.date): starting timeseries date
-         END (datetime.date): ending timeseries date
-         THRESHOLD (float): significance threshold
-         auto_adjust_time (boolean): if True, within increments specified (6H default),
-             determine optimal temporal frequency for timeseries data
-         incr (int): frequency increment
-         max_incr (int): user-specified maximum increment
-
-     Outputs -
-         (No output) grid pd.Dataframe written out as CSV file
-                 to path specified
+	fit(self, grid=None, INIT=None, END=None, THRESHOLD=None,csvPREF='TS',auto_adjust_time=False,incr=6,max_incr=24):
 
