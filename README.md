@@ -59,21 +59,15 @@ Utilities for spatial-temporal analysis
 
 	fit(self, grid=None, INIT=None, END=None, THRESHOLD=None,csvPREF='TS',auto_adjust_time=False,incr=6,max_incr=24):
 
-*Inputs*
-	
-	+ grid (dictionary or list of lists): coordinate dictionary with
-             respective ranges and EPS value OR custom list of lists
-             of custom grid tiles as [coord1_start, coord1_stop,
-             coord2_start, coord2_stop]
-	+ INIT (datetime.date): starting timeseries date
-    + END (datetime.date): ending timeseries date
-    + THRESHOLD (float): significance threshold
-    + auto_adjust_time (boolean): if True, within increments specified (6H default),
-             determine optimal temporal frequency for timeseries data
-    + incr (int): frequency increment
-    + max_incr (int): user-specified maximum increment
+	getTS(self, _types=None, tile=None, freq=None)
 
-*Outputs*
-    
-	(No output) grid pd.Dataframe written out as CSV file
-                 to path specified
+	get_rand_tile(tiles=None,LAT=None,LON=None,EPS=None,_types=None)
+
+	get_opt_freq(df,incr=6,max_incr=24)
+	
+	getGrid(self)
+	
+	pull(self, domain='data.cityofchicago.org', dataset_id='crimes', token=None, store=True, out_fname='pull_df.p', pull_all=False)
+	
+	timeseries(self, LAT=None, LON=None, EPS=None,_types=None,CSVfile='TS.csv',THRESHOLD=None,tiles=None,incr=6,max_incr=24)
+ 

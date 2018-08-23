@@ -1,12 +1,12 @@
 Metadata-Version: 1.2
 Name: cynet
-Version: 1.0.42
+Version: 1.0.43
 Summary: Spatio temporal analysis for inferrence of statistical causality using XGenESeSS
 Home-page: https://github.com/zeroknowledgediscovery/
 Author: zed.uchicago.edu
 Author-email: ishanu@uchicago.edu
 License: LICENSE.txt
-Download-URL: https://github.com/zeroknowledgediscovery/Cynet/archive/1.0.42.tar.gz
+Download-URL: https://github.com/zeroknowledgediscovery/Cynet/archive/1.0.43.tar.gz
 Description: cynet
         =====
         
@@ -68,6 +68,24 @@ Description: cynet
         
         	fit(self, grid=None, INIT=None, END=None, THRESHOLD=None,csvPREF='TS',auto_adjust_time=False,incr=6,max_incr=24):
         
+        *Inputs*
+        	
+        	+ grid (dictionary or list of lists): coordinate dictionary with
+                     respective ranges and EPS value OR custom list of lists
+                     of custom grid tiles as [coord1_start, coord1_stop,
+                     coord2_start, coord2_stop]
+        	+ INIT (datetime.date): starting timeseries date
+            + END (datetime.date): ending timeseries date
+            + THRESHOLD (float): significance threshold
+            + auto_adjust_time (boolean): if True, within increments specified (6H default),
+                     determine optimal temporal frequency for timeseries data
+            + incr (int): frequency increment
+            + max_incr (int): user-specified maximum increment
+        
+        *Outputs*
+            
+        	(No output) grid pd.Dataframe written out as CSV file
+                         to path specified
         
 Keywords: spatial,temporal,inference,statistical,causality
 Platform: UNKNOWN
