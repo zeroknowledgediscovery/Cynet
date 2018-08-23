@@ -30,6 +30,6 @@ git tag $VERSION -m $COMMENT
 git push --tags
 python setup.py sdist upload -r test
 
-if [ ONLYTEST -eq 0 ] ; then
+if [ $ONLYTEST -eq 0 ] ; then
     python setup.py sdist upload -r pypi
 fi
