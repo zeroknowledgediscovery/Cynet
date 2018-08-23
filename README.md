@@ -7,16 +7,16 @@ cynet
 if not, please run:
 
 ``` 
-sudo apt-get install python3-tk
+	sudo apt-get install python3-tk
 ```
 
 **Usage:**
 
- ``` {.sourceCode .python}
+``` 
  from cynet import cynet
  from cynet.cynet import uNetworkModels as models
  from viscynet import viscynet as vcn
- ```
+```
 
 cynet module includes:  
 -   cynet
