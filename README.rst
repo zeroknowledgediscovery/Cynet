@@ -2,7 +2,7 @@
 cynet
 ===============
    
-.. image:: logo.png
+.. image:: http://zed.uchicago.edu/logo/logozed1.png
    :height: 500px
    :scale: 50 %
    :alt: alternate text
