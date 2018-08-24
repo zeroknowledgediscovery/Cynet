@@ -3,7 +3,7 @@ cynet
 ===============
    
 .. image:: http://zed.uchicago.edu/logo/logozed1.png
-   :height: 500px
+   :height: 400px
    :scale: 50 %
    :alt: alternate text
    :align: center
