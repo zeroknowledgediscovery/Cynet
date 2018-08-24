@@ -37,7 +37,7 @@ setup(
     scripts=['bin/print_help.py','bin/read_raw_log.py'],
     url='https://github.com/zeroknowledgediscovery/',
     license='LICENSE.txt',
-    description='Spatio temporal analysis for inferrence of statistical causality using XGenESeSS',
+    description='Learning Point Processes Using Deep Granger Nets',
     keywords=['spatial', 'temporal', 'inference', 'statistical', 'causality'],
     download_url='https://github.com/zeroknowledgediscovery/Cynet/archive/'+str(version['__version__'])+'.tar.gz',
     long_description=long_description,
