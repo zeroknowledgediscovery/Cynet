@@ -1,14 +1,17 @@
 ===============
 cynet
 ===============
-  Implementation of the Deep Granger net inference algorithm, described in https://arxiv.org/abs/1406.6651, for learning spatio-temporal stochastic processes (*point processes*). **cynet** learns a network of generative local models, without assuming any specific model structure. 
+   
 
 .. class:: no-web no-pdf
 
+:Info: See <https://arxiv.org/abs/1406.6651> for theoretical background
+:Author: ZeD@UChicago <zed.uchicago.edu>
+:Date: $Date: 2013-02-20 02:10:53 +0100 (Mi, 20. Feb 2013) $
+:Description: Implementation of the Deep Granger net inference algorithm, described in https://arxiv.org/abs/1406.6651, for learning spatio-temporal stochastic processes (*point processes*). **cynet** learns a network of generative local models, without assuming any specific model structure.
 
-**NOTE:** if issues arise with dependencies in python3, be sure that tkinter is installed
-  if not, please run:
-
+.. NOTE:: If issues arise with dependencies in python3, be sure that *tkinter* is installed
+  
   .. code-block::
 
     sudo apt-get install python3-tk
@@ -22,11 +25,11 @@ cynet
     from viscynet import viscynet as vcn
 
 
-
-cynet module includes:
+**cynet module includes:**
   * cynet
   * viscynet
   * bokeh_pipe
+
 
 cynet library classes:
 ~~~~~~~~~~~~~~~~~~~~~~
