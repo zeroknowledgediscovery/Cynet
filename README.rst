@@ -62,6 +62,7 @@ cynet library classes:
   **Methods:**
 
     .. code-block:: python
+
         __init__(self, log_store='log.p', log_file=None, ts_store=None, DATE='Date', year=None, month=None, day=None, EVENT='Primary Type', coord1='Latitude', coord2='Longitude', coord3=None, init_date=None, end_date=None, freq=None, columns=None, types=None, value_limits=None, grid=None, threshold=None)
 
 
@@ -498,10 +499,12 @@ bokeh_pipe library:
         2. run combine_merc to combine the batch of csv files into one csv file in mercator coordinates.
         3. run neighbor_plot on the combined csv file to get the neighbor hood plot.
 
+
     To get the streamline plot:
         1. same as step 1 of neighborhood plot (can be skipped if already done)
-        2. run streamheat_combine to combine the batch of csv files into one csv
-        file. THIS IS IN A FORMAT DIFFERENT FROM THAT OF THE NEIGHBORHOOD PLOT.
+
+        2. run streamheat_combine to combine the batch of csv files into one csv file. *THIS IS IN A FORMAT DIFFERENT FROM THAT OF THE NEIGHBORHOOD PLOT.*
+
         3. run crime_stream.py on the combined file.
 
     To get the heatplot:
