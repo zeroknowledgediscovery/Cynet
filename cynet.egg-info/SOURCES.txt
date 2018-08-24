@@ -1,17 +1,14 @@
 CHANGES.txt
 LICENSE.txt
 MANIFEST.in
+README.md
+README.rst
 README.txt
 setup.cfg
 setup.py
 version.py
 bin/print_help.py
-bin/process_log1.py
-bin/process_models.py
 bin/read_raw_log.py
-bin/read_raw_log1.py
-bin/script11.py
-bin/script_test.py
 bokeh_pipe/__init__.py
 bokeh_pipe/bokeh_pipe.py
 bokeh_pipe/bokeh_plot.py
@@ -24,7 +21,6 @@ cynet/__init__.py
 cynet/__init__.pyc
 cynet/cynet.py
 cynet/cynet.pyc
-cynet/spin.py
 cynet.egg-info/PKG-INFO
 cynet.egg-info/SOURCES.txt
 cynet.egg-info/dependency_links.txt

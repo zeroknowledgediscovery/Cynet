@@ -1,7 +1,7 @@
 ===============
 cynet
 ===============
-  **`cynet` is a spatial-temporal analysis library for inferrence of statistical causality**
+  Implementation of the Deep Granger net inference algorithm, described in https://arxiv.org/abs/1406.6651, for learning spatio-temporal stochastic processes (*point processes*). **cynet** learns a network of generative local models, without assuming any specific model structure. 
 
 .. class:: no-web no-pdf
 
@@ -598,4 +598,4 @@ bokeh_pipe library:
             method (string): method for interpolation. 'cubic','linear', or 'nearest'
 
 
-VERSION 1.0.17
+VERSION 1.0.50
