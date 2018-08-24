@@ -7,7 +7,6 @@ cynet
 
 :Info: See <https://arxiv.org/abs/1406.6651> for theoretical background
 :Author: ZeD@UChicago <zed.uchicago.edu>
-:Date: $Date: 2013-02-20 02:10:53 +0100 (Mi, 20. Feb 2013) $
 :Description: Implementation of the Deep Granger net inference algorithm, described in https://arxiv.org/abs/1406.6651, for learning spatio-temporal stochastic processes (*point processes*). **cynet** learns a network of generative local models, without assuming any specific model structure.
 
 .. NOTE:: If issues arise with dependencies in python3, be sure that *tkinter* is installed
