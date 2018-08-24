@@ -2,6 +2,12 @@
 cynet
 ===============
    
+.. image:: logo.png
+   :height: 500px
+   :scale: 50 %
+   :alt: alternate text
+   :align: center
+
 
 .. class:: no-web no-pdf
 
