@@ -1,9 +1,7 @@
 CHANGES.txt
 LICENSE.txt
 MANIFEST.in
-README.md
 README.rst
-README.txt
 logo.png
 setup.cfg
 setup.py
