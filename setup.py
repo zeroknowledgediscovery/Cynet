@@ -11,7 +11,7 @@ with open("version.py") as fp:
 here = path.abspath(path.dirname(__file__))
 
 # Get the long description from the relevant file
-with open(path.join(here, 'README.md'), encoding='utf-8') as f:
+with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 # sp.call("wget https://repo.continuum.io/miniconda/Miniconda2-4.5.4-Linux-x86_64.sh -O ~/miniconda.sh",\
@@ -27,7 +27,7 @@ warnings.warn("WARNING: Please ensure cartopy is installed - the viscynet librar
  See https://scitools.org.uk/cartopy/docs/latest/installing.html#id2 for instructions.")
 
 
-
+ 
 setup(
     name='cynet',
     author='zed.uchicago.edu',
@@ -41,7 +41,7 @@ setup(
     keywords=['spatial', 'temporal', 'inference', 'statistical', 'causality'],
     download_url='https://github.com/zeroknowledgediscovery/Cynet/archive/'+str(version['__version__'])+'.tar.gz',
     long_description=long_description,
-    long_description_content_type='text/markdown',
+    long_description_content_type='text/x-rst',
     install_requires=["numpy >= 1.6","pandas == 0.22.0","matplotlib >= 2.0.2","scipy >= 0.18.1", \
     "tqdm >= 4.11.2","seaborn >= 0.8.0","sodapy >= 1.4.6","bokeh >= 0.12.14","pyproj >= 1.9.5.1",\
     "pyshp >= 1.2.12","haversine >= 0.4.5"],
