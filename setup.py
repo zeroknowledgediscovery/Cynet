@@ -53,6 +53,6 @@ setup(
     "Topic :: Scientific/Engineering :: Information Analysis",
     "Topic :: Software Development :: Libraries",
     "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 2.7"]
-    # "Operating System :: POSIX :: Linux"],
+    "Programming Language :: Python :: 2.7"],
+    data_files=[('bin', ['bin/XgenESeSS', 'bin/cynet','bin/flexroc'])]
 )
