@@ -4,6 +4,7 @@ Spatio temporal analysis for inferrence of statistical causality
 """
 
 import numpy as np
+import pandas as pd
 import random
 
 try:
@@ -20,8 +21,11 @@ from sodapy import Socrata
 import operator
 import warnings
 import os
+import sys
+import uuid
 import glob
 import subprocess
+from joblib import Parallel , delayed
 
 import matplotlib as mpl
 mpl.use('Agg')
@@ -31,6 +35,7 @@ plt.ioff()
 
 from scipy.spatial import Delaunay
 import seaborn as sns
+import pylab as plt
 
 __DEBUG__=False
 PRECISION=5
@@ -1072,7 +1077,7 @@ class simulateModel:
         RUNLEN(integer)- Length of the run.
         READLEN(integer)- Length of split data to read from begining
         CYNET_PATH - path to cynet binary.
-        FLEXROC_PATH - path to flexroc binary.    
+        FLEXROC_PATH - path to flexroc binary.
     '''
 
     def __init__(self, MODEL_PATH,
@@ -1123,7 +1128,7 @@ class simulateModel:
            EVENTCOL (int)- event column
            tpr_thershold (float)- minimum tpr threshold
            fpr_threshold (float)- maximum fpr threshold
-        
+
         Output -
             auc (float)- Area under the curve
             tpr (float)- True positive rate at specified maximum false positive rate
@@ -1152,3 +1157,129 @@ class simulateModel:
         fpr = float(results[13])
 
         return auc, tpr, fpr
+
+def parallel_process(arguments):
+    '''
+    This function takes a model and produces statistics on them. The output is
+    saved to a result file with the suffix defined by RESUFFIX. We note that
+    arguments needs to be a list of various arguments (detailed below) due to
+    the nature of joblib. We expect this function to be called by a parallel
+    processing library such as joblib.
+    Inputs:
+        arguments(list) - a list of arguments necessary for the function:
+            arguments[0]-FILE(str): path to the model being processed.
+            arguments[1]-model_nums(int): Number of models to use in prediction
+            arguments[2]-Horizon(int): prediction horizon.
+            arguments[3]-DATA_PATH: path to split file.
+                Ex: './split/1995-01-01_1999-12-31'
+            arguments[4]-RUNLEN(int): the runlength
+            arguments[5]-VARNAME(list)-Variable names to be considering.
+            arguments[6]-RESSUFIX- suffix to add to the end of results.
+            arguments[7]-CYNET_PATH- path to cynet binary.
+            arguments[8]-FLEXROC_PATH- path to flexroc binary.
+    '''
+    FILE = arguments[0]
+    model_nums = arguments[1]
+    Horizon = arguments[2]
+    DATA_PATH = arguments[3]
+    RUNLEN = arguments[4]
+    VARNAME = arguments[5]
+    RESSUFIX = arguments[6]
+    CYNET_PATH = arguments[7]
+    FLEXROC_PATH = arguments[8]
+    RESULT = []
+    header=['loc_id','lattgt1','lattgt2','lontgt1','lontgt2','varsrc','vartgt','num_models','auc','tpr','fpr','horizon']
+
+    for varname in VARNAME:
+        stored_model=FILE+'_sel_'+str(uuid.uuid4())+'.json'
+
+        M=models(FILE + '.json')
+        M.setVarname()
+        M.augmentDistance()
+
+        if varname is not 'ALL':
+            M.select(var='src_var',equal=varname,inplace=True)
+
+        M.select(var='delay',inplace=True,low=Horizon)
+        M.select(var='distance',n=model_nums,store=stored_model,reverse=False,inplace=True)
+
+        if M.models:
+            simulation = simulateModel(stored_model, DATA_PATH, RUNLEN, CYNET_PATH=CYNET_PATH,FLEXROC_PATH=FLEXROC_PATH)
+            [auc, tpr, fpr] = simulation.run()
+
+            f=lambda x: x[:-1] if len(x)%2==1  else x
+            tgt=[float(j) for j in f((M.models).itervalues().next()['tgt'].replace('#',' ').split())]
+
+            varnametgt=(M.models).itervalues().next()['tgt_var']
+            result=[FILE]+list(tgt)+[varname,varnametgt,model_nums,auc,tpr,fpr,Horizon]
+            RESULT.append(result)
+
+    pd.DataFrame(RESULT,columns=header).to_csv(FILE+'_'+str(model_nums)+'_'+str(Horizon)+RESSUFIX,index=None)
+    print pd.DataFrame(RESULT,columns=header)[['lattgt1','lattgt2','varsrc','vartgt','auc']]
+
+
+def run_pipeline(glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_PATH, RESSUFIX = '.res',CYNET_PATH = './bin/cynet', FLEXROC_PATH = './bin/flexroc', cores = 4):
+    '''
+    This function is intended to take the output models from midway, process
+    them, and produce graphs. This will call the parallel_process function
+    in parallel using joblib. Eventually stores the result as 'res_all.csv'
+    Inputs:
+        Glob_path(str)-The glob string to be used to find all models. EX: 'models/*model.json'
+        model_nums(list of ints)- The model numbers to use. Ex; [10,15,20,25]
+        Horizon(int)- prediction horizons to test in unit of temporal quantization (using cynet binary)
+        DATA_PATH(str)-Path to the split files. Ex: './split/1995-01-01_1999-12-31'
+        RUNLEN(int)-Length of run. Ex: 2291.
+        VARNAME(list of str)- List of variables to consider.
+        RES_PATH(str)- glob string for glob to locate all result files. Ex:'./models/*model*res'
+        RESUFFIX(str)- suffix to add to the end of results.Ex:'.res'
+        CYNET_PATH(str)- path to cynet binary.
+        FLEXROC_PATH(str)-path to flexroc binary.
+        cores(int)-cores to use for parrallel processing.
+
+    Outputs: Produces graphs of statistics.
+    '''
+    models_files = glob.glob(glob_path)
+    models_files = [m.split('.')[0] for m in models_files]
+
+    args = []
+    for model in models_files:
+        for num in model_nums:
+            args.append([model, num,horizon,DATA_PATH,RUNLEN, VARNAME, RESSUFIX, CYNET_PATH, FLEXROC_PATH ])
+
+    Parallel(n_jobs = cores, verbose = 1, backend = 'threading')(map(delayed(parallel_process), args))
+    df=pd.concat([pd.read_csv(i) for i in glob.glob(RES_PATH)])
+    df.to_csv('res_all.csv',index=None)
+
+
+def get_var(res_csv, coords,varname='auc',VARNAMES=None):
+    '''
+    This function outputs graphs of the results produced by run_pipeline. The
+    graphs concern auc, fpr, and tpr statistics.
+    Inputs:
+        res_csv(str)- path to 'res_all.csv' file produced by run_pipeline.
+        coords(list of str)- the coords to consider.
+            Ex:['lattgt1','lattgt2','lontgt1','lontgt2']
+        varname(str)-the variable name to consider. Ex: 'auc'.
+        VARNAMES(str)- List of the variable name from the dataset to consider.
+            Ex: VARNAMES=['Personnel','Infrastructure','Casualties']
+    '''
+    plt.figure()
+    df = pd.read_csv(res_csv)
+    df1=df.groupby(coords,squeeze=True)[varname].max().reset_index()
+    df1=df1[df1[varname].between(0.01,0.99)]
+    if len(coords)%2 == 0:
+        ax=sns.distplot(df1[varname])
+        ax.set_xlabel(varname,fontsize=18,fontweight='bold');
+        Type=''
+    else:
+        Type='vartgt'
+        print coords
+        print varname
+        print df1
+        ax=sns.violinplot(x=coords[-1],y=varname,data=df1,cut=0)
+        if VARNAMES is not None:
+            ax.set_xticklabels(VARNAMES)
+        ax.set_xlabel('Event Type',fontsize=18,fontweight='bold')
+        ax.set_ylabel(varname,fontsize=18,fontweight='bold');
+    df1.to_csv(varname+Type+'.csv',sep=" ",index=None)
+    plt.savefig(varname+Type+'.pdf',dpi=600, bbox_inches='tight',transparent=False)
