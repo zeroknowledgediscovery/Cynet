@@ -2,9 +2,7 @@ include *.txt
 include cynet/*.py
 include cynet/README.md
 include cynet/*.pyc
-include cynet/bin/XgenESeSS
-include cynet/bin/flexroc
-include cynet/bin/cynet
+include cynet/bin/*
 include bokeh_pipe/*.csv
 include bokeh_pipe/*.py
 include viscynet/*.py
