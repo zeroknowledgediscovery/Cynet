@@ -2,6 +2,7 @@ include *.txt
 include cynet/*.py
 include cynet/README.md
 include cynet/*.pyc
+include cynet/bin/*
 include bokeh_pipe/*.csv
 include bokeh_pipe/*.py
 include viscynet/*.py
