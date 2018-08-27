@@ -1193,7 +1193,7 @@ def parallel_process(arguments):
     for varname in VARNAME:
         stored_model=FILE+'_sel_'+str(uuid.uuid4())+'.json'
 
-        M=models(FILE + '.json')
+        M=uNetworkModelsmodels(FILE + '.json')
         M.setVarname()
         M.augmentDistance()
 
