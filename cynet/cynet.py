@@ -1218,11 +1218,12 @@ def parallel_process(arguments):
     print pd.DataFrame(RESULT,columns=header)[['lattgt1','lattgt2','varsrc','vartgt','auc']]
 
 
-def run_pipeline(glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_PATH, RESSUFIX = '.res',CYNET_PATH = './bin/cynet', FLEXROC_PATH = './bin/flexroc', cores = 4):
+def run_pipeline(glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_PATH, RESSUFIX = '.res', cores = 4):
     '''
     This function is intended to take the output models from midway, process
     them, and produce graphs. This will call the parallel_process function
-    in parallel using joblib. Eventually stores the result as 'res_all.csv'
+    in parallel using joblib. Eventually stores the result as 'res_all.csv'.
+    Cynet and flexroc are binaries written in C++.
     Inputs:
         Glob_path(str)-The glob string to be used to find all models. EX: 'models/*model.json'
         model_nums(list of ints)- The model numbers to use. Ex; [10,15,20,25]
@@ -1232,14 +1233,15 @@ def run_pipeline(glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_PA
         VARNAME(list of str)- List of variables to consider.
         RES_PATH(str)- glob string for glob to locate all result files. Ex:'./models/*model*res'
         RESUFFIX(str)- suffix to add to the end of results.Ex:'.res'
-        CYNET_PATH(str)- path to cynet binary.
-        FLEXROC_PATH(str)-path to flexroc binary.
         cores(int)-cores to use for parrallel processing.
 
     Outputs: Produces graphs of statistics.
     '''
     models_files = glob.glob(glob_path)
     models_files = [m.split('.')[0] for m in models_files]
+
+    CYNET_PATH = os.path.dirname(sys.executable) + '/cynet'
+    FLEXROC_PATH = os.path.dirname(sys.executable) + '/flexroc'
 
     args = []
     for model in models_files:
