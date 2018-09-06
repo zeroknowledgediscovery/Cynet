@@ -1,0 +1,59 @@
+#YAML Configuration
+
+# path to file which has the rowwise multiline time series data
+TS_PATH: 'TERROR-_1995-01-01_1999-12-31.csv'
+
+# path to file with name of the variables
+NAME_PATH: 'TERROR-_1995-01-01_1999-12-31.coords'
+
+# path to log file for xgenesess inference
+LOG_PATH: 'log.txt'
+
+# xgenesses run parameters (these are not hyperparameters, Beg is 0, End is whatever tempral memory is)
+END: 9
+BEG: 0
+
+# number of restarts (20 is good)
+NUM: 2
+
+# partition sequence (we can specify different partition for each time series. XgenESeSS already has this capability)
+PARTITION:
+- 0.5
+
+# number of models to use in prediction (using cynet binary)
+model_nums:
+- 10
+- 15
+- 20
+- 25
+
+# prediction horizons to test in unit of temporal quantization (using cynet binary)
+horizons:
+- 7
+
+# length of run using cynet (generally length of individual ts in split folder)
+
+RUNLEN: 2291
+
+# path to split series
+
+DATA_PATH: './split/1995-01-01_1999-12-31'
+
+# path to models
+FILEPATH: 'models/'
+
+# glob string that matches all the model.json files.
+MODEL_GLOB: 'models/*model.json'
+
+# number of processors to use for post process models
+NUMPROC: 10
+
+# path to where result files are stored
+RESPATH: './models/*model*res'
+
+# path to XgenESeSS binary
+XgenESeSS: './bin/XgenESeSS'
+
+
+# do we run XgenESeSS binary locally, or do we produce a list of commands to be run via phnx
+RUN_LOCAL: 0
