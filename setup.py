@@ -34,7 +34,7 @@ setup(
     author_email='ishanu@uchicago.edu',
     version = str(version['__version__']),
     packages=['cynet','viscynet','bokeh_pipe'],
-    scripts=['bin/print_help.py','bin/read_raw_log.py'],
+    scripts=['bin/print_help.py'],
     url='https://github.com/zeroknowledgediscovery/',
     license='LICENSE.txt',
     description='Learning Point Processes Using Deep Granger Nets',
