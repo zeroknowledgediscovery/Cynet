@@ -1,7 +1,7 @@
 ===============
 cynet
 ===============
-   
+
 .. image:: http://zed.uchicago.edu/logo/logozed1.png
    :height: 400px
    :scale: 50 %
@@ -16,7 +16,7 @@ cynet
 :Description: Implementation of the Deep Granger net inference algorithm, described in https://arxiv.org/abs/1406.6651, for learning spatio-temporal stochastic processes (*point processes*). **cynet** learns a network of generative local models, without assuming any specific model structure.
 
 .. NOTE:: If issues arise with dependencies in python3, be sure that *tkinter* is installed
-  
+
   .. code-block::
 
     sudo apt-get install python3-tk
@@ -71,7 +71,11 @@ cynet library classes:
 
     .. code-block:: python
 
-        __init__(self, log_store='log.p', log_file=None, ts_store=None, DATE='Date', year=None, month=None, day=None, EVENT='Primary Type', coord1='Latitude', coord2='Longitude', coord3=None, init_date=None, end_date=None, freq=None, columns=None, types=None, value_limits=None, grid=None, threshold=None)
+        __init__(self, log_store='log.p', log_file=None, ts_store=None, DATE='Date',
+                year=None, month=None, day=None, EVENT='Primary Type',
+                coord1='Latitude', coord2='Longitude', coord3=None, init_date=None,
+                end_date=None, freq=None, columns=None, types=None, value_limits=None,
+                grid=None, threshold=None)
 
 
         fit(self, grid=None, INIT=None, END=None, THRESHOLD=None, csvPREF='TS',
@@ -91,8 +95,9 @@ cynet library classes:
                 INIT (datetime.date): starting timeseries date
                 END (datetime.date): ending timeseries date
                 THRESHOLD (float): significance threshold
-                auto_adjust_time (boolean): if True, within increments specified (6H default),
-                    determine optimal temporal frequency for timeseries data
+                auto_adjust_time (boolean): if True, within increments specified
+                    (6H default), determine optimal temporal frequency for
+                    timeseries data
                 incr (int): frequency increment
                 max_incr (int): user-specified maximum increment
 
@@ -129,7 +134,8 @@ cynet library classes:
                                                coordinate start floats
                 EPS (float): coordinate increment ESP
                 _types (list): event type filter; accepted event type list
-                tiles (list of lists): list of tiles to build (list of [lat1 lat2 lon1 lon2])
+                tiles (list of lists): list of tiles to build
+                    (list of [lat1 lat2 lon1 lon2])
 
             Outputs -
                 tile dataframe (pd.DataFrame)
@@ -158,7 +164,8 @@ cynet library classes:
                 TILE (list of lists): the grid tiles
 
 
-        pull(self, domain='data.cityofchicago.org', dataset_id='crimes', token=None, store=True, out_fname='pull_df.p', pull_all=False)
+        pull(self, domain='data.cityofchicago.org', dataset_id='crimes', token=None,
+            store=True, out_fname='pull_df.p', pull_all=False)
             Pulls new entries from datasource
 
             Input -
