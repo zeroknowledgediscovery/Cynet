@@ -1240,8 +1240,8 @@ def run_pipeline(glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_PA
     models_files = glob.glob(glob_path)
     models_files = [m.split('.')[0] for m in models_files]
 
-    CYNET_PATH = os.path.dirname(sys.executable) + '/cynet'
-    FLEXROC_PATH = os.path.dirname(sys.executable) + '/flexroc'
+    CYNET_PATH = os.path.dirname(sys.modules['cynet'].__file__) + '/bin/cynet'
+    FLEXROC_PATH = os.path.dirname(sys.modules['cynet'].__file__) + '/bin/flexroc'
 
     args = []
     for model in models_files:
