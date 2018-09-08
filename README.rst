@@ -71,7 +71,10 @@ cynet library classes:
 
   .. code-block::
 
-        __init__(self, log_store='log.p', log_file=None, ts_store=None, DATE='Date', year=None, month=None, day=None, EVENT='Primary Type', coord1='Latitude', coord2='Longitude', coord3=None, init_date=None, end_date=None, freq=None, columns=None, types=None, value_limits=None, grid=None, threshold=None)
+        __init__(self, log_store='log.p', log_file=None, ts_store=None, DATE='Date',
+                year=None, month=None, day=None, EVENT='Primary Type', coord1='Latitude',
+                coord2='Longitude', coord3=None, init_date=None, end_date=None, freq=None,
+                columns=None, types=None, value_limits=None, grid=None, threshold=None)
 
 
         fit(self, grid=None, INIT=None, END=None, THRESHOLD=None, csvPREF='TS',
@@ -97,8 +100,7 @@ cynet library classes:
                 max_incr (int): user-specified maximum increment
 
             Outputs -
-                (No output) grid pd.Dataframe written out as CSV file
-                        to path specified
+                (No output) grid pd.Dataframe written out as CSV file to path specified
 
 
         getTS(self, _types=None, tile=None, freq=None):
@@ -158,7 +160,8 @@ cynet library classes:
                 TILE (list of lists): the grid tiles
 
 
-        pull(self, domain='data.cityofchicago.org', dataset_id='crimes', token=None, store=True, out_fname='pull_df.p', pull_all=False)
+        pull(self, domain='data.cityofchicago.org', dataset_id='crimes', token=None,
+            store=True, out_fname='pull_df.p', pull_all=False):
             Pulls new entries from datasource
 
             Input -
@@ -174,7 +177,9 @@ cynet library classes:
                 None (writes out files if store is True and modifies inplace)
 
 
-        timeseries(self, LAT=None, LON=None, EPS=None,_types=None,CSVfile='TS.csv',THRESHOLD=None,tiles=None,incr=6,max_incr=24):
+        timeseries(self, LAT=None, LON=None, EPS=None,_types=None,CSVfile='TS.csv',
+            THRESHOLD=None,tiles=None,incr=6,max_incr=24):
+
             Creates DataFrame of location tiles and their
             respective timeseries from input datasource with
             significance threshold THRESHOLD
@@ -190,8 +195,8 @@ cynet library classes:
                 EPS (float): coordinate increment ESP
                 _types (list): event type filter; accepted event type list
                 CSVfile (string): path to output file
-                tiles (list of lists): list of tiles to build (list of [lat1 lat2 lon1 lon2])
-                auto_adjust_time (boolean): if True, within increments specified (6H default),
+                tiles (list of lists): list of tiles to build(list of [lat1 lat2 lon1 lon2])
+                auto_adjust_time (boolean): if True, within increments specified(6H default),
                     determine optimal temporal frequency for timeseries data
                 incr (int): frequency increment
                 max_incr (int): user-specified maximum increment
@@ -204,7 +209,8 @@ cynet library classes:
 
   .. code-block::
 
-      splitTS(TSfile, csvNAME='TS1', dirname='./', prefix='@', BEG=None, END=None, VARNAME='')
+      splitTS(TSfile, csvNAME='TS1', dirname='./', prefix='@', BEG=None, END=None,
+          VARNAME='')
           Utilities for spatio temporal analysis
 
           Writes out each row of the pd.DataFrame as a separate CSVfile
@@ -455,7 +461,8 @@ cynet library classes:
 
 
       viz(unet,jsonfile=False,colormap='autumn',res='c',
-          drawpoly=False,figname='fig',BGIMAGE=None,BGIMGNAME='BM',IMGRES='high',WIDTH=0.007):
+          drawpoly=False,figname='fig',BGIMAGE=None,BGIMGNAME='BM',
+          IMGRES='high',WIDTH=0.007):
 
           Utility function to visualize spatio temporal interaction networks
 
@@ -538,22 +545,25 @@ cynet library classes:
           current directory. USE PYTHON 3.
 
           Inputs:
-              DIR (string): The location(filepath) of the csvs to be combined. Example 'csvs/'
-              filename (string): the desired name for the combined csv file. Example: 'combined.csv'
+              DIR (string): The location(filepath) of the csvs to be combined.
+                  Example 'csvs/'
+              filename (string): the desired name for the combined csv file.
+                  Example: 'combined.csv'
               N (int): the max number of sources selected for in json_to_csv:
                   M.select(var='delay',high=20,reverse=False,inplace=True).
                   high argument is N.
 
 
       neighbor_plot(filepath= 'crime_filtered_data.csv'):
-          This is the first implementation of our Bokeh plot. The function takes the filepath
-          of the data and opens the bokeh plot in a browser. Google Chrome seems to be the
-          best browser for bokeh plots. The datafile must be a csv file in the correct format.
-          See the file 'crime_filtered_data.csv' for an example. Each row represents a point,
-          all the lines(sources) connected to it and the gammas and delays associated with
-          the lines. The current implementation results in the bokeh plot, and a linked
-          table of the data. IMPORTANT: Points are in MERCATOR Coordinates. This is because
-          the current tileset for the map is in mercator coordinates.
+          This is the first implementation of our Bokeh plot. The function takes
+          the filepath of the data and opens the bokeh plot in a browser. Google Chrome
+          seems to be the best browser for bokeh plots. The datafile must be a csv
+          file in the correct format. See the file 'crime_filtered_data.csv' for an
+          example. Each row represents a point, all the lines(sources) connected to
+          it and the gammas and delays associated with the lines. The current
+          implementation results in the bokeh plot, and a linked table of the data.
+          IMPORTANT: Points are in MERCATOR Coordinates. This is because the current
+          tileset for the map is in mercator coordinates.
           Example file is 'crime_filtered_data.csv'
 
           Inputs -
@@ -561,9 +571,9 @@ cynet library classes:
 
 
       streamheat_combine(DIR, filename):
-          We need to once again combine the csvs, into a format appropriate for the streamplots.
-          This file will do that. This function will produce two files. File 1 will
-          be in longitude and latitude. File 2 will be in mercator coordinates.
+          We need to once again combine the csvs, into a format appropriate for the
+          streamplots. This file will do that. This function will produce two files.
+          File 1 will be in longitude and latitude. File 2 will be in mercator coordinates.
           We will be primiarily working with file 2
 
           Inputs -
@@ -571,7 +581,8 @@ cynet library classes:
               filename (string): The filename for the combined csv file. 'contourmerc.csv'
 
 
-      crime_stream(datafile='contourmerc.csv',density=4, npoints=10, output_name='streamplot.html', method = 'cubic'):
+      crime_stream(datafile='contourmerc.csv',density=4, npoints=10,
+          output_name='streamplot.html', method = 'cubic'):
           This function takes a csv datafile of crime vectors, reads it into
           a pandas dataframe and plots the streamplot using Delanuay
           interpolation. Function will open the plot in a new browser. Use chrome.
@@ -579,13 +590,15 @@ cynet library classes:
               datafile: name of the csv file. Example file is 'contourmerc.csv'
               density: desired line density of the plot. Ex: 4.
               npoints: The dimensions used for the streamplot. The grid will
-                  have npoints**2 number of grids. It is not advised to have npoints > 200.
+                  have npoints**2 number of grids. It is not advised to have
+                  npoints > 200.
                   Reccommended: npoints =10.
               ouput_name: name to save plot to.
               method: method for interpolation. 'cubic','linear', or 'nearest'
 
 
-      heat_map(datafile='contourmerc.csv', npoints=300, output_name='heatmap.html', method = 'linear'):
+      heat_map(datafile='contourmerc.csv', npoints=300, output_name='heatmap.html',
+              method = 'linear'):
           Makes a heatmap from the same datafile that cimre_stream uses.
           datafile: name of the datafile. Example file is 'contourmerc.csv'.
           npoints: dimension for plot. number of squares = npoints**2.
@@ -596,4 +609,4 @@ cynet library classes:
             method (string): method for interpolation. 'cubic','linear', or 'nearest'
 
 
-VERSION 1.0.84
+VERSION 1.0.94
