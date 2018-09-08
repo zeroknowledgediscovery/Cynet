@@ -69,7 +69,7 @@ cynet library classes:
 
   **Methods:**
 
-    .. code-block:: python
+  .. code-block:: python
 
         __init__(self, log_store='log.p', log_file=None, ts_store=None, DATE='Date', year=None, month=None, day=None, EVENT='Primary Type', coord1='Latitude', coord2='Longitude', coord3=None, init_date=None, end_date=None, freq=None, columns=None, types=None, value_limits=None, grid=None, threshold=None)
 
