@@ -266,15 +266,13 @@ cynet library classes:
 
 
 **class uNetworkModels:**
+  Utilities for storing and manipulating XPFSA models
+  inferred by XGenESeSS
 
-    Utilities for storing and manipulating XPFSA models
-    inferred by XGenESeSS
+  Attributes:
+    jsonFile (string): path to json file containing models
 
-
-    Attributes:
-        jsonFile (string): path to json file containing models
-
-    Methods defined here:
+**Methods defined here:**
 
 .. code:: python
 
