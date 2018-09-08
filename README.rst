@@ -23,7 +23,7 @@ cynet
 
 **Usage:**
 
-  .. code-block:: python
+.. code-block:: python
 
 	from cynet import cynet
 	from cynet.cynet import uNetworkModels as models
@@ -212,7 +212,7 @@ cynet library classes:
 
 **Utility functions for spatioTemporal class:**
 
-	.. code:: python
+.. code:: python
 
 		splitTS(TSfile, csvNAME='TS1', dirname='./', prefix='@', BEG=None, END=None,
 			VARNAME='')
