@@ -78,7 +78,7 @@ cynet library classes:
 
 
         fit(self, grid=None, INIT=None, END=None, THRESHOLD=None, csvPREF='TS',
-            auto_adjust_time=False,incr=6,max_incr=24):
+            auto_adjust_time=False,incr=6,max_incr=24, poly_tile=False):
 
             Fit dataproc with specified grid parameters and
             create timeseries for
@@ -98,6 +98,7 @@ cynet library classes:
                 (6H default), determine optimal temporal frequency for timeseries data
                 incr (int): frequency increment
                 max_incr (int): user-specified maximum increment
+                poly_tile(boolean): whether or not tiles define polygons
 
             Outputs -
                 (No output) grid pd.Dataframe written out as CSV file to path specified
@@ -113,6 +114,8 @@ cynet library classes:
                 _types (list of strings): list of category filters
                 tile (list of floats): location boundaries for tile
                 freq (string): intervals of time between timeseries columns
+                poly_tile (boolean): whether or not input for tiles defines
+                    a polygon filter
 
             Outputs:
                 pd.Dataframe of timeseries data to corresponding grid tile
@@ -132,7 +135,9 @@ cynet library classes:
                 EPS (float): coordinate increment ESP
                 _types (list): event type filter; accepted event type list
                 tiles (list of lists): list of tiles to build
-                    Ex:(list of [lat1 lat2 lon1 lon2])
+                    Ex:(list of [lat1 lat2 lon1 lon2]) or tuples (i.e. [(x1,y1),(x2,y2)])
+                    defining polygons
+                poly_tile (boolean): whether input for tile specifies a polygon
 
             Outputs -
                 tile dataframe (pd.DataFrame)
@@ -179,7 +184,7 @@ cynet library classes:
 
 
         timeseries(self, LAT=None, LON=None, EPS=None,_types=None,CSVfile='TS.csv',
-            THRESHOLD=None,tiles=None,incr=6,max_incr=24):
+            THRESHOLD=None,tiles=None,incr=6,max_incr=24, poly_tile=False):
 
             Creates DataFrame of location tiles and their
             respective timeseries from input datasource with
@@ -202,6 +207,7 @@ cynet library classes:
                 (6H default), determine optimal temporal frequency for timeseries data
                 incr (int): frequency increment
                 max_incr (int): user-specified maximum increment
+                poly_tile (boolean): whether or tiles define polygons
 
             Output:
                 No Output grid pd.Dataframe written out as CSV file to path specified
@@ -235,8 +241,7 @@ cynet library classes:
           Utility function
 
           Converts list into string separated by dashes
-          or empty string if input list
-               is not list or is empty
+          or empty string if input list is not list or is empty
 
           Input:
               List (list): input list to be converted
@@ -427,20 +432,24 @@ cynet library classes:
                   arguments[7]-CYNET_PATH- path to cynet binary.
                   arguments[8]-FLEXROC_PATH- path to flexroc binary.
 
-      def run_pipeline(glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_PATH, RESSUFIX = '.res', cores = 4):
+      def run_pipeline(glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_PATH,
+                      RESSUFIX = '.res', cores = 4):
 
           This function is intended to take the output models from midway, process
           them, and produce graphs. This will call the parallel_process function
           in parallel using joblib. Eventually stores the result as 'res_all.csv'.
           Cynet and flexroc are binaries written in C++.
           Inputs:
-              Glob_path(str)-The glob string to be used to find all models. EX: 'models/*model.json'
+              Glob_path(str)-The glob string to be used to find all models.
+                  EX: 'models/*model.json'
               model_nums(list of ints)- The model numbers to use. Ex; [10,15,20,25]
-              Horizon(int)- prediction horizons to test in unit of temporal quantization (using cynet binary)
+              Horizon(int)- prediction horizons to test in unit of temporal quantization
+                  (using cynet binary)
               DATA_PATH(str)-Path to the split files. Ex: './split/1995-01-01_1999-12-31'
               RUNLEN(int)-Length of run. Ex: 2291.
               VARNAME(list of str)- List of variables to consider.
-              RES_PATH(str)- glob string for glob to locate all result files. Ex:'./models/*model*res'
+              RES_PATH(str)- glob string for glob to locate all result files.
+                  Ex:'./models/*model*res'
               RESUFFIX(str)- suffix to add to the end of results.Ex:'.res'
               cores(int)-cores to use for parrallel processing.
 
