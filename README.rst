@@ -409,7 +409,6 @@ cynet library classes:
         auc, tpr, and fpr statistics from flexroc.
 
   **Utility functions for simulateModel:**
-
     .. code-block::
 
         def parallel_process(arguments):
@@ -673,4 +672,4 @@ cynet library classes:
             method (string): method for interpolation. 'cubic','linear', or 'nearest'
 
 
-VERSION 1.1.01
+VERSION 1.1.02
