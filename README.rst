@@ -94,8 +94,8 @@ cynet library classes:
                 INIT (datetime.date): starting timeseries date
                 END (datetime.date): ending timeseries date
                 THRESHOLD (float): significance threshold
-                auto_adjust_time (boolean): if True, within increments specified (6H default),
-                    determine optimal temporal frequency for timeseries data
+                auto_adjust_time (boolean): if True, within increments specified
+                (6H default), determine optimal temporal frequency for timeseries data
                 incr (int): frequency increment
                 max_incr (int): user-specified maximum increment
 
@@ -207,7 +207,7 @@ cynet library classes:
                 No Output grid pd.Dataframe written out as CSV file to path specified
 
 
-  **Utility functions:**
+  **Utility functions for spatioTemporal:**
 
   .. code-block::
 
@@ -393,18 +393,69 @@ cynet library classes:
         function will use the subprocess library to call cynet on a model to process
         it and then run flexroc on it to obtain statistics: auc, tpr, fuc.
         Inputs:
-           LOG_PATH(string)- Logfile from cynet run
-           PARTITION(string)- Partition to use on split data
-           FLEXWIDTH(int)-  Parameter to specify flex in flwxroc
-           FLEX_TAIL_LEN(int)- tail length of input file to consider [0: all]
-           POSITIVE_CLASS_COLUMN(int)- positive class column
-           EVENTCOL(int)- event column
-           tpr_thershold(float)- tpr threshold
-           fpr_threshold(float)- fpr threshold
+            LOG_PATH(string)- Logfile from cynet run
+            PARTITION(string)- Partition to use on split data
+            FLEXWIDTH(int)-  Parameter to specify flex in flwxroc
+            FLEX_TAIL_LEN(int)- tail length of input file to consider [0: all]
+            POSITIVE_CLASS_COLUMN(int)- positive class column
+            EVENTCOL(int)- event column
+            tpr_thershold(float)- tpr threshold
+            fpr_threshold(float)- fpr threshold
         Returns:
         auc, tpr, and fpr statistics from flexroc.
+  **Utility functions for simulateModel:**
 
+  .. code-block::
 
+      def parallel_process(arguments):
+          This function takes a model and produces statistics on them. The output is
+          saved to a result file with the suffix defined by RESUFFIX. We note that
+          arguments needs to be a list of various arguments (detailed below) due to
+          the nature of joblib. We expect this function to be called by a parallel
+          processing library such as joblib.
+          Inputs:
+              arguments(list) - a list of arguments necessary for the function:
+                  arguments[0]-FILE(str): path to the model being processed.
+                  arguments[1]-model_nums(int): Number of models to use in prediction
+                  arguments[2]-Horizon(int): prediction horizon.
+                  arguments[3]-DATA_PATH: path to split file.
+                      Ex: './split/1995-01-01_1999-12-31'
+                  arguments[4]-RUNLEN(int): the runlength
+                  arguments[5]-VARNAME(list)-Variable names to be considering.
+                  arguments[6]-RESSUFIX- suffix to add to the end of results.
+                  arguments[7]-CYNET_PATH- path to cynet binary.
+                  arguments[8]-FLEXROC_PATH- path to flexroc binary.
+
+      def run_pipeline(glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_PATH, RESSUFIX = '.res', cores = 4):
+
+          This function is intended to take the output models from midway, process
+          them, and produce graphs. This will call the parallel_process function
+          in parallel using joblib. Eventually stores the result as 'res_all.csv'.
+          Cynet and flexroc are binaries written in C++.
+          Inputs:
+              Glob_path(str)-The glob string to be used to find all models. EX: 'models/*model.json'
+              model_nums(list of ints)- The model numbers to use. Ex; [10,15,20,25]
+              Horizon(int)- prediction horizons to test in unit of temporal quantization (using cynet binary)
+              DATA_PATH(str)-Path to the split files. Ex: './split/1995-01-01_1999-12-31'
+              RUNLEN(int)-Length of run. Ex: 2291.
+              VARNAME(list of str)- List of variables to consider.
+              RES_PATH(str)- glob string for glob to locate all result files. Ex:'./models/*model*res'
+              RESUFFIX(str)- suffix to add to the end of results.Ex:'.res'
+              cores(int)-cores to use for parrallel processing.
+
+              Outputs: Produces graphs of statistics.
+
+      def get_var(res_csv, coords,varname='auc',VARNAMES=None):
+
+          This function outputs graphs of the results produced by run_pipeline. The
+          graphs concern auc, fpr, and tpr statistics.
+          Inputs:
+              res_csv(str)- path to 'res_all.csv' file produced by run_pipeline.
+              coords(list of str)- the coords to consider.
+                  Ex:['lattgt1','lattgt2','lontgt1','lontgt2']
+              varname(str)-the variable name to consider. Ex: 'auc'.
+                  VARNAMES(str)- List of the variable name from the dataset to consider.
+                  Ex: VARNAMES=['Personnel','Infrastructure','Casualties']
 
 **viscynet library classes:**
   visualization library for Network Models produced by uNetworkModels based on
@@ -431,7 +482,7 @@ cynet library classes:
 
 
       getalpha(arr, index, F=0.9)
-          utility function to normalize transparency of quiver
+          ction to normalize transparency of quiver
 
           Inputs -
               arr (iterable): list of input values
@@ -559,7 +610,7 @@ cynet library classes:
 
       neighbor_plot(filepath= 'crime_filtered_data.csv'):
           This is the first implementation of our Bokeh plot. The function takes
-          the filepath of the data and opens the bokeh plot in a browser. Google Chrome
+          the filepath of the data and opens the bokeh plot in a browser. Chrome
           seems to be the best browser for bokeh plots. The datafile must be a csv
           file in the correct format. See the file 'crime_filtered_data.csv' for an
           example. Each row represents a point, all the lines(sources) connected to
