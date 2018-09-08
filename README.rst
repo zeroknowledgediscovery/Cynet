@@ -273,7 +273,7 @@ cynet library classes:
     jsonFile (string): path to json file containing models
 
   Methods defined here:
-  
+
 .. code:: python
 
     __init__(self, jsonFILE)
@@ -368,7 +368,6 @@ cynet library classes:
     * FLEXROC_PATH - path to flexroc binary.
 
   **Methods:**
-
     .. code-block:: python
 
         run(self, LOG_PATH=None,
@@ -399,12 +398,7 @@ cynet library classes:
 
 
 
-viscynet library classes:
-~~~~~~~~~~~~~~~~~~~~~~~~~
-  * viscynet
-
-  **viscynet library:**
-
+**viscynet library classes:**
   visualization library for Network Models produced by uNetworkModels based on
   matplotlib
 
@@ -490,8 +484,7 @@ viscynet library classes:
 
 
 
-bokeh_pipe library:
-~~~~~~~~~~~~~~~~~~~
+**bokeh_pipe library:**
   visualization library for Network Models produced by uNetworkModels based on
   bokeh
 
