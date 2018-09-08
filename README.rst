@@ -204,7 +204,7 @@ cynet library classes:
 
   .. code:: python
 
-        splitTS(TSfile, csvNAME='TS1', dirname='./', prefix='@', BEG=None, END=None, VARNAME='')
+      splitTS(TSfile, csvNAME='TS1', dirname='./', prefix='@', BEG=None, END=None, VARNAME='')
           Utilities for spatio temporal analysis
 
           Writes out each row of the pd.DataFrame as a separate CSVfile
@@ -223,7 +223,7 @@ cynet library classes:
               (No output)
 
 
-        stringify(List)
+      stringify(List)
           Utility function
 
           Converts list into string separated by dashes
@@ -237,7 +237,7 @@ cynet library classes:
               (string)
 
 
-        to_json(pydict, outFile)
+      to_json(pydict, outFile)
           Writes dictionary json to file
 
           Input -
@@ -248,7 +248,7 @@ cynet library classes:
               (No output but writes out files)
 
 
-        readTS(TSfile,csvNAME='TS1',BEG=None,END=None):
+      readTS(TSfile,csvNAME='TS1',BEG=None,END=None):
            Utilities for spatio temporal analysis
 
            Reads in output TS logfile into pd.DF and outputs necessary
@@ -455,7 +455,7 @@ cynet library classes:
 
 
       viz(unet,jsonfile=False,colormap='autumn',res='c',
-        drawpoly=False,figname='fig',BGIMAGE=None,BGIMGNAME='BM',IMGRES='high',WIDTH=0.007):
+          drawpoly=False,figname='fig',BGIMAGE=None,BGIMGNAME='BM',IMGRES='high',WIDTH=0.007):
 
           Utility function to visualize spatio temporal interaction networks
 
@@ -518,12 +518,12 @@ cynet library classes:
     .. code:: python
 
       json_to_csv(FILEPATH, DEST):
-        This function takes a group of json data files and transforms
-        them into csv files for use. Edit the selection variables as
-        you see fit. It is very important that you initialize DEST to a folder,
-        as it generates many csv files. WARNING: Run this function in
-        python2. The rest of the code should use python3.
-        THIS TAKES QUITE A BIT OF TIME.
+          This function takes a group of json data files and transforms
+          them into csv files for use. Edit the selection variables as
+          you see fit. It is very important that you initialize DEST to a folder,
+          as it generates many csv files. WARNING: Run this function in
+          python2. The rest of the code should use python3.
+          THIS TAKES QUITE A BIT OF TIME.
 
         Inputs -
             FILEPATH (string): the filepath to the json files. Example: 'jsons/'
@@ -531,33 +531,33 @@ cynet library classes:
 
 
       combine_merc(DIR, filename, N = 20):
-        This function combines the csv's into a single file. At the same time,
-        this function will convert the format of the coordinates from longitude
-        and latitude which is necessary to make our neighborhood plot. Our tileset
-        accepts mercator coordinates. This generates one combined csv in the
-        current directory. USE PYTHON 3.
+          This function combines the csv's into a single file. At the same time,
+          this function will convert the format of the coordinates from longitude
+          and latitude which is necessary to make our neighborhood plot. Our tileset
+          accepts mercator coordinates. This generates one combined csv in the
+          current directory. USE PYTHON 3.
 
-        Inputs:
-            DIR (string): The location(filepath) of the csvs to be combined. Example 'csvs/'
-            filename (string): the desired name for the combined csv file. Example: 'combined.csv'
-            N (int): the max number of sources selected for in json_to_csv:
-                M.select(var='delay',high=20,reverse=False,inplace=True).
-                high argument is N.
+          Inputs:
+              DIR (string): The location(filepath) of the csvs to be combined. Example 'csvs/'
+              filename (string): the desired name for the combined csv file. Example: 'combined.csv'
+              N (int): the max number of sources selected for in json_to_csv:
+                  M.select(var='delay',high=20,reverse=False,inplace=True).
+                  high argument is N.
 
 
       neighbor_plot(filepath= 'crime_filtered_data.csv'):
-        This is the first implementation of our Bokeh plot. The function takes the filepath
-        of the data and opens the bokeh plot in a browser. Google Chrome seems to be the
-        best browser for bokeh plots. The datafile must be a csv file in the correct format.
-        See the file 'crime_filtered_data.csv' for an example. Each row represents a point,
-        all the lines(sources) connected to it and the gammas and delays associated with
-        the lines. The current implementation results in the bokeh plot, and a linked
-        table of the data. IMPORTANT: Points are in MERCATOR Coordinates. This is because
-        the current tileset for the map is in mercator coordinates.
-        Example file is 'crime_filtered_data.csv'
+          This is the first implementation of our Bokeh plot. The function takes the filepath
+          of the data and opens the bokeh plot in a browser. Google Chrome seems to be the
+          best browser for bokeh plots. The datafile must be a csv file in the correct format.
+          See the file 'crime_filtered_data.csv' for an example. Each row represents a point,
+          all the lines(sources) connected to it and the gammas and delays associated with
+          the lines. The current implementation results in the bokeh plot, and a linked
+          table of the data. IMPORTANT: Points are in MERCATOR Coordinates. This is because
+          the current tileset for the map is in mercator coordinates.
+          Example file is 'crime_filtered_data.csv'
 
-        Inputs -
-          filepath (string): input data file
+          Inputs -
+            filepath (string): input data file
 
 
       streamheat_combine(DIR, filename):
