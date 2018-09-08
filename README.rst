@@ -200,69 +200,69 @@ cynet library classes:
                 No Output grid pd.Dataframe written out as CSV file to path specified
 
 
-**Utility functions:**
+  **Utility functions:**
 
-.. code:: python
+  .. code:: python
 
-      splitTS(TSfile, csvNAME='TS1', dirname='./', prefix='@', BEG=None, END=None, VARNAME='')
-        Utilities for spatio temporal analysis
+        splitTS(TSfile, csvNAME='TS1', dirname='./', prefix='@', BEG=None, END=None, VARNAME='')
+          Utilities for spatio temporal analysis
 
-        Writes out each row of the pd.DataFrame as a separate CSVfile
-        For XgenESeSS binary
+          Writes out each row of the pd.DataFrame as a separate CSVfile
+          For XgenESeSS binary
 
-        Inputs -
-            TSfile (pd.DataFrame): DataFrame to write out
-            csvNAME (string): output filename
-            dirname (string): directory for output file
-            prefix (string): prefix for files
-            VARNAME (string): string to append to file names
-            BEG (datetime): start date
-            END (datetime): end date
+          Inputs -
+              TSfile (pd.DataFrame): DataFrame to write out
+              csvNAME (string): output filename
+              dirname (string): directory for output file
+              prefix (string): prefix for files
+              VARNAME (string): string to append to file names
+              BEG (datetime): start date
+              END (datetime): end date
 
-        Outputs -
-            (No output)
-
-
-      stringify(List)
-        Utility function
-
-        Converts list into string separated by dashes
-        or empty string if input list
-             is not list or is empty
-
-        Input:
-            List (list): input list to be converted
-
-        Output:
-            (string)
+          Outputs -
+              (No output)
 
 
-      to_json(pydict, outFile)
-        Writes dictionary json to file
+        stringify(List)
+          Utility function
 
-        Input -
-            pydict (dict): ditionary to store
-            outFile (string): name of outfile to write json to
+          Converts list into string separated by dashes
+          or empty string if input list
+               is not list or is empty
 
-        Output -
-            (No output but writes out files)
+          Input:
+              List (list): input list to be converted
+
+          Output:
+              (string)
 
 
-      readTS(TSfile,csvNAME='TS1',BEG=None,END=None):
-         Utilities for spatio temporal analysis
+        to_json(pydict, outFile)
+          Writes dictionary json to file
 
-         Reads in output TS logfile into pd.DF and outputs necessary
-         CSV files in XgenESeSS-friendly format
+          Input -
+              pydict (dict): ditionary to store
+              outFile (string): name of outfile to write json to
 
-         Input -
-             TSfile (string or list of strings): filename of input TS to read
-                 or list of filenames to read in and concatenate into one TS
-             csvNAME (string)
-             BEG (string): start datetime
-             END (string): end datetime
+          Output -
+              (No output but writes out files)
 
-         Output -
-             dfts (pandas.DataFrame)
+
+        readTS(TSfile,csvNAME='TS1',BEG=None,END=None):
+           Utilities for spatio temporal analysis
+
+           Reads in output TS logfile into pd.DF and outputs necessary
+           CSV files in XgenESeSS-friendly format
+
+           Input -
+               TSfile (string or list of strings): filename of input TS to read
+                   or list of filenames to read in and concatenate into one TS
+               csvNAME (string)
+               BEG (string): start datetime
+               END (string): end datetime
+
+           Output -
+               dfts (pandas.DataFrame)
 
 
 **class uNetworkModels:**
@@ -272,8 +272,7 @@ cynet library classes:
   Attributes:
     jsonFile (string): path to json file containing models
 
-**Methods defined here:**
-
+  Methods defined here:
 .. code:: python
 
     __init__(self, jsonFILE)
@@ -357,15 +356,15 @@ cynet library classes:
             ['latsrc','lonsrc','lattgt', 'lontgtt','gamma','delay','distance']
 
 **class simulateModel**
-    Utilities for generating statistical analysis after processing models
+  Utilities for generating statistical analysis after processing models
 
-    **Attributes:**
-        * MODEL_PATH(string)- The path to the model being processed.
-        * DATA_PATH(string)- Path to the split file.
-        * RUNLEN(integer)- Length of the run.
-        * READLEN(integer)- Length of split data to read from begining
-        * CYNET_PATH - path to cynet binary.
-        * FLEXROC_PATH - path to flexroc binary.
+  **Attributes:**
+    * MODEL_PATH(string)- The path to the model being processed.
+    * DATA_PATH(string)- Path to the split file.
+    * RUNLEN(integer)- Length of the run.
+    * READLEN(integer)- Length of split data to read from begining
+    * CYNET_PATH - path to cynet binary.
+    * FLEXROC_PATH - path to flexroc binary.
 
   **Methods:**
 
