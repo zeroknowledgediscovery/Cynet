@@ -23,7 +23,7 @@ cynet
 
 **Usage:**
 
-.. code-block:: python
+.. code-block::
 
     from cynet import cynet
     from cynet.cynet import uNetworkModels as models
@@ -69,7 +69,7 @@ cynet library classes:
 
   **Methods:**
 
-  .. code-block:: python
+  .. code-block::
 
         __init__(self, log_store='log.p', log_file=None, ts_store=None, DATE='Date', year=None, month=None, day=None, EVENT='Primary Type', coord1='Latitude', coord2='Longitude', coord3=None, init_date=None, end_date=None, freq=None, columns=None, types=None, value_limits=None, grid=None, threshold=None)
 
@@ -101,7 +101,7 @@ cynet library classes:
                         to path specified
 
 
-        getTS(self, _types=None, tile=None, freq=None)
+        getTS(self, _types=None, tile=None, freq=None):
             Given location tile boundaries and type category filter, creates the
             corresponding timeseries as a pandas DataFrame
             (Note: can reassign type filter, does not have to be the same one
@@ -118,7 +118,7 @@ cynet library classes:
                 with the type filter  included
 
 
-        get_rand_tile(tiles=None,LAT=None,LON=None,EPS=None,_types=None)
+        get_rand_tile(tiles=None,LAT=None,LON=None,EPS=None,_types=None):
             Picks random tile from options fed into timeseries method which maps to a
             non-empty subset within the larger dataset
 
@@ -202,7 +202,7 @@ cynet library classes:
 
   **Utility functions:**
 
-  .. code:: python
+  .. code-block::
 
       splitTS(TSfile, csvNAME='TS1', dirname='./', prefix='@', BEG=None, END=None, VARNAME='')
           Utilities for spatio temporal analysis
@@ -223,7 +223,7 @@ cynet library classes:
               (No output)
 
 
-      stringify(List)
+      stringify(List):
           Utility function
 
           Converts list into string separated by dashes
@@ -237,7 +237,7 @@ cynet library classes:
               (string)
 
 
-      to_json(pydict, outFile)
+      to_json(pydict, outFile):
           Writes dictionary json to file
 
           Input -
@@ -274,9 +274,9 @@ cynet library classes:
 
   Methods defined here:
 
-.. code:: python
+.. code-block::
 
-    __init__(self, jsonFILE)
+    __init__(self, jsonFILE):
 
 
     append(self,pydict):
@@ -286,7 +286,7 @@ cynet library classes:
         append models to internal dictionary
 
 
-    augmentDistance(self)
+    augmentDistance(self):
         Utilities for storing and manipulating XPFSA models
         inferred by XGenESeSS
 
@@ -333,7 +333,7 @@ cynet library classes:
         No I/O
 
 
-    to_json(outFile)
+    to_json(outFile):
         Utilities for storing and manipulating XPFSA models
         inferred by XGenESeSS
 
@@ -368,7 +368,7 @@ cynet library classes:
     * FLEXROC_PATH - path to flexroc binary.
 
   **Methods:**
-    .. code-block:: python
+    .. code-block::
 
         run(self, LOG_PATH=None,
             PARTITION=0.5,
@@ -403,7 +403,7 @@ cynet library classes:
   matplotlib
 
   Functions:
-    .. code:: python
+    .. code-block::
 
       draw_screen_poly(lats, lons, m, ax, val, cmap, ALPHA=0.6)
           utility function to draw polygons on basemap
@@ -515,7 +515,7 @@ cynet library classes:
     the combined file for the streamline plot and the heatplot.
 
   Functions:
-    .. code:: python
+    .. code-block::
 
       json_to_csv(FILEPATH, DEST):
           This function takes a group of json data files and transforms
