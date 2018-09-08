@@ -210,9 +210,9 @@ cynet library classes:
 				No Output grid pd.Dataframe written out as CSV file to path specified
 
 
-**Utility functions for spatioTemporal class:**
+	**Utility functions for spatioTemporal class:**
 
-.. code:: python
+	.. code:: python
 
 		splitTS(TSfile, csvNAME='TS1', dirname='./', prefix='@', BEG=None, END=None,
 			VARNAME='')
@@ -281,7 +281,6 @@ cynet library classes:
 
 	Utilities for storing and manipulating XPFSA models
 	inferred by XGenESeSS
-
 
 	Attributes:
 		jsonFile (string): path to json file containing models
