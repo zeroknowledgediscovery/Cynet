@@ -202,7 +202,7 @@ cynet library classes:
 
 **Utility functions:**
 
-    .. code:: python
+.. code:: python
 
       splitTS(TSfile, csvNAME='TS1', dirname='./', prefix='@', BEG=None, END=None, VARNAME='')
         Utilities for spatio temporal analysis
@@ -276,88 +276,87 @@ cynet library classes:
 
     Methods defined here:
 
-    .. code:: python
+.. code:: python
 
-      __init__(self, jsonFILE)
-
-
-      append(self,pydict):
-          Utilities for storing and manipulating XPFSA models
-          inferred by XGenESeSS
-
-          append models to internal dictionary
+    __init__(self, jsonFILE)
 
 
-      augmentDistance(self)
-          Utilities for storing and manipulating XPFSA models
-          inferred by XGenESeSS
+    append(self,pydict):
+        Utilities for storing and manipulating XPFSA models
+        inferred by XGenESeSS
 
-          Calculates the distance between all models and stores
-          them under the
-          distance key of each model;
-
-          No I/O
+        append models to internal dictionary
 
 
-      select(self,var="gamma",n=None,
-          reverse=False, store=None,
-          high=None,low=None,equal=None,inplace=False):
-          Utilities for storing and manipulating XPFSA models
-          inferred by XGenESeSS
+    augmentDistance(self)
+        Utilities for storing and manipulating XPFSA models
+        inferred by XGenESeSS
 
-          Selects the N top models as ranked by var specified value
-          (in reverse order if reverse is True)
+        Calculates the distance between all models and stores
+        them under the
+        distance key of each model;
 
-          Inputs -
-              var (string): model parameter to rank by
-              n (int): number of models to return
-              reverse (boolean): return in ascending order (True)
-                  or descending (False) order
-              store (string): name of file to store selection json
-              high (float): higher cutoff
-              equal (float): choose models with selection values
-                  equal to the given value
-              low (float): lower cutoff
-              inplace (bool): update models if true
-          Output -
-              (dictionary): top n models as ranked by var
-                           in ascending/descending order
+        No I/O
 
 
-      setVarname(self):
-          Utilities for storing and manipulating XPFSA models
-          inferred by XGenESeSS
+    select(self,var="gamma",n=None,
+        reverse=False, store=None,
+        high=None,low=None,equal=None,inplace=False):
+        Utilities for storing and manipulating XPFSA models
+        inferred by XGenESeSS
 
-          Extracts the varname for src and tgt of
-          each model and stores under src_var and tgt_var
-          keys of each model;
+        Selects the N top models as ranked by var specified value
+        (in reverse order if reverse is True)
 
-          No I/O
+        Inputs -
+            var (string): model parameter to rank by
+            n (int): number of models to return
+            reverse (boolean): return in ascending order (True)
+                or descending (False) order
+            store (string): name of file to store selection json
+            high (float): higher cutoff
+            equal (float): choose models with selection values
+                equal to the given value
+            low (float): lower cutoff
+            inplace (bool): update models if true
+        Output -
+            (dictionary): top n models as ranked by var
+                         in ascending/descending order
 
 
-      to_json(outFile)
-          Utilities for storing and manipulating XPFSA models
-          inferred by XGenESeSS
+    setVarname(self):
+        Utilities for storing and manipulating XPFSA models
+        inferred by XGenESeSS
 
-          Writes out updated models json to file
+        Extracts the varname for src and tgt of
+        each model and stores under src_var and tgt_var
+        keys of each model;
 
-          Input -
-              outFile (string): name of outfile to write json to
-
-          Output -
-              (No output but writes out files)
+        No I/O
 
 
-      setDataFrame(self,scatter=None):
-          Generate dataframe representation of models
+    to_json(outFile)
+        Utilities for storing and manipulating XPFSA models
+        inferred by XGenESeSS
 
-          Input -
-              scatter (string) : prefix of filename to plot 3X3 regression
-              matrix between delay, distance and coefficiecient of causality
-          Output -
-              Dataframe with columns
-              ['latsrc','lonsrc','lattgt',
-               'lontgtt','gamma','delay','distance']
+        Writes out updated models json to file
+
+        Input -
+            outFile (string): name of outfile to write json to
+
+        Output -
+            (No output but writes out files)
+
+
+    setDataFrame(self,scatter=None):
+        Generate dataframe representation of models
+
+        Input -
+            scatter (string) : prefix of filename to plot 3X3 regression
+            matrix between delay, distance and coefficiecient of causality
+        Output -
+            Dataframe with columns
+            ['latsrc','lonsrc','lattgt', 'lontgtt','gamma','delay','distance']
 
 **class simulateModel**
     Utilities for generating statistical analysis after processing models
