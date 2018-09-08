@@ -214,7 +214,6 @@ cynet library classes:
 
 
   **Utility functions for spatioTemporal:**
-
     .. code-block::
 
         splitTS(TSfile, csvNAME='TS1', dirname='./', prefix='@', BEG=None, END=None,
@@ -674,4 +673,4 @@ cynet library classes:
             method (string): method for interpolation. 'cubic','linear', or 'nearest'
 
 
-VERSION 1.0.99
+VERSION 1.1.01
