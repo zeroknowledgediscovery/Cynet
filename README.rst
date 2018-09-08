@@ -387,31 +387,31 @@ cynet library classes:
 
   	.. code-block:: python
 
-		run(self, LOG_PATH=None,
-			PARTITION=0.5,
-			DATA_TYPE='continuous',
-			FLEXWIDTH=1,
-			FLEX_TAIL_LEN=100,
-			POSITIVE_CLASS_COLUMN=5,
-			EVENTCOL=3,
-			tpr_thrshold=0.85,
-			fpr_threshold=0.15):
+			run(self, LOG_PATH=None,
+				PARTITION=0.5,
+				DATA_TYPE='continuous',
+				FLEXWIDTH=1,
+				FLEX_TAIL_LEN=100,
+				POSITIVE_CLASS_COLUMN=5,
+				EVENTCOL=3,
+				tpr_thrshold=0.85,
+				fpr_threshold=0.15):
 
 
-		This function is intended to replace the cynrun.sh shell script. This
-		function will use the subprocess library to call cynet on a model to process
-		it and then run flexroc on it to obtain statistics: auc, tpr, fuc.
-		Inputs:
-			LOG_PATH(string)- Logfile from cynet run
-			PARTITION(string)- Partition to use on split data
-			FLEXWIDTH(int)-  Parameter to specify flex in flwxroc
-			FLEX_TAIL_LEN(int)- tail length of input file to consider [0: all]
-			POSITIVE_CLASS_COLUMN(int)- positive class column
-			EVENTCOL(int)- event column
-			tpr_thershold(float)- tpr threshold
-			fpr_threshold(float)- fpr threshold
-		Returns:
-		auc, tpr, and fpr statistics from flexroc.
+			This function is intended to replace the cynrun.sh shell script. This
+			function will use the subprocess library to call cynet on a model to process
+			it and then run flexroc on it to obtain statistics: auc, tpr, fuc.
+			Inputs:
+				LOG_PATH(string)- Logfile from cynet run
+				PARTITION(string)- Partition to use on split data
+				FLEXWIDTH(int)-  Parameter to specify flex in flwxroc
+				FLEX_TAIL_LEN(int)- tail length of input file to consider [0: all]
+				POSITIVE_CLASS_COLUMN(int)- positive class column
+				EVENTCOL(int)- event column
+				tpr_thershold(float)- tpr threshold
+				fpr_threshold(float)- fpr threshold
+			Returns:
+			auc, tpr, and fpr statistics from flexroc.
 
 
 
@@ -541,83 +541,83 @@ bokeh_pipe library:
 
 	.. code:: python
 
-	  json_to_csv(FILEPATH, DEST):
-		  This function takes a group of json data files and transforms
-		  them into csv files for use. Edit the selection variables as
-		  you see fit. It is very important that you initialize DEST to a folder,
-		  as it generates many csv files. WARNING: Run this function in
-		  python2. The rest of the code should use python3.
-		  THIS TAKES QUITE A BIT OF TIME.
+		json_to_csv(FILEPATH, DEST):
+			This function takes a group of json data files and transforms
+			them into csv files for use. Edit the selection variables as
+			you see fit. It is very important that you initialize DEST to a folder,
+			as it generates many csv files. WARNING: Run this function in
+			python2. The rest of the code should use python3.
+			THIS TAKES QUITE A BIT OF TIME.
 
-		  Inputs -
-			  FILEPATH (string): the filepath to the json files. Example: 'jsons/'
-			  DEST (string): the place for the csv files to be stored. Example: 'csvs/'
-
-
-	  combine_merc(DIR, filename, N = 20):
-		  This function combines the csv's into a single file. At the same time,
-		  this function will convert the format of the coordinates from longitude
-		  and latitude which is necessary to make our neighborhood plot. Our tileset
-		  accepts mercator coordinates. This generates one combined csv in the
-		  current directory. USE PYTHON 3.
-
-		  Inputs:
-			  DIR (string): The location(filepath) of the csvs to be combined. Example 'csvs/'
-			  filename (string): the desired name for the combined csv file. Example: 'combined.csv'
-			  N (int): the max number of sources selected for in json_to_csv:
-			  M.select(var='delay',high=20,reverse=False,inplace=True).
-			  high argument is N.
+			Inputs -
+				FILEPATH (string): the filepath to the json files. Example: 'jsons/'
+				DEST (string): the place for the csv files to be stored. Example: 'csvs/'
 
 
-	  neighbor_plot(filepath= 'crime_filtered_data.csv'):
-		  This is the first implementation of our Bokeh plot. The function takes the filepath
-		  of the data and opens the bokeh plot in a browser. Google Chrome seems to be the
-		  best browser for bokeh plots. The datafile must be a csv file in the correct format.
-		  See the file 'crime_filtered_data.csv' for an example. Each row represents a point,
-		  all the lines(sources) connected to it and the gammas and delays associated with
-		  the lines. The current implementation results in the bokeh plot, and a linked
-		  table of the data. IMPORTANT: Points are in MERCATOR Coordinates. This is because
-		  the current tileset for the map is in mercator coordinates.
-		  Example file is 'crime_filtered_data.csv'
+		combine_merc(DIR, filename, N = 20):
+			This function combines the csv's into a single file. At the same time,
+			this function will convert the format of the coordinates from longitude
+			and latitude which is necessary to make our neighborhood plot. Our tileset
+			accepts mercator coordinates. This generates one combined csv in the
+			current directory. USE PYTHON 3.
 
-		  Inputs -
-			  filepath (string): input data file
-
-
-	  streamheat_combine(DIR, filename):
-		  We need to once again combine the csvs, into a format appropriate for the streamplots.
-		  This file will do that. This function will produce two files. File 1 will
-		  be in longitude and latitude. File 2 will be in mercator coordinates.
-		  We will be primiarily working with file 2
-
-		  Inputs -
-			  DIR (string): The filepath to the csvs. Ex: 'csvs/'
-			  filename (string): The filename for the combined csv file. 'contourmerc.csv'
+			Inputs:
+				DIR (string): The location(filepath) of the csvs to be combined. Example 'csvs/'
+				filename (string): the desired name for the combined csv file. Example: 'combined.csv'
+				N (int): the max number of sources selected for in json_to_csv:
+				M.select(var='delay',high=20,reverse=False,inplace=True).
+				high argument is N.
 
 
-	  crime_stream(datafile='contourmerc.csv',density=4, npoints=10, output_name='streamplot.html', method = 'cubic'):
-		  This function takes a csv datafile of crime vectors, reads it into
-		  a pandas dataframe and plots the streamplot using Delanuay
-		  interpolation. Function will open the plot in a new browser. Use chrome.
-		  Inputs:
-			  datafile: name of the csv file. Example file is 'contourmerc.csv'
-			  density: desired line density of the plot. Ex: 4.
-			  npoints: The dimensions used for the streamplot. The grid will
-				  have npoints**2 number of grids. It is not advised to have npoints > 200.
-				  Reccommended: npoints =10.
-			  ouput_name: name to save plot to.
-			  method: method for interpolation. 'cubic','linear', or 'nearest'
+		neighbor_plot(filepath= 'crime_filtered_data.csv'):
+			This is the first implementation of our Bokeh plot. The function takes the filepath
+			of the data and opens the bokeh plot in a browser. Google Chrome seems to be the
+			best browser for bokeh plots. The datafile must be a csv file in the correct format.
+			See the file 'crime_filtered_data.csv' for an example. Each row represents a point,
+			all the lines(sources) connected to it and the gammas and delays associated with
+			the lines. The current implementation results in the bokeh plot, and a linked
+			table of the data. IMPORTANT: Points are in MERCATOR Coordinates. This is because
+			the current tileset for the map is in mercator coordinates.
+			Example file is 'crime_filtered_data.csv'
+
+			Inputs -
+				filepath (string): input data file
 
 
-	  heat_map(datafile='contourmerc.csv', npoints=300, output_name='heatmap.html', method = 'linear'):
-		  Makes a heatmap from the same datafile that cimre_stream uses.
-		  datafile: name of the datafile. Example file is 'contourmerc.csv'.
-		  npoints: dimension for plot. number of squares = npoints**2.
-			  Recommended: 100-300
+		streamheat_combine(DIR, filename):
+			We need to once again combine the csvs, into a format appropriate for the streamplots.
+			This file will do that. This function will produce two files. File 1 will
+			be in longitude and latitude. File 2 will be in mercator coordinates.
+			We will be primiarily working with file 2
 
-		  Inputs -
-			output_name (string): output file name for the plot.
-			method (string): method for interpolation. 'cubic','linear', or 'nearest'
+			Inputs -
+				DIR (string): The filepath to the csvs. Ex: 'csvs/'
+				filename (string): The filename for the combined csv file. 'contourmerc.csv'
 
 
-VERSION 1.0.78
+		crime_stream(datafile='contourmerc.csv',density=4, npoints=10, output_name='streamplot.html', method = 'cubic'):
+			This function takes a csv datafile of crime vectors, reads it into
+			a pandas dataframe and plots the streamplot using Delanuay
+			interpolation. Function will open the plot in a new browser. Use chrome.
+			Inputs:
+				datafile: name of the csv file. Example file is 'contourmerc.csv'
+				density: desired line density of the plot. Ex: 4.
+				npoints: The dimensions used for the streamplot. The grid will
+					have npoints**2 number of grids. It is not advised to have npoints > 200.
+					Reccommended: npoints =10.
+				ouput_name: name to save plot to.
+				method: method for interpolation. 'cubic','linear', or 'nearest'
+
+
+		heat_map(datafile='contourmerc.csv', npoints=300, output_name='heatmap.html', method = 'linear'):
+			Makes a heatmap from the same datafile that cimre_stream uses.
+			datafile: name of the datafile. Example file is 'contourmerc.csv'.
+			npoints: dimension for plot. number of squares = npoints**2.
+				Recommended: 100-300
+
+			Inputs -
+				output_name (string): output file name for the plot.
+				method (string): method for interpolation. 'cubic','linear', or 'nearest'
+
+
+VERSION 1.0.80
