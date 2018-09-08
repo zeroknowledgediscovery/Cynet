@@ -441,9 +441,10 @@ cynet library classes:
                 Glob_path(str)-The glob string to be used to find all models.
                     EX: 'models/*model.json'
                 model_nums(list of ints)- The model numbers to use. Ex; [10,15,20,25]
-                Horizon(int)- prediction horizons to test in unit of temporal quantization
-                    (using cynet binary)
-                DATA_PATH(str)-Path to the split files. Ex: './split/1995-01-01_1999-12-31'
+                Horizon(int)- prediction horizons to test in unit of temporal
+                    quantization (using cynet binary)
+                DATA_PATH(str)-Path to the split files.
+                    Ex: './split/1995-01-01_1999-12-31'
                 RUNLEN(int)-Length of run. Ex: 2291.
                 VARNAME(list of str)- List of variables to consider.
                 RES_PATH(str)- glob string for glob to locate all result files.
@@ -462,7 +463,8 @@ cynet library classes:
                 coords(list of str)- the coords to consider.
                     Ex:['lattgt1','lattgt2','lontgt1','lontgt2']
                 varname(str)-the variable name to consider. Ex: 'auc'.
-                    VARNAMES(str)- List of the variable name from the dataset to consider.
+                    VARNAMES(str)- List of the variable name from the dataset
+                    to consider.
                     Ex: VARNAMES=['Personnel','Infrastructure','Casualties']
 
 **viscynet library classes:**
@@ -672,4 +674,4 @@ cynet library classes:
             method (string): method for interpolation. 'cubic','linear', or 'nearest'
 
 
-VERSION 1.1.02
+VERSION 1.1.03
