@@ -403,6 +403,7 @@ cynet library classes:
             fpr_threshold(float)- fpr threshold
         Returns:
         auc, tpr, and fpr statistics from flexroc.
+
   **Utility functions for simulateModel:**
 
   .. code-block::
