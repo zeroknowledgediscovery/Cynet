@@ -131,7 +131,8 @@ cynet library classes:
                                                coordinate start floats
                 EPS (float): coordinate increment ESP
                 _types (list): event type filter; accepted event type list
-                tiles (list of lists): list of tiles to build (list of [lat1 lat2 lon1 lon2])
+                tiles (list of lists): list of tiles to build
+                    Ex:(list of [lat1 lat2 lon1 lon2])
 
             Outputs -
                 tile dataframe (pd.DataFrame)
@@ -195,9 +196,10 @@ cynet library classes:
                 EPS (float): coordinate increment ESP
                 _types (list): event type filter; accepted event type list
                 CSVfile (string): path to output file
-                tiles (list of lists): list of tiles to build(list of [lat1 lat2 lon1 lon2])
-                auto_adjust_time (boolean): if True, within increments specified(6H default),
-                    determine optimal temporal frequency for timeseries data
+                tiles (list of lists): list of tiles to build
+                    (list of [lat1 lat2 lon1 lon2])
+                auto_adjust_time (boolean): if True, within increments specified
+                (6H default), determine optimal temporal frequency for timeseries data
                 incr (int): frequency increment
                 max_incr (int): user-specified maximum increment
 
@@ -441,7 +443,8 @@ cynet library classes:
               v (float): alpha value
 
 
-      showGlobalPlot(coords, ts=None, fsize=[14, 14], cmap='jet', m=None, figname='fig', F=2)
+      showGlobalPlot(coords, ts=None, fsize=[14, 14], cmap='jet',
+                    m=None, figname='fig', F=2):
           plot global distribution of events within time period specified
 
           Inputs -
@@ -573,12 +576,13 @@ cynet library classes:
       streamheat_combine(DIR, filename):
           We need to once again combine the csvs, into a format appropriate for the
           streamplots. This file will do that. This function will produce two files.
-          File 1 will be in longitude and latitude. File 2 will be in mercator coordinates.
-          We will be primiarily working with file 2
+          File 1 will be in longitude and latitude. File 2 will be in mercator
+          coordinates. We will be primiarily working with file 2
 
           Inputs -
               DIR (string): The filepath to the csvs. Ex: 'csvs/'
-              filename (string): The filename for the combined csv file. 'contourmerc.csv'
+              filename (string): The filename for the combined csv file.
+                Ex: 'contourmerc.csv'
 
 
       crime_stream(datafile='contourmerc.csv',density=4, npoints=10,
