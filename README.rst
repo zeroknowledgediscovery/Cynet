@@ -17,13 +17,13 @@ cynet
 
 .. NOTE:: If issues arise with dependencies in python3, be sure that *tkinter* is installed
 
-  .. code-block::
+.. code-block::
 
     sudo apt-get install python3-tk
 
 **Usage:**
 
-  .. code-block:: python
+.. code-block:: python
 
     from cynet import cynet
     from cynet.cynet import uNetworkModels as models
