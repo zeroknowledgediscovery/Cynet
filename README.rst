@@ -273,6 +273,7 @@ cynet library classes:
     jsonFile (string): path to json file containing models
 
   Methods defined here:
+  
 .. code:: python
 
     __init__(self, jsonFILE)
