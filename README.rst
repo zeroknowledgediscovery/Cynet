@@ -215,67 +215,67 @@ cynet library classes:
 
   **Utility functions for spatioTemporal:**
 
-  .. code-block::
+    .. code-block::
 
-      splitTS(TSfile, csvNAME='TS1', dirname='./', prefix='@', BEG=None, END=None,
-          VARNAME='')
-          Utilities for spatio temporal analysis
+        splitTS(TSfile, csvNAME='TS1', dirname='./', prefix='@', BEG=None, END=None,
+            VARNAME='')
+            Utilities for spatio temporal analysis
 
-          Writes out each row of the pd.DataFrame as a separate CSVfile
-          For XgenESeSS binary
+            Writes out each row of the pd.DataFrame as a separate CSVfile
+            For XgenESeSS binary
 
-          Inputs -
-              TSfile (pd.DataFrame): DataFrame to write out
-              csvNAME (string): output filename
-              dirname (string): directory for output file
-              prefix (string): prefix for files
-              VARNAME (string): string to append to file names
-              BEG (datetime): start date
-              END (datetime): end date
+            Inputs -
+                TSfile (pd.DataFrame): DataFrame to write out
+                csvNAME (string): output filename
+                dirname (string): directory for output file
+                prefix (string): prefix for files
+                VARNAME (string): string to append to file names
+                BEG (datetime): start date
+                END (datetime): end date
 
-          Outputs -
-              (No output)
-
-
-      stringify(List):
-          Utility function
-
-          Converts list into string separated by dashes
-          or empty string if input list is not list or is empty
-
-          Input:
-              List (list): input list to be converted
-
-          Output:
-              (string)
+            Outputs -
+                (No output)
 
 
-      to_json(pydict, outFile):
-          Writes dictionary json to file
+        stringify(List):
+            Utility function
 
-          Input -
-              pydict (dict): ditionary to store
-              outFile (string): name of outfile to write json to
+            Converts list into string separated by dashes
+            or empty string if input list is not list or is empty
 
-          Output -
-              (No output but writes out files)
+            Input:
+                List (list): input list to be converted
+
+            Output:
+                (string)
 
 
-      readTS(TSfile,csvNAME='TS1',BEG=None,END=None):
-           Utilities for spatio temporal analysis
+        to_json(pydict, outFile):
+            Writes dictionary json to file
 
-           Reads in output TS logfile into pd.DF and outputs necessary
-           CSV files in XgenESeSS-friendly format
+            Input -
+                pydict (dict): ditionary to store
+                outFile (string): name of outfile to write json to
 
-           Input -
-               TSfile (string or list of strings): filename of input TS to read
-                   or list of filenames to read in and concatenate into one TS
-               csvNAME (string)
-               BEG (string): start datetime
-               END (string): end datetime
+            Output -
+                (No output but writes out files)
 
-           Output -
-               dfts (pandas.DataFrame)
+
+        readTS(TSfile,csvNAME='TS1',BEG=None,END=None):
+             Utilities for spatio temporal analysis
+
+             Reads in output TS logfile into pd.DF and outputs necessary
+             CSV files in XgenESeSS-friendly format
+
+             Input -
+                 TSfile (string or list of strings): filename of input TS to read
+                     or list of filenames to read in and concatenate into one TS
+                 csvNAME (string)
+                 BEG (string): start datetime
+                 END (string): end datetime
+
+             Output -
+                 dfts (pandas.DataFrame)
 
 
 **class uNetworkModels:**
@@ -411,61 +411,61 @@ cynet library classes:
 
   **Utility functions for simulateModel:**
 
-  .. code-block::
+    .. code-block::
 
-      def parallel_process(arguments):
-          This function takes a model and produces statistics on them. The output is
-          saved to a result file with the suffix defined by RESUFFIX. We note that
-          arguments needs to be a list of various arguments (detailed below) due to
-          the nature of joblib. We expect this function to be called by a parallel
-          processing library such as joblib.
-          Inputs:
-              arguments(list) - a list of arguments necessary for the function:
-                  arguments[0]-FILE(str): path to the model being processed.
-                  arguments[1]-model_nums(int): Number of models to use in prediction
-                  arguments[2]-Horizon(int): prediction horizon.
-                  arguments[3]-DATA_PATH: path to split file.
-                      Ex: './split/1995-01-01_1999-12-31'
-                  arguments[4]-RUNLEN(int): the runlength
-                  arguments[5]-VARNAME(list)-Variable names to be considering.
-                  arguments[6]-RESSUFIX- suffix to add to the end of results.
-                  arguments[7]-CYNET_PATH- path to cynet binary.
-                  arguments[8]-FLEXROC_PATH- path to flexroc binary.
+        def parallel_process(arguments):
+            This function takes a model and produces statistics on them. The output is
+            saved to a result file with the suffix defined by RESUFFIX. We note that
+            arguments needs to be a list of various arguments (detailed below) due to
+            the nature of joblib. We expect this function to be called by a parallel
+            processing library such as joblib.
+            Inputs:
+                arguments(list) - a list of arguments necessary for the function:
+                    arguments[0]-FILE(str): path to the model being processed.
+                    arguments[1]-model_nums(int): Number of models to use in prediction
+                    arguments[2]-Horizon(int): prediction horizon.
+                    arguments[3]-DATA_PATH: path to split file.
+                        Ex: './split/1995-01-01_1999-12-31'
+                    arguments[4]-RUNLEN(int): the runlength
+                    arguments[5]-VARNAME(list)-Variable names to be considering.
+                    arguments[6]-RESSUFIX- suffix to add to the end of results.
+                    arguments[7]-CYNET_PATH- path to cynet binary.
+                    arguments[8]-FLEXROC_PATH- path to flexroc binary.
 
-      def run_pipeline(glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_PATH,
-                      RESSUFIX = '.res', cores = 4):
+        def run_pipeline(glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,
+                        RES_PATH, RESSUFIX = '.res', cores = 4):
 
-          This function is intended to take the output models from midway, process
-          them, and produce graphs. This will call the parallel_process function
-          in parallel using joblib. Eventually stores the result as 'res_all.csv'.
-          Cynet and flexroc are binaries written in C++.
-          Inputs:
-              Glob_path(str)-The glob string to be used to find all models.
-                  EX: 'models/*model.json'
-              model_nums(list of ints)- The model numbers to use. Ex; [10,15,20,25]
-              Horizon(int)- prediction horizons to test in unit of temporal quantization
-                  (using cynet binary)
-              DATA_PATH(str)-Path to the split files. Ex: './split/1995-01-01_1999-12-31'
-              RUNLEN(int)-Length of run. Ex: 2291.
-              VARNAME(list of str)- List of variables to consider.
-              RES_PATH(str)- glob string for glob to locate all result files.
-                  Ex:'./models/*model*res'
-              RESUFFIX(str)- suffix to add to the end of results.Ex:'.res'
-              cores(int)-cores to use for parrallel processing.
+            This function is intended to take the output models from midway, process
+            them, and produce graphs. This will call the parallel_process function
+            in parallel using joblib. Eventually stores the result as 'res_all.csv'.
+            Cynet and flexroc are binaries written in C++.
+            Inputs:
+                Glob_path(str)-The glob string to be used to find all models.
+                    EX: 'models/*model.json'
+                model_nums(list of ints)- The model numbers to use. Ex; [10,15,20,25]
+                Horizon(int)- prediction horizons to test in unit of temporal quantization
+                    (using cynet binary)
+                DATA_PATH(str)-Path to the split files. Ex: './split/1995-01-01_1999-12-31'
+                RUNLEN(int)-Length of run. Ex: 2291.
+                VARNAME(list of str)- List of variables to consider.
+                RES_PATH(str)- glob string for glob to locate all result files.
+                    Ex:'./models/*model*res'
+                RESUFFIX(str)- suffix to add to the end of results.Ex:'.res'
+                cores(int)-cores to use for parrallel processing.
 
-              Outputs: Produces graphs of statistics.
+                Outputs: Produces graphs of statistics.
 
-      def get_var(res_csv, coords,varname='auc',VARNAMES=None):
+        def get_var(res_csv, coords,varname='auc',VARNAMES=None):
 
-          This function outputs graphs of the results produced by run_pipeline. The
-          graphs concern auc, fpr, and tpr statistics.
-          Inputs:
-              res_csv(str)- path to 'res_all.csv' file produced by run_pipeline.
-              coords(list of str)- the coords to consider.
-                  Ex:['lattgt1','lattgt2','lontgt1','lontgt2']
-              varname(str)-the variable name to consider. Ex: 'auc'.
-                  VARNAMES(str)- List of the variable name from the dataset to consider.
-                  Ex: VARNAMES=['Personnel','Infrastructure','Casualties']
+            This function outputs graphs of the results produced by run_pipeline. The
+            graphs concern auc, fpr, and tpr statistics.
+            Inputs:
+                res_csv(str)- path to 'res_all.csv' file produced by run_pipeline.
+                coords(list of str)- the coords to consider.
+                    Ex:['lattgt1','lattgt2','lontgt1','lontgt2']
+                varname(str)-the variable name to consider. Ex: 'auc'.
+                    VARNAMES(str)- List of the variable name from the dataset to consider.
+                    Ex: VARNAMES=['Personnel','Infrastructure','Casualties']
 
 **viscynet library classes:**
   visualization library for Network Models produced by uNetworkModels based on
@@ -674,4 +674,4 @@ cynet library classes:
             method (string): method for interpolation. 'cubic','linear', or 'nearest'
 
 
-VERSION 1.0.94
+VERSION 1.0.99
