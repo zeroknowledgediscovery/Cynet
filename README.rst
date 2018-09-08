@@ -290,86 +290,85 @@ cynet library classes:
 
 	.. code:: python
 
-	  __init__(self, jsonFILE)
+		__init__(self, jsonFILE)
 
 
-	  append(self,pydict):
-		  Utilities for storing and manipulating XPFSA models
-		  inferred by XGenESeSS
+		append(self,pydict):
+			Utilities for storing and manipulating XPFSA models
+			inferred by XGenESeSS
 
-		  append models to internal dictionary
-
-
-	  augmentDistance(self)
-		  Utilities for storing and manipulating XPFSA models
-		  inferred by XGenESeSS
-
-		  Calculates the distance between all models and stores
-		  them under the
-		  distance key of each model;
-
-		  No I/O
+			append models to internal dictionary
 
 
-	  select(self,var="gamma",n=None,
-		  reverse=False, store=None,
-		  high=None,low=None,equal=None,inplace=False):
-		  Utilities for storing and manipulating XPFSA models
-		  inferred by XGenESeSS
+		augmentDistance(self)
+			Utilities for storing and manipulating XPFSA models
+			inferred by XGenESeSS
 
-		  Selects the N top models as ranked by var specified value
-		  (in reverse order if reverse is True)
+			Calculates the distance between all models and stores
+			them under the
+			distance key of each model;
 
-		  Inputs -
-			  var (string): model parameter to rank by
-			  n (int): number of models to return
-			  reverse (boolean): return in ascending order (True)
-				  or descending (False) order
-			  store (string): name of file to store selection json
-			  high (float): higher cutoff
-			  equal (float): choose models with selection values
-				  equal to the given value
-			  low (float): lower cutoff
-			  inplace (bool): update models if true
-		  Output -
-			  (dictionary): top n models as ranked by var
-						   in ascending/descending order
+			No I/O
 
 
-	  setVarname(self):
-		  Utilities for storing and manipulating XPFSA models
-		  inferred by XGenESeSS
+		select(self,var="gamma",n=None,
+			reverse=False, store=None,
+			high=None,low=None,equal=None,inplace=False):
+			Utilities for storing and manipulating XPFSA models
+			inferred by XGenESeSS
 
-		  Extracts the varname for src and tgt of
-		  each model and stores under src_var and tgt_var
-		  keys of each model;
+			Selects the N top models as ranked by var specified value
+			(in reverse order if reverse is True)
 
-		  No I/O
+			Inputs -
+				var (string): model parameter to rank by
+				n (int): number of models to return
+				reverse (boolean): return in ascending order (True)
+					or descending (False) order
+				store (string): name of file to store selection json
+				high (float): higher cutoff
+				equal (float): choose models with selection values
+					equal to the given value
+				low (float): lower cutoff
+				inplace (bool): update models if true
+			Output -
+				(dictionary): top n models as ranked by var
+					in ascending/descending order
 
 
-	  to_json(outFile)
-		  Utilities for storing and manipulating XPFSA models
-		  inferred by XGenESeSS
+		setVarname(self):
+			Utilities for storing and manipulating XPFSA models
+			inferred by XGenESeSS
 
-		  Writes out updated models json to file
+			Extracts the varname for src and tgt of
+			each model and stores under src_var and tgt_var
+			keys of each model;
 
-		  Input -
-			  outFile (string): name of outfile to write json to
-
-		  Output -
-			  (No output but writes out files)
+			No I/O
 
 
-	  setDataFrame(self,scatter=None):
-		  Generate dataframe representation of models
+		to_json(outFile)
+			Utilities for storing and manipulating XPFSA models
+			inferred by XGenESeSS
 
-		  Input -
-			  scatter (string) : prefix of filename to plot 3X3 regression
-			  matrix between delay, distance and coefficiecient of causality
-		  Output -
-			  Dataframe with columns
-			  ['latsrc','lonsrc','lattgt',
-			   'lontgtt','gamma','delay','distance']
+			Writes out updated models json to file
+
+			Input -
+				outFile (string): name of outfile to write json to
+
+			Output -
+				(No output but writes out files)
+
+
+		setDataFrame(self,scatter=None):
+			Generate dataframe representation of models
+
+			Input -
+				scatter (string) : prefix of filename to plot 3X3 regression
+				matrix between delay, distance and coefficiecient of causality
+			Output -
+				Dataframe with columns
+				['latsrc','lonsrc','lattgt','lontgtt','gamma','delay','distance']
 
 **class simulateModel**
 
@@ -418,41 +417,41 @@ cynet library classes:
 viscynet library:
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  visualization library for Network Models produced by uNetworkModels based on
-  matplotlib
+	visualization library for Network Models produced by uNetworkModels based on
+	matplotlib
 
-  Functions:
+	Functions:
 
 	.. code:: python
 
-	  draw_screen_poly(lats, lons, m, ax, val, cmap, ALPHA=0.6)
-		  utility function to draw polygons on basemap
+		draw_screen_poly(lats, lons, m, ax, val, cmap, ALPHA=0.6)
+			utility function to draw polygons on basemap
 
-		  Inputs -
-			  lats (list of floats): mpl_toolkits.basemap lat parameters
-			  lons (list of floats): mpl_toolkits.basemap lon parameters
-			  m (mpl.mpl_toolkits.Basemap): mpl instance for plotting
-			  ax (axis parent handle)
-			  cax (colorbar parent handle)
-			  val (Matplotlib color)
-			  cmap (string): colormap cmap parameter
-			  ALPHA (float): alpha value to use for plot
+			Inputs -
+				lats (list of floats): mpl_toolkits.basemap lat parameters
+				lons (list of floats): mpl_toolkits.basemap lon parameters
+				m (mpl.mpl_toolkits.Basemap): mpl instance for plotting
+				ax (axis parent handle)
+				cax (colorbar parent handle)
+				val (Matplotlib color)
+				cmap (string): colormap cmap parameter
+				ALPHA (float): alpha value to use for plot
+
+			Outputs -
+				(No outputs - modifies objects in place)
+
+
+			getalpha(arr, index, F=0.9)
+				utility function to normalize transparency of quiver
+
+				Inputs -
+					arr (iterable): list of input values
+					index (int): index position from which alpha value should be taken from
+					F (float): multiplier
+					M (float): minimum alpha value
 
 		  Outputs -
-			  (No outputs - modifies objects in place)
-
-
-	  getalpha(arr, index, F=0.9)
-		  utility function to normalize transparency of quiver
-
-		  Inputs -
-			  arr (iterable): list of input values
-			  index (int): index position from which alpha value should be taken from
-			  F (float): multiplier
-			  M (float): minimum alpha value
-
-		  Outputs -
-			  v (float): alpha value
+					v (float): alpha value
 
 
 	  showGlobalPlot(coords, ts = None, fsize = [14, 14], cmap = 'jet', m = None,
