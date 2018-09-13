@@ -2,6 +2,9 @@
 cynet
 ===============
 
+.. figure:: https://pypistats.com/badge/cynet.png
+:alt: cynet PyPI Downloads
+
 .. image:: http://zed.uchicago.edu/logo/logozed1.png
    :height: 400px
    :scale: 50 %
