@@ -26,6 +26,9 @@ import uuid
 import glob
 import subprocess
 from joblib import Parallel , delayed
+import yaml
+from viscynet import viscynet as vcn
+import shlex
 
 import matplotlib as mpl
 mpl.use('Agg')
@@ -1138,19 +1141,20 @@ class simulateModel:
 
         if LOG_PATH is None:
             LOG_PATH = self.MODEL_PATH + '-XX.log'
-
         cystr = self.CYNET_PATH + ' -J ' + self.MODEL_PATH\
             + ' -T ' + DATA_TYPE + ' -p ' + str(PARTITION) + ' -N '\
             + str(self.RUNLEN) + ' -x ' + str(self.READLEN)\
             + ' -l ' + LOG_PATH\
             + ' -w ' + self.DATA_PATH
-        subprocess.check_call(cystr, shell=True)
+        cyrstr_arg = shlex.split(cyrstr)
+        subprocess.check_call(cystr_arg, shell=False)
         flexroc_str = self.FLEXROC_PATH + ' -i ' + LOG_PATH\
             + ' -w ' + str(FLEXWIDTH) + ' -x '\
             + str(FLEX_TAIL_LEN) + ' -C '\
             + str(POSITIVE_CLASS_COLUMN) + ' -E ' + str(EVENTCOL)\
             + ' -t ' + str(tpr_thrshold) + ' -f ' + str(fpr_threshold)
-        output_str = subprocess.check_output(flexroc_str, shell=True)
+        flexstr_arg = shlex.split(flexroc_str)
+        output_str = subprocess.check_output(flexstr_arg, shell=False)
         results = np.array(output_str.split())
         auc = float(results[1])
         tpr = float(results[7])
@@ -1246,9 +1250,11 @@ def run_pipeline(glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_PA
     args = []
     for model in models_files:
         for num in model_nums:
-            args.append([model, num,horizon,DATA_PATH,RUNLEN, VARNAME, RESSUFIX, CYNET_PATH, FLEXROC_PATH ])
+            args.append([model, num,horizon,DATA_PATH,RUNLEN, VARNAME, RESSUFIX, \
+            CYNET_PATH, FLEXROC_PATH ])
 
-    Parallel(n_jobs = cores, verbose = 1, backend = 'threading')(map(delayed(parallel_process), args))
+    Parallel(n_jobs = cores, verbose = 1, backend = 'threading')\
+    (map(delayed(parallel_process), args))
     df=pd.concat([pd.read_csv(i) for i in glob.glob(RES_PATH)])
     df.to_csv('res_all.csv',index=None)
 
@@ -1285,3 +1291,164 @@ def get_var(res_csv, coords,varname='auc',VARNAMES=None):
         ax.set_ylabel(varname,fontsize=18,fontweight='bold');
     df1.to_csv(varname+Type+'.csv',sep=" ",index=None)
     plt.savefig(varname+Type+'.pdf',dpi=600, bbox_inches='tight',transparent=False)
+
+
+def render_network(model_path,DATA_PATH,MAX_DIST,MIN_DIST,MAX_GAMMA,MIN_GAMMA,
+                    COLORMAP,Horizon,model_nums, newmodel_name='newmodel.json'):
+    '''
+    For use after model.json files are produced via XgenESeSS. Will produce a
+    network interaction map of all the models. Requires vizcynet import
+    Inputs:
+        model_path(str)- path to the model.json files.
+        DATA_PATH(str)- path to the split series.
+        MAX_DIST(int)- max distance cutoff in render network.
+        MIN_DIST(int)- min distance cutoff in render network.
+        MAX_GAMMA(float)- max gamma cutoff in render network.
+        MIN_GAMMA(float)- min gamma cutoff in render network.
+        COLORMAP(str)- colormap in render network.
+        Horizon(int)- prediction horizons to test in unit of temporal
+            quantization.
+        model_nums(int)- number of models to use in prediction.
+        newmodel_name(str): Name to save the newmodel as. This new model
+            will be loaded in by viz.
+    '''
+    VARNAME=list(set([i.split('#')[-1] for i in glob.glob(DATA_PATH+"*")]))+['ALL']
+    first=True
+    for jfile  in tqdm(glob.glob(model_path)):
+        if first:
+            M=uNetworkModels(jfile)
+            M.setVarname()
+            M.augmentDistance()
+            M.select(var='distance',low=MIN_DIST,inplace=True)
+            M.select(var='distance',high=MAX_DIST,inplace=True)
+            M.select(var='delay',inplace=True,low=Horizon)
+            M.select(var='distance',n=model_nums,
+                     reverse=False,inplace=True)
+            M.select(var='gamma',high=MAX_GAMMA,low=MIN_GAMMA,inplace=True)
+            first=False
+        else:
+            mtmp=uNetworkModels(jfile)
+            if mtmp.models:
+                mtmp.setVarname()
+                mtmp.augmentDistance()
+                mtmp.select(var='distance',high=MAX_DIST,inplace=True)
+                mtmp.select(var='distance',low=MIN_DIST,inplace=True)
+                mtmp.select(var='delay',inplace=True,low=Horizon)
+                mtmp.select(var='distance',n=model_nums,reverse=False,
+                            inplace=True)
+                mtmp.select(var='gamma',high=MAX_GAMMA,low=MIN_GAMMA,inplace=True)
+                M.append(mtmp.models)
+
+    M.to_json(newmodel_name)
+    vcn.viz(newmodel_name,jsonfile=True,colormap=COLORMAP,res='c',
+           drawpoly=False,figname='fig2',BGIMAGE=None,BGIMGNAME=None,WIDTH=0.005)
+
+
+class xgModels:
+    '''
+    Utility class for running XgenESeSS. This class will either run XgenESeSS
+    locally or produce the list of commands to run on a cluster. We note that
+    you may set the path of XgenESeSS in the yaml file. If running on a cluster
+    then the commands will use the path use the XgenESeSS path in the yaml. If
+    running on
+    Attributes -
+        TS_PATH(string)- path to file which has the rowwise multiline
+            time series data
+        NAME_PATH(string)-path to file with name of the variables
+        LOG_PATH(string)-path to log file for xgenesess inference
+        BEG(int) & END(int)- xgenesses run parameters (not hyperparameters,
+            Beg is 0, End is whatever tempral memory is)
+        NUM(int)-number of restarts (20 is good)
+        PARTITION(float)-partition sequence
+        XgenESeSS_PATH(str)-path to XgenESeSS
+        RUN_LOCAL(bool)- whether to run XgenESeSS locally or produce a list of
+        commands to run on a cluster.
+    '''
+    def __init__(self, TS_PATH,
+                NAME_PATH,
+                LOG_PATH,
+                FILEPATH,
+                BEG,
+                END,
+                NUM,
+                PARTITION,
+                XgenESeSS_PATH,
+                RUN_LOCAL):
+
+        assert os.path.exists(TS_PATH), "Time series file not found"
+        assert os.path.exists(NAME_PATH), "Name file not found"
+
+        self.TS_PATH = TS_PATH
+        self.NAME_PATH = NAME_PATH
+        self.LOG_PATH = LOG_PATH
+        self.FILEPATH = FILEPATH
+        self.BEG = BEG
+        self.END = END
+        self.NUM = NUM
+        self.PARTITION = PARTITION
+        self.RUN_LOCAL = RUN_LOCAL
+
+        if self.RUN_LOCAL:
+            #Find the local copy of XgenESeSS binary
+            self.XgenESeSS_PATH = os.path.dirname(sys.modules['cynet'].__file__) \
+            + '/bin/XgenESeSS'
+            assert os.path.exists(self.XgenESeSS_PATH),"XgenESeSS binary not found"
+        else:
+            self.XgenESeSS_PATH = XgenESeSS_PATH
+
+    def run_oneXG(self,command):
+        '''
+        This function is intended to be called by the run method in xgModels. This
+        function uses the subprocess module to execute a XgenESeSS command
+        and wait for its completion.
+        Input-
+            command(str): the XgenESeSS command to be executed.
+            command_count(int): the command number of this command.
+        '''
+        print "XgenESeSS Command {} has started".format(command[1])
+        args = shlex.split(command[0])
+        subprocess.check_output(args, shell=False)
+        print "XgenESeSS Command {} has finished".format(command[1])
+
+
+    def run(self, calls_name='program_calls.txt', workers = 4):
+        '''
+        Here we run XgenESeSS. This either happens locally or this function
+        will output the program calls text file to run on a cluster.
+        Input-
+            calls_name(str)-Name of file containing program_calls. Only used if
+                RUN_LOCAL = 0.
+            workers(int)- Number of workers to use in pool. If none, then will
+            default to number of cores in the system.
+        '''
+        INDICES=sum([1 for i in open(self.TS_PATH,"r").readlines() if i.strip()])
+
+        if self.RUN_LOCAL:
+            commands = []
+            command_count = 0
+            for INDEX in np.arange(INDICES):
+                xgstr= self.XgenESeSS_PATH +' -f ' + self.TS_PATH\
+                 + " -k \"  :" + str(INDEX) +  " \"  -B " + str(self.BEG)\
+                 + "  -E " +str(self.END) + ' -n ' +str(self.NUM)+ ' -p '\
+                 + " ".join(str(x) for x in self.PARTITION) + ' -S -N '\
+                 + self.NAME_PATH + ' -l ' + self.FILEPATH+str(INDEX)\
+                 + self.LOG_PATH + ' -m -g 0.01 -G 10000 -v 0 -A .5 -q -w '\
+                 + self.FILEPATH+str(INDEX)
+                command_count += 1
+                commands.append([xgstr,command_count])
+            #Parallel of XgenESeSS
+            Parallel(n_jobs = workers, verbose = 1, backend = 'threading')\
+            (map(delayed(self.run_oneXG), commands))
+            print "Processing on XgenESeSS finished."
+
+        else:
+            with open(calls_name, 'wr') as file:
+                for INDEX in np.arange(INDICES):
+                    xgstr= self.XgenESeSS_PATH +' -f ' + self.TS_PATH\
+                     + " -k \"  :" + str(INDEX) +  " \"  -B " + str(self.BEG)\
+                     + "  -E " +str(self.END) + ' -n ' +str(self.NUM)+ ' -p '\
+                     + " ".join(str(x) for x in self.PARTITION) + ' -S -N '\
+                     + self.NAME_PATH + ' -l ' + self.FILEPATH+str(INDEX)\
+                     + self.LOG_PATH + ' -m -g 0.01 -G 10000 -v 0 -A .5 -q -w '\
+                     + self.FILEPATH+str(INDEX)
+                    file.write(xgstr + '\n')
