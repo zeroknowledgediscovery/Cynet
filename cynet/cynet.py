@@ -1141,7 +1141,7 @@ class simulateModel:
 
         if LOG_PATH is None:
             LOG_PATH = self.MODEL_PATH + '-XX.log'
-        cystr = self.CYNET_PATH + ' -J ' + self.MODEL_PATH\
+        cyrstr = self.CYNET_PATH + ' -J ' + self.MODEL_PATH\
             + ' -T ' + DATA_TYPE + ' -p ' + str(PARTITION) + ' -N '\
             + str(self.RUNLEN) + ' -x ' + str(self.READLEN)\
             + ' -l ' + LOG_PATH\
