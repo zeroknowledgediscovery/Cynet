@@ -1147,7 +1147,7 @@ class simulateModel:
             + ' -l ' + LOG_PATH\
             + ' -w ' + self.DATA_PATH
         cyrstr_arg = shlex.split(cyrstr)
-        subprocess.check_call(cystr_arg, shell=False)
+        subprocess.check_call(cyrstr_arg, shell=False)
         flexroc_str = self.FLEXROC_PATH + ' -i ' + LOG_PATH\
             + ' -w ' + str(FLEXWIDTH) + ' -x '\
             + str(FLEX_TAIL_LEN) + ' -C '\
