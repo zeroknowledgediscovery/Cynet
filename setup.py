@@ -54,6 +54,6 @@ setup(
     "Topic :: Software Development :: Libraries",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 2.7"],
-    data_files=[('home',['bin/print_help.py'])],
+    data_files=[('/home',['bin/print_help.py'])],
     include_package_data=True
 )
