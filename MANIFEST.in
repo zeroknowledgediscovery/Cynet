@@ -5,6 +5,15 @@ include cynet/*.pyc
 include cynet/bin/*
 include bin/*
 include example_cynet/example2/terrortest_small.py
+include example_cynet/example2/config_pypi.yaml
+include example_cynet/example2/models/empty.txt
+include example_cynet/example2/split/empty.txt
+include example_cynet/example2/triplet/empty.txt
+include example_cynet/example1/config_pypi.yaml
+include example_cynet/example1/run_parallel.py
+include example_cynet/example1/terrortest_50eps.py
+include example_cynet/example1/models/*
+include example_cynet/example1/split/*
 include example_cynet/*
 include bokeh_pipe/*.csv
 include bokeh_pipe/*.py
