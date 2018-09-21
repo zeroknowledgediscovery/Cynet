@@ -34,7 +34,7 @@ setup(
     author_email='ishanu@uchicago.edu',
     version = str(version['__version__']),
     packages=['cynet','viscynet','bokeh_pipe'],
-    package_dir = {'bin':'home'}
+    package_dir = {'bin':'home'},
     scripts=['bin/print_help.py'],
     url='https://github.com/zeroknowledgediscovery/',
     license='LICENSE.txt',
