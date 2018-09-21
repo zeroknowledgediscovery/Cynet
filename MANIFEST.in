@@ -4,11 +4,7 @@ include cynet/README.md
 include cynet/*.pyc
 include cynet/bin/*
 include bin/*
-include bin/example2/terrortest_small.py
-include bin/example2/config_pypi.yaml
-include bin/example2/models/empty.txt
-include bin/example2/split/empty.txt
-include bin/example2/triplet/empty.txt
+include example_cynet/*
 include bokeh_pipe/*.csv
 include bokeh_pipe/*.py
 include viscynet/*.py
