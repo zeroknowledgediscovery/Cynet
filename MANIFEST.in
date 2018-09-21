@@ -4,6 +4,7 @@ include cynet/README.md
 include cynet/*.pyc
 include cynet/bin/*
 include bin/*
+include example_cynet/example2/terrortest_small.py
 include example_cynet/*
 include bokeh_pipe/*.csv
 include bokeh_pipe/*.py
