@@ -54,6 +54,9 @@ setup(
     "Topic :: Software Development :: Libraries",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 2.7"],
-    data_files=[('random/',['bin/print_help.py'])],
+    data_files=[('example_cynet/example2/',['example_cynet/example2/config_pypi.yaml','example_cynet/example2/terrortest_small.py']),
+                ('example_cynet/example2/models/',['example_cynet/example2/models/empty.txt']),
+                ('example_cynet/example2/triplet/',['example_cynet/example2/triplet/empty.txt']),
+                ('example_cynet/example2/split/',['example_cynet/example2/split/empty.txt'])],
     include_package_data=True
 )
