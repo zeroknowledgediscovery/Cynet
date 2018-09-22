@@ -26,7 +26,7 @@ tiles=list([[grid['Latitude'][i],grid['Latitude'][i+1],grid['Longitude'][j], gri
 
 S0=sp.spatioTemporal(log_file=LOGFILE,
                      log_store=STOREFILE,
-                     DATE=None,
+                     #DATE=None,
                      year='iyear',
                      month='imonth',
                      day='iday',
@@ -43,7 +43,7 @@ S0=sp.spatioTemporal(log_file=LOGFILE,
 S0.fit(csvPREF='NKILL')
 tiles = S0.getGrid()
 S00=sp.spatioTemporal(log_store=STOREFILE,
-                     DATE=None,
+                     #DATE=None,
                      year='iyear',
                      month='imonth',
                      day='iday',
@@ -60,7 +60,7 @@ S00=sp.spatioTemporal(log_store=STOREFILE,
 S00.fit(csvPREF='')
 
 S1=sp.spatioTemporal(log_store=STOREFILE,
-                     DATE=None,
+                     #DATE=None,
                      year='iyear',
                      month='imonth',
                      day='iday',
