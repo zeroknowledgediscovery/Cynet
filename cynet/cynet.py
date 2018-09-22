@@ -105,10 +105,12 @@ class spatioTemporal:
         # either a DATE column is specified, or separate
         # columns for year month day are specified, not both
         # NOTE: could fail if only year is specified but not the other two, etc.
+        '''
         assert not ((DATE is not None)
                     and ((year is not None)
                          or (month is not None)
                          or (day is not None)))
+        '''
 
         # if log_file is specified, then read
         # else read log_store pickle
