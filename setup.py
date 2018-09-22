@@ -58,6 +58,6 @@ setup(
                 ('example_cynet/example2/models/',['example_cynet/example2/models/empty.txt']),
                 ('example_cynet/example2/triplet/',['example_cynet/example2/triplet/empty.txt']),
                 ('example_cynet/example2/split/',['example_cynet/example2/split/empty.txt']),
-                ('example_cynet/',['example_cynet/example1/','example_cynet/example1.tar.gz'])],
+                ('example_cynet/',['example_cynet/example1/*'])],
     include_package_data=True
 )
