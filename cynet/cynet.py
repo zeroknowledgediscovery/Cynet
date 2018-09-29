@@ -27,7 +27,6 @@ import glob
 import subprocess
 from joblib import Parallel , delayed
 import yaml
-from viscynet import viscynet as vcn
 import shlex
 
 import matplotlib as mpl
@@ -1293,57 +1292,6 @@ def get_var(res_csv, coords,varname='auc',VARNAMES=None):
         ax.set_ylabel(varname,fontsize=18,fontweight='bold');
     df1.to_csv(varname+Type+'.csv',sep=" ",index=None)
     plt.savefig(varname+Type+'.pdf',dpi=600, bbox_inches='tight',transparent=False)
-
-
-def render_network(model_path,DATA_PATH,MAX_DIST,MIN_DIST,MAX_GAMMA,MIN_GAMMA,
-                    COLORMAP,Horizon,model_nums, newmodel_name='newmodel.json'):
-    '''
-    For use after model.json files are produced via XgenESeSS. Will produce a
-    network interaction map of all the models. Requires vizcynet import
-    Inputs:
-        model_path(str)- path to the model.json files.
-        DATA_PATH(str)- path to the split series.
-        MAX_DIST(int)- max distance cutoff in render network.
-        MIN_DIST(int)- min distance cutoff in render network.
-        MAX_GAMMA(float)- max gamma cutoff in render network.
-        MIN_GAMMA(float)- min gamma cutoff in render network.
-        COLORMAP(str)- colormap in render network.
-        Horizon(int)- prediction horizons to test in unit of temporal
-            quantization.
-        model_nums(int)- number of models to use in prediction.
-        newmodel_name(str): Name to save the newmodel as. This new model
-            will be loaded in by viz.
-    '''
-    VARNAME=list(set([i.split('#')[-1] for i in glob.glob(DATA_PATH+"*")]))+['ALL']
-    first=True
-    for jfile  in tqdm(glob.glob(model_path)):
-        if first:
-            M=uNetworkModels(jfile)
-            M.setVarname()
-            M.augmentDistance()
-            M.select(var='distance',low=MIN_DIST,inplace=True)
-            M.select(var='distance',high=MAX_DIST,inplace=True)
-            M.select(var='delay',inplace=True,low=Horizon)
-            M.select(var='distance',n=model_nums,
-                     reverse=False,inplace=True)
-            M.select(var='gamma',high=MAX_GAMMA,low=MIN_GAMMA,inplace=True)
-            first=False
-        else:
-            mtmp=uNetworkModels(jfile)
-            if mtmp.models:
-                mtmp.setVarname()
-                mtmp.augmentDistance()
-                mtmp.select(var='distance',high=MAX_DIST,inplace=True)
-                mtmp.select(var='distance',low=MIN_DIST,inplace=True)
-                mtmp.select(var='delay',inplace=True,low=Horizon)
-                mtmp.select(var='distance',n=model_nums,reverse=False,
-                            inplace=True)
-                mtmp.select(var='gamma',high=MAX_GAMMA,low=MIN_GAMMA,inplace=True)
-                M.append(mtmp.models)
-
-    M.to_json(newmodel_name)
-    vcn.viz(newmodel_name,jsonfile=True,colormap=COLORMAP,res='c',
-           drawpoly=False,figname='fig2',BGIMAGE=None,BGIMGNAME=None,WIDTH=0.005)
 
 
 class xgModels:

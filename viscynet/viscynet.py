@@ -2,17 +2,11 @@
 Visualization library for cynet
 @author zed.uchicago.edu
 """
-
-
-
 import pandas as pd
 import numpy as np
 import json
 import os
 import warnings
-
-# import subprocess as sp
-# sp.call('source $HOME/miniconda/bin/activate', shell=True)
 
 try:
     import cartopy.crs as ccrs
@@ -21,8 +15,6 @@ except ImportError:
     raise ImportError('Error: Please ensure cartopy is installed.\
     Due to failing builds of cartopy, this package cannot guarantee\
     correct installation of the cartopy dependency.')
-
-
 import matplotlib as mpl
 mpl.use('Agg')
 
@@ -30,13 +22,12 @@ from matplotlib import pyplot as plt
 plt.ioff()
 
 import matplotlib.cm as cm
-# from mpl_toolkits.basemap import Basemap
 from matplotlib.patches import Polygon
 from matplotlib.collections import PatchCollection
 from matplotlib.patches import PathPatch
 import matplotlib.colors as colors
 from scipy.spatial import ConvexHull
-
+from cynet.cynet import uNetworkModels
 
 
 def _scaleforsize(a):
@@ -65,7 +56,6 @@ def _scaleforsize(a):
     return a
 
 
-
 def draw_screen_poly(lats,lons,m,ax,val,cmap,ALPHA=0.6):
     """
     utility function to draw polygons on basemap
@@ -84,17 +74,13 @@ def draw_screen_poly(lats,lons,m,ax,val,cmap,ALPHA=0.6):
     Outputs -
         (No outputs - modifies objects in place)
     """
-
     norm = mpl.colors.Normalize(vmin=.75, vmax=.82)
-
     col = cm.ScalarMappable(norm=norm, cmap=cmap)
     x, y = m( lons, lats )
     xy = zip(x,y)
-
     poly = Polygon( xy, facecolor=col.to_rgba(val),
                    alpha=ALPHA, zorder=20,lw=0)
     ax.add_patch(poly)
-
 
 
 def getalpha(arr,index,F=.9,M=0):
@@ -115,17 +101,12 @@ def getalpha(arr,index,F=.9,M=0):
     mn=np.min(arr)
     mx=np.max(arr)
     val=arr[index]
-
     v=(val-F*mn)/(mx-mn)
-
     if (v>1):
         v=1
-
     if (v<=M):
         v=M
-
     return v
-
 
 
 def viz(unet,jsonfile=False,colormap='autumn',res='c',
@@ -194,8 +175,6 @@ def viz(unet,jsonfile=False,colormap='autumn',res='c',
     if BGIMAGE is not None:
         ax.background_img(name=BGIMGNAME, resolution=IMGRES)
     else:
-        #ax.stock_img()
-    #ax.gridlines()
         ax.add_feature(crt.feature.LAND,facecolor='k')
         ax.add_feature(crt.feature.OCEAN,facecolor='.3')
         ax.add_feature(crt.feature.COASTLINE)
@@ -206,34 +185,6 @@ def viz(unet,jsonfile=False,colormap='autumn',res='c',
     y=lattgt
     x=lontgt
 
-
-#    CLS={}
-#    for index in np.arange(len(lontgt)):
-#        CLS[(lontgt[index],lattgt[index])]=[]
-
-#    for index in np.arange(len(lontgt)):
-#        CLS[(lontgt[index],
-#             lattgt[index])].append((latsrc[index],
-#                                     lonsrc[index]))
-
-#    if drawpoly:
-#        for key, value in CLS.iteritems():
-#            a=[]
-#            for i in value:
-#                a.append(i[0])
-#            b=[]
-#            for i in value:
-#                b.append(i[1])
-#
-#            a=np.array(a)
-#            b=np.array(b)
-#
-#            zP=[[i[0],i[1]] for i in zip(a,b)]
-#            hull = ConvexHull(zP)
-#            aa=[a[i] for i in hull.vertices]
-#            bb=[b[i] for i in hull.vertices]
-#            draw_screen_poly(aa,bb,m,ax,0,colormap1,ALPHA=0.3)
-#
     norm = mpl.colors.LogNorm(vmin=(np.min(np.array(gamma))),
                           vmax=(np.max(np.array(gamma))))
     colx = cm.ScalarMappable(norm=norm,
@@ -262,3 +213,54 @@ def viz(unet,jsonfile=False,colormap='autumn',res='c',
     plt.savefig(figname+'.pdf',dpi=300,bbox_inches='tight',transparent=True)
 
     return fig,ax,cax
+
+
+def render_network(model_path,DATA_PATH,MAX_DIST,MIN_DIST,MAX_GAMMA,MIN_GAMMA,
+                    COLORMAP,Horizon,model_nums, newmodel_name='newmodel.json'):
+    '''
+    For use after model.json files are produced via XgenESeSS. Will produce a
+    network interaction map of all the models. Requires vizcynet import
+    Inputs:
+        model_path(str)- path to the model.json files.
+        DATA_PATH(str)- path to the split series.
+        MAX_DIST(int)- max distance cutoff in render network.
+        MIN_DIST(int)- min distance cutoff in render network.
+        MAX_GAMMA(float)- max gamma cutoff in render network.
+        MIN_GAMMA(float)- min gamma cutoff in render network.
+        COLORMAP(str)- colormap in render network.
+        Horizon(int)- prediction horizons to test in unit of temporal
+            quantization.
+        model_nums(int)- number of models to use in prediction.
+        newmodel_name(str): Name to save the newmodel as. This new model
+            will be loaded in by viz.
+    '''
+    VARNAME=list(set([i.split('#')[-1] for i in glob.glob(DATA_PATH+"*")]))+['ALL']
+    first=True
+    for jfile  in tqdm(glob.glob(model_path)):
+        if first:
+            M=uNetworkModels(jfile)
+            M.setVarname()
+            M.augmentDistance()
+            M.select(var='distance',low=MIN_DIST,inplace=True)
+            M.select(var='distance',high=MAX_DIST,inplace=True)
+            M.select(var='delay',inplace=True,low=Horizon)
+            M.select(var='distance',n=model_nums,
+                     reverse=False,inplace=True)
+            M.select(var='gamma',high=MAX_GAMMA,low=MIN_GAMMA,inplace=True)
+            first=False
+        else:
+            mtmp=uNetworkModels(jfile)
+            if mtmp.models:
+                mtmp.setVarname()
+                mtmp.augmentDistance()
+                mtmp.select(var='distance',high=MAX_DIST,inplace=True)
+                mtmp.select(var='distance',low=MIN_DIST,inplace=True)
+                mtmp.select(var='delay',inplace=True,low=Horizon)
+                mtmp.select(var='distance',n=model_nums,reverse=False,
+                            inplace=True)
+                mtmp.select(var='gamma',high=MAX_GAMMA,low=MIN_GAMMA,inplace=True)
+                M.append(mtmp.models)
+
+    M.to_json(newmodel_name)
+    viz(newmodel_name,jsonfile=True,colormap=COLORMAP,res='c',
+           drawpoly=False,figname='fig2',BGIMAGE=None,BGIMGNAME=None,WIDTH=0.005)
