@@ -54,6 +54,20 @@ RESPATH: './models/*model*res'
 # path to XgenESeSS binary
 XgenESeSS: './bin/XgenESeSS'
 
-
 # do we run XgenESeSS binary locally, or do we produce a list of commands to be run via phnx
 RUN_LOCAL: 0
+
+# max distance cutoff in render network
+MAX_DIST: 1200
+
+# min distance cutoff in render network
+MIN_DIST: 80
+
+# max gamma cutoff in render network
+MAX_GAMMA: 0.95
+
+# min gamma cutoff in render network
+MIN_GAMMA: 0.005
+
+# colormap in render network
+COLORMAP: 'Reds'

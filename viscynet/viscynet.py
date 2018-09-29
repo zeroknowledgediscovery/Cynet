@@ -28,7 +28,8 @@ from matplotlib.patches import PathPatch
 import matplotlib.colors as colors
 from scipy.spatial import ConvexHull
 from cynet.cynet import uNetworkModels
-
+import glob
+from tqdm import tqdm
 
 def _scaleforsize(a):
     """
