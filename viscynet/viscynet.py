@@ -31,6 +31,8 @@ from cynet.cynet import uNetworkModels
 import glob
 from tqdm import tqdm
 
+from multiprocessing import Pool
+
 def _scaleforsize(a):
     """
     normalize array for plotting
@@ -216,14 +218,14 @@ def viz(unet,jsonfile=False,colormap='autumn',res='c',
     return fig,ax,cax
 
 
-def render_network(model_path,DATA_PATH,MAX_DIST,MIN_DIST,MAX_GAMMA,MIN_GAMMA,
-                    COLORMAP,Horizon,model_nums, newmodel_name='newmodel.json'):
+def render_network(model_path,MAX_DIST,MIN_DIST,MAX_GAMMA,MIN_GAMMA,
+                    COLORMAP,Horizon,model_nums, newmodel_name='newmodel.json',
+                    figname='fig2'):
     '''
     For use after model.json files are produced via XgenESeSS. Will produce a
     network interaction map of all the models. Requires vizcynet import
     Inputs:
         model_path(str)- path to the model.json files.
-        DATA_PATH(str)- path to the split series.
         MAX_DIST(int)- max distance cutoff in render network.
         MIN_DIST(int)- min distance cutoff in render network.
         MAX_GAMMA(float)- max gamma cutoff in render network.
@@ -234,8 +236,8 @@ def render_network(model_path,DATA_PATH,MAX_DIST,MIN_DIST,MAX_GAMMA,MIN_GAMMA,
         model_nums(int)- number of models to use in prediction.
         newmodel_name(str): Name to save the newmodel as. This new model
             will be loaded in by viz.
+        figname(str)-Name of figure drawn)
     '''
-    VARNAME=list(set([i.split('#')[-1] for i in glob.glob(DATA_PATH+"*")]))+['ALL']
     first=True
     for jfile  in tqdm(glob.glob(model_path)):
         if first:
@@ -264,4 +266,86 @@ def render_network(model_path,DATA_PATH,MAX_DIST,MIN_DIST,MAX_GAMMA,MIN_GAMMA,
 
     M.to_json(newmodel_name)
     viz(newmodel_name,jsonfile=True,colormap=COLORMAP,res='c',
-           drawpoly=False,figname='fig2',BGIMAGE=None,BGIMGNAME=None,WIDTH=0.005)
+           drawpoly=False,figname=figname,BGIMAGE=None,BGIMGNAME=None,WIDTH=0.005)
+
+
+def render_network_parallel(model_path,MAX_DIST,MIN_DIST,MAX_GAMMA,MIN_GAMMA,
+                    COLORMAP,Horizon,model_nums, newmodel_name='newmodel.json',
+                    figname='fig2',workers=4,rendered_glob='models/*_rendered.json'):
+    '''
+    This function aims to achieve the same thing as render_network but in
+    parallel.
+    Inputs:
+        model_path(str)- path to the model.json files.
+        MAX_DIST(int)- max distance cutoff in render network.
+        MIN_DIST(int)- min distance cutoff in render network.
+        MAX_GAMMA(float)- max gamma cutoff in render network.
+        MIN_GAMMA(float)- min gamma cutoff in render network.
+        COLORMAP(str)- colormap in render network.
+        Horizon(int)- prediction horizons to test in unit of temporal
+            quantization.
+        model_nums(int)- number of models to use in prediction.
+        newmodel_name(str): Name to save the newmodel as. This new model
+            will be loaded in by viz.
+        figname(str)-Name of figure drawn)
+    '''
+    print model_path
+    arguments = []
+    counter = 1
+    for jfile in glob.glob(model_path):
+        arguments.append([jfile,MIN_DIST,MAX_DIST,MIN_GAMMA,MAX_GAMMA,Horizon,model_nums,counter])
+        counter += 1
+
+    pool = Pool(workers)
+    pool.map(individual_render, arguments)
+
+    combined_dict = {}
+    for rendered_jfile in glob.glob(rendered_glob):
+        with open(rendered_jfile) as entry_dict:
+            combined_dict.update(json.load(entry_dict))
+
+    with open(newmodel_name,'w') as outfile:
+        json.dump(combined_dict, outfile)
+
+    viz(newmodel_name,jsonfile=True,colormap=COLORMAP,res='c',
+           drawpoly=False,figname=figname,BGIMAGE=None,BGIMGNAME=None,WIDTH=0.005)
+
+
+def individual_render(arguments):
+    '''
+    A rendering for a single file. This function is called by render_network_parallel.
+    arguments(list)-list of arguments for the rendering.
+        arguments[0]:model_path(str)- path to the model.json files.
+        arguments[1]:MIN_DIST(int)- min distance cutoff in render network.
+        arguments[2]:MAX_DIST(int)- max distance cutoff in render network.
+        arguments[3]:MIN_GAMMA(float)- min gamma cutoff in render network.
+        arguments[4]:MAX_GAMMA(float)- max gamma cutoff in render network.
+        arguments[5]:Horizon(int)- prediction horizons to test in unit of temporal
+            quantization.
+        arguments[6]:model_nums(int)- number of models to use in prediction.
+        arguments[7]:counter(int)- a number to keep track of model progress.
+    '''
+    jfile = arguments[0]
+    MIN_DIST = arguments[1]
+    MAX_DIST = arguments[2]
+    MIN_GAMMA = arguments[3]
+    MAX_GAMMA = arguments[4]
+    Horizon = arguments[5]
+    model_nums = arguments[6]
+    counter = arguments[7]
+    print "Rendering a model {}".format(counter)
+    new_jfile =  jfile.replace('.json','_rendered.json')
+    M=uNetworkModels(jfile)
+    M.setVarname()
+    M.augmentDistance()
+    M.select(var='distance',low=MIN_DIST,inplace=True)
+    M.select(var='distance',high=MAX_DIST,inplace=True)
+    M.select(var='delay',inplace=True,low=Horizon)
+    M.select(var='distance',n=model_nums,
+                reverse=False,inplace=True)
+    M.select(var='gamma',high=MAX_GAMMA,low=MIN_GAMMA,inplace=True)
+
+    with open(new_jfile, 'w') as outfile:
+        json.dump(M.models, outfile)
+
+    return

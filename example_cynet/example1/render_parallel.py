@@ -19,4 +19,5 @@ MAX_GAMMA=settings_dict['MAX_GAMMA']
 MIN_GAMMA=settings_dict['MIN_GAMMA']
 COLORMAP=settings_dict['COLORMAP']
 
-vis.render_network(model_path,MAX_DIST,MIN_DIST,MAX_GAMMA,MIN_GAMMA,COLORMAP,horizon,model_nums[3], newmodel_name='newmodel.json')
+vis.render_network_parallel(model_path,MAX_DIST,MIN_DIST,MAX_GAMMA,MIN_GAMMA,\
+COLORMAP,horizon,model_nums[3], newmodel_name='newmodel.json',workers=4,rendered_glob = 'models/*_rendered.json',figname='newfig')
