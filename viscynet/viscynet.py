@@ -289,7 +289,6 @@ def render_network_parallel(model_path,MAX_DIST,MIN_DIST,MAX_GAMMA,MIN_GAMMA,
             will be loaded in by viz.
         figname(str)-Name of figure drawn)
     '''
-    print model_path
     arguments = []
     counter = 1
     for jfile in glob.glob(model_path):
