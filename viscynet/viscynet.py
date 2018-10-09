@@ -113,7 +113,9 @@ def getalpha(arr,index,F=.9,M=0):
 
 
 def viz(unet,jsonfile=False,colormap='autumn',res='c',
-        drawpoly=False,figname='fig',BGIMAGE=None,BGIMGNAME='BM',IMGRES='high',WIDTH=0.007):
+        drawpoly=False,figname='fig',BGIMAGE=None,BGIMGNAME='BM',
+        IMGRES='high',WIDTH=0.007,SHPPATH=None,
+        OCEAN_FACECOLOR='.3',LAND_FACECOLOR='k',LAKE_FACECOLOR='.3'):
     """
     utility function to visualize spatio temporal interaction networks
     @author zed.uchicago.edu
@@ -132,7 +134,6 @@ def viz(unet,jsonfile=False,colormap='autumn',res='c',
             ax (axis handle)
             cax (colorbar handle)
     """
-
     if BGIMAGE is not None:
         os.environ['CARTOPY_USER_BACKGROUNDS'] = BGIMAGE
 
@@ -165,29 +166,63 @@ def viz(unet,jsonfile=False,colormap='autumn',res='c',
         gamma.append(value['gamma'])
         delay.append(value['delay'])
 
-    margin = 2 # buffer to add to the range
+    margin = 0.02 # buffer to add to the range
     lat_min = min(min(latsrc),min(lattgt)) - margin
     lat_max = max(max(latsrc),max(lattgt)) + margin
     lon_min = min(min(lonsrc),min(lontgt)) - margin
     lon_max = max(max(lonsrc),max(lontgt)) + margin
 
-    fig=plt.figure(figsize=(20,15))
 
-    ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
-    ax.set_extent([lon_min,lon_max,lat_min,lat_max])
+
+    fig=plt.figure(figsize=(10,10*np.round((lon_max-lon_min)/(lat_max-lat_min))))
+    PROJ=ccrs.PlateCarree()#ccrs.LambertConformal()
+
+    #ax = fig.add_subplot(1, 1, 1, projection=ccrs.LambertConformal())
+
+    ax = plt.axes([0, 0, 1, 1],
+                  projection=PROJ)
+
+
+    ax.set_extent([lon_min,lon_max,lat_min,lat_max],crs=PROJ)
     if BGIMAGE is not None:
         ax.background_img(name=BGIMGNAME, resolution=IMGRES)
     else:
-        ax.add_feature(crt.feature.LAND,facecolor='k')
-        ax.add_feature(crt.feature.OCEAN,facecolor='.3')
+        #ax.stock_img()
+    #ax.gridlines()
+        ax.add_feature(crt.feature.LAND,facecolor=LAND_FACECOLOR)
+        ax.add_feature(crt.feature.OCEAN,facecolor=OCEAN_FACECOLOR)
         ax.add_feature(crt.feature.COASTLINE)
-        ax.add_feature(crt.feature.LAKES,facecolor='.5', alpha=0.95)
-    ax.add_feature(crt.feature.BORDERS,edgecolor='w',linewidth=2,linestyle='-', alpha=.1)
+        ax.add_feature(crt.feature.LAKES,facecolor=LAKE_FACECOLOR, alpha=0.95)
+        ax.add_feature(crt.feature.BORDERS,edgecolor='w',linewidth=2,linestyle='-', alpha=.1)
+
+    if SHPPATH is not None:
+        shpf = shpreader.Reader(SHPPATH)
+        #request = cimgt.OSM()
+        #ax.add_image(request, 10, interpolation='spline36', regrid_shape=2000)
+
+        for record, ward in zip(shpf.records(), shpf.geometries()):
+            try:
+                colorNormalized = '.3'
+                ax.add_geometries([ward],PROJ,
+                                  facecolor=colorNormalized,
+                                  alpha=0.5,
+                                  edgecolor='.4', linewidth=1,)
+            except KeyError:
+                ax.add_geometries([ward],PROJ,
+                                  facecolor='.3',
+                                  alpha=0.5,
+                                  edgecolor=None, linewidth=0)
+
+
     y_o=latsrc
     x_o=lonsrc
     y=lattgt
     x=lontgt
 
+
+#    CLS={}
+#    for index in np.arange(len(lontgt)):
+#        CLS[(lontgt[index],lattgt[index])]=[]
     norm = mpl.colors.LogNorm(vmin=(np.min(np.array(gamma))),
                           vmax=(np.max(np.array(gamma))))
     colx = cm.ScalarMappable(norm=norm,
@@ -201,8 +236,9 @@ def viz(unet,jsonfile=False,colormap='autumn',res='c',
                    alpha=ALPHA*getalpha(gamma,index,F=.1,M=.3),
                    scale_units='xy',angles='xy',scale=1.05,
                    width=WIDTH*getalpha(gamma,index,F=.7,M=.4),
-                   headwidth=4,headlength=5,zorder=10)
+                   headwidth=4,headlength=5,zorder=10,transform=PROJ)
 
+    #ax.set_aspect('auto')
     cax, _ = mpl.colorbar.make_axes(ax, shrink=0.5)
     cbar = mpl.colorbar.ColorbarBase(cax, cmap=colormap,
                                      norm=mpl.colors.Normalize(vmin=np.min(np.array(gamma)),
@@ -213,9 +249,12 @@ def viz(unet,jsonfile=False,colormap='autumn',res='c',
     plt.setp(plt.getp(cax, 'yticklabels'), color='k')
     plt.setp(plt.getp(cax, 'yticklabels'), fontweight='bold')
     cax.set_title('$\gamma$',fontsize=18,color='k',y=1.05)
+
     plt.savefig(figname+'.pdf',dpi=300,bbox_inches='tight',transparent=True)
 
     return fig,ax,cax
+
+
 
 
 def render_network(model_path,MAX_DIST,MIN_DIST,MAX_GAMMA,MIN_GAMMA,
