@@ -1,5 +1,5 @@
 ===============
-cynet
+cynet 
 ===============
 
 .. figure:: https://pypistats.com/badge/cynet.png
