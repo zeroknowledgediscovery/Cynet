@@ -115,7 +115,8 @@ def getalpha(arr,index,F=.9,M=0):
 def viz(unet,jsonfile=False,colormap='autumn',res='c',
         drawpoly=False,figname='fig',BGIMAGE=None,BGIMGNAME='BM',
         IMGRES='high',WIDTH=0.007,SHPPATH=None,
-        OCEAN_FACECOLOR='.3',LAND_FACECOLOR='k',LAKE_FACECOLOR='.3'):
+        OCEAN_FACECOLOR='.3',LAND_FACECOLOR='k',LAKE_FACECOLOR='.3',
+        FIGSIZE=None,EXTENT=None,ASPECTAUTO=False):
     """
     utility function to visualize spatio temporal interaction networks
     @author zed.uchicago.edu
@@ -166,34 +167,41 @@ def viz(unet,jsonfile=False,colormap='autumn',res='c',
         gamma.append(value['gamma'])
         delay.append(value['delay'])
 
-    margin = 0.02 # buffer to add to the range
-    lat_min = min(min(latsrc),min(lattgt)) - margin
-    lat_max = max(max(latsrc),max(lattgt)) + margin
-    lon_min = min(min(lonsrc),min(lontgt)) - margin
-    lon_max = max(max(lonsrc),max(lontgt)) + margin
-
-
-
-    fig=plt.figure(figsize=(10,10*np.round((lon_max-lon_min)/(lat_max-lat_min))))
+    if EXTENT is None:
+        margin = 0.02 # buffer to add to the range
+        lat_min = min(min(latsrc),min(lattgt)) - margin
+        lat_max = max(max(latsrc),max(lattgt)) + margin
+        lon_min = min(min(lonsrc),min(lontgt)) - margin
+        lon_max = max(max(lonsrc),max(lontgt)) + margin
+    else:
+        lat_min = EXTENT[0]
+        lat_max = EXTENT[1]
+        lon_min = EXTENT[2]
+        lon_max = EXTENT[3]
+        
+        
+    if FIGSIZE is None:
+        fig=plt.figure(figsize=(10,10*np.round((lon_max-lon_min)/(lat_max-lat_min))))
+    else:
+        fig=plt.figure(figsize=(FIGSIZE[0],FIGSIZE[1]))
     PROJ=ccrs.PlateCarree()#ccrs.LambertConformal()
-
-    #ax = fig.add_subplot(1, 1, 1, projection=ccrs.LambertConformal())
 
     ax = plt.axes([0, 0, 1, 1],
                   projection=PROJ)
-
 
     ax.set_extent([lon_min,lon_max,lat_min,lat_max],crs=PROJ)
     if BGIMAGE is not None:
         ax.background_img(name=BGIMGNAME, resolution=IMGRES)
     else:
         #ax.stock_img()
-    #ax.gridlines()
+        #ax.gridlines()
         ax.add_feature(crt.feature.LAND,facecolor=LAND_FACECOLOR)
         ax.add_feature(crt.feature.OCEAN,facecolor=OCEAN_FACECOLOR)
         ax.add_feature(crt.feature.COASTLINE)
-        ax.add_feature(crt.feature.LAKES,facecolor=LAKE_FACECOLOR, alpha=0.95)
-        ax.add_feature(crt.feature.BORDERS,edgecolor='w',linewidth=2,linestyle='-', alpha=.1)
+        ax.add_feature(crt.feature.LAKES,
+                       facecolor=LAKE_FACECOLOR,alpha=0.95)
+        ax.add_feature(crt.feature.BORDERS,edgecolor='w',
+                       linewidth=2,linestyle='-', alpha=.1)
 
     if SHPPATH is not None:
         shpf = shpreader.Reader(SHPPATH)
@@ -219,10 +227,6 @@ def viz(unet,jsonfile=False,colormap='autumn',res='c',
     y=lattgt
     x=lontgt
 
-
-#    CLS={}
-#    for index in np.arange(len(lontgt)):
-#        CLS[(lontgt[index],lattgt[index])]=[]
     norm = mpl.colors.LogNorm(vmin=(np.min(np.array(gamma))),
                           vmax=(np.max(np.array(gamma))))
     colx = cm.ScalarMappable(norm=norm,
@@ -238,7 +242,8 @@ def viz(unet,jsonfile=False,colormap='autumn',res='c',
                    width=WIDTH*getalpha(gamma,index,F=.7,M=.4),
                    headwidth=4,headlength=5,zorder=10,transform=PROJ)
 
-    #ax.set_aspect('auto')
+    if ASPECTAUTO:
+        ax.set_aspect('auto')
     cax, _ = mpl.colorbar.make_axes(ax, shrink=0.5)
     cbar = mpl.colorbar.ColorbarBase(cax, cmap=colormap,
                                      norm=mpl.colors.Normalize(vmin=np.min(np.array(gamma)),
@@ -253,7 +258,6 @@ def viz(unet,jsonfile=False,colormap='autumn',res='c',
     plt.savefig(figname+'.pdf',dpi=300,bbox_inches='tight',transparent=True)
 
     return fig,ax,cax
-
 
 
 

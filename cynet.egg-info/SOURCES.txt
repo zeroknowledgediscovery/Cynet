@@ -7,7 +7,6 @@ setup.cfg
 setup.py
 version.py
 bin/print_help.py
-bin/read_raw_log.py
 bokeh_pipe/__init__.py
 bokeh_pipe/bokeh_pipe.py
 bokeh_pipe/bokeh_plot.py
@@ -25,5 +24,19 @@ cynet.egg-info/SOURCES.txt
 cynet.egg-info/dependency_links.txt
 cynet.egg-info/requires.txt
 cynet.egg-info/top_level.txt
+cynet/bin/XgenESeSS
+cynet/bin/cynet
+cynet/bin/flexroc
+example_cynet/example1.tar.gz
+example_cynet/example1/config_pypi.yaml
+example_cynet/example1/render.py
+example_cynet/example1/render_parallel.py
+example_cynet/example1/run_parallel.py
+example_cynet/example1/terrortest_50eps.py
+example_cynet/example2/config_pypi.yaml
+example_cynet/example2/terrortest_small.py
+example_cynet/example2/models/empty.txt
+example_cynet/example2/split/empty.txt
+example_cynet/example2/triplet/empty.txt
 viscynet/__init__.py
 viscynet/viscynet.py
