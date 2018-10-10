@@ -11,6 +11,9 @@ import warnings
 try:
     import cartopy.crs as ccrs
     import cartopy as crt
+    import cartopy.io.shapereader as shpreader
+    import cartopy.feature as cfeature
+    import cartopy.io.img_tiles as cimgt
 except ImportError:
     raise ImportError('Error: Please ensure cartopy is installed.\
     Due to failing builds of cartopy, this package cannot guarantee\

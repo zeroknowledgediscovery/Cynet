@@ -1,12 +1,12 @@
 Metadata-Version: 2.1
 Name: cynet
-Version: 1.1.36
+Version: 1.1.37
 Summary: Learning Point Processes Using Deep Granger Nets
 Home-page: https://github.com/zeroknowledgediscovery/
 Author: zed.uchicago.edu
 Author-email: ishanu@uchicago.edu
 License: LICENSE.txt
-Download-URL: https://github.com/zeroknowledgediscovery/Cynet/archive/1.1.36.tar.gz
+Download-URL: https://github.com/zeroknowledgediscovery/Cynet/archive/1.1.37.tar.gz
 Description: ===============
         cynet 
         ===============
