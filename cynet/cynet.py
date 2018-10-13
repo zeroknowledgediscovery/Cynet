@@ -1116,7 +1116,7 @@ class simulateModel:
             FLEX_TAIL_LEN=100,
             POSITIVE_CLASS_COLUMN=5,
             EVENTCOL=3,
-            tpr_thrshold=0.85,
+            tpr_threshold=0.85,
             fpr_threshold=0.15):
 
         '''
@@ -1130,7 +1130,7 @@ class simulateModel:
            FLEX_TAIL_LEN (int)- tail length of input file to consider [0: all]
            POSITIVE_CLASS_COLUMN (int)- positive class column
            EVENTCOL (int)- event column
-           tpr_thershold (float)- minimum tpr threshold
+           tpr_threshold (float)- minimum tpr threshold
            fpr_threshold (float)- maximum fpr threshold
 
         Output -
@@ -1153,7 +1153,7 @@ class simulateModel:
             + ' -w ' + str(FLEXWIDTH) + ' -x '\
             + str(FLEX_TAIL_LEN) + ' -C '\
             + str(POSITIVE_CLASS_COLUMN) + ' -E ' + str(EVENTCOL)\
-            + ' -t ' + str(tpr_thrshold) + ' -f ' + str(fpr_threshold)
+            + ' -t ' + str(tpr_threshold) + ' -f ' + str(fpr_threshold)
         flexstr_arg = shlex.split(flexroc_str)
         output_str = subprocess.check_output(flexstr_arg, shell=False)
         results = np.array(output_str.split())
@@ -1199,7 +1199,7 @@ def parallel_process(arguments):
     FLEX_TAIL_LEN = arguments[13]
     POSITIVE_CLASS_COLUMN = arguments[14]
     EVENTCOL = arguments[15]
-    tpr_thrshold = arguments[16]
+    tpr_threshold = arguments[16]
     fpr_threshold = arguments[17]
     RESULT = []
     header=['loc_id','lattgt1','lattgt2','lontgt1','lontgt2','varsrc','vartgt','num_models','auc','tpr','fpr','horizon']
@@ -1226,7 +1226,7 @@ def parallel_process(arguments):
             FLEX_TAIL_LEN = FLEX_TAIL_LEN,
             POSITIVE_CLASS_COLUMN = POSITIVE_CLASS_COLUMN,
             EVENTCOL = EVENTCOL,
-            tpr_thrshold = tpr_thershold,
+            tpr_threshold = tpr_threshold,
             fpr_threshold = fpr_threshold)
 
             f=lambda x: x[:-1] if len(x)%2==1  else x
@@ -1242,14 +1242,14 @@ def parallel_process(arguments):
 
 def run_pipeline(glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_PATH,
                 RESSUFIX = '.res', cores = 4,
-                LOG_PATH=None
+                LOG_PATH=None,
                 PARTITION=0.5,
                 DATA_TYPE='continuous',
                 FLEXWIDTH=1,
                 FLEX_TAIL_LEN=100,
                 POSITIVE_CLASS_COLUMN=5,
                 EVENTCOL=3,
-                tpr_thrshold=0.85,
+                tpr_threshold=0.85,
                 fpr_threshold=0.15):
     '''
     This function is intended to take the output models from midway, process
@@ -1287,7 +1287,7 @@ def run_pipeline(glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_PA
             FLEX_TAIL_LEN,
             POSITIVE_CLASS_COLUMN,
             EVENTCOL,
-            tpr_thrshold,
+            tpr_threshold,
             fpr_threshold])
 
     Parallel(n_jobs = cores, verbose = 1, backend = 'threading')\
