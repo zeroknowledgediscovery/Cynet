@@ -1192,6 +1192,15 @@ def parallel_process(arguments):
     RESSUFIX = arguments[6]
     CYNET_PATH = arguments[7]
     FLEXROC_PATH = arguments[8]
+    LOG_PATH = arguments[9]
+    PARTITION = arguments[10]
+    DATA_TYPE = arguments[11]
+    FLEXWIDTH = arguments[12]
+    FLEX_TAIL_LEN = arguments[13]
+    POSITIVE_CLASS_COLUMN = arguments[14]
+    EVENTCOL = arguments[15]
+    tpr_thrshold = arguments[16]
+    fpr_threshold = arguments[17]
     RESULT = []
     header=['loc_id','lattgt1','lattgt2','lontgt1','lontgt2','varsrc','vartgt','num_models','auc','tpr','fpr','horizon']
 
@@ -1210,7 +1219,15 @@ def parallel_process(arguments):
 
         if M.models:
             simulation = simulateModel(stored_model, DATA_PATH, RUNLEN, CYNET_PATH=CYNET_PATH,FLEXROC_PATH=FLEXROC_PATH)
-            [auc, tpr, fpr] = simulation.run()
+            [auc, tpr, fpr] = simulation.run(LOG_PATH = LOG_PATH,
+            PARTITION = PARTITION,
+            DATA_TYPE = DATA_TYPE,
+            FLEXWIDTH = FLEXWIDTH,
+            FLEX_TAIL_LEN = FLEX_TAIL_LEN,
+            POSITIVE_CLASS_COLUMN = POSITIVE_CLASS_COLUMN,
+            EVENTCOL = EVENTCOL,
+            tpr_thrshold = tpr_thershold,
+            fpr_threshold = fpr_threshold)
 
             f=lambda x: x[:-1] if len(x)%2==1  else x
             tgt=[float(j) for j in f((M.models).itervalues().next()['tgt'].replace('#',' ').split())]
@@ -1223,7 +1240,17 @@ def parallel_process(arguments):
     print pd.DataFrame(RESULT,columns=header)[['lattgt1','lattgt2','varsrc','vartgt','auc']]
 
 
-def run_pipeline(glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_PATH, RESSUFIX = '.res', cores = 4):
+def run_pipeline(glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_PATH,
+                RESSUFIX = '.res', cores = 4,
+                LOG_PATH=None
+                PARTITION=0.5,
+                DATA_TYPE='continuous',
+                FLEXWIDTH=1,
+                FLEX_TAIL_LEN=100,
+                POSITIVE_CLASS_COLUMN=5,
+                EVENTCOL=3,
+                tpr_thrshold=0.85,
+                fpr_threshold=0.15):
     '''
     This function is intended to take the output models from midway, process
     them, and produce graphs. This will call the parallel_process function
@@ -1251,8 +1278,17 @@ def run_pipeline(glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_PA
     args = []
     for model in models_files:
         for num in model_nums:
-            args.append([model, num,horizon,DATA_PATH,RUNLEN, VARNAME, RESSUFIX, \
-            CYNET_PATH, FLEXROC_PATH ])
+            args.append([model, num, horizon, DATA_PATH, RUNLEN, VARNAME, RESSUFIX, \
+            CYNET_PATH, FLEXROC_PATH,
+            LOG_PATH, #Here onwards are the run parameters of the pipeline.
+            PARTITION,
+            DATA_TYPE,
+            FLEXWIDTH,
+            FLEX_TAIL_LEN,
+            POSITIVE_CLASS_COLUMN,
+            EVENTCOL,
+            tpr_thrshold,
+            fpr_threshold])
 
     Parallel(n_jobs = cores, verbose = 1, backend = 'threading')\
     (map(delayed(parallel_process), args))
