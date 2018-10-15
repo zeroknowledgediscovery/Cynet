@@ -508,14 +508,14 @@ Description of Pipeline:
   commands locally.
 
   **Attributes**
-    *TS_PATH(string)-path to file which has the rowwise multiline time series data
-    *NAME_PATH(string)-path to file with name of the variables
-    *LOG_PATH(string)-path to log file for xgenesess inference
-    *BEG(int) & END(int)- xgenesses run parameters
-    *NUM(int)-number of restarts (20 is good)
-    *PARTITION(float)-partition sequence
-    *XgenESeSS_PATH(str)-path to XgenESeSS
-    *RUN_LOCAL(bool)- whether to run XgenESeSS locally or produce a list of commands
+    * TS_PATH(string)-path to file which has the rowwise multiline time series data
+    * NAME_PATH(string)-path to file with name of the variables
+    * LOG_PATH(string)-path to log file for xgenesess inference
+    * BEG(int) & END(int)- xgenesses run parameters
+    * NUM(int)-number of restarts (20 is good)
+    * PARTITION(float)-partition sequence
+    * XgenESeSS_PATH(str)-path to XgenESeSS
+    * RUN_LOCAL(bool)- whether to run XgenESeSS locally or produce a list of commands
 
     **Methods**
       .. code-block::
@@ -625,7 +625,59 @@ Description of Pipeline:
           Output -
               a (ndarray): output array
 
+      render_network(model_path,MAX_DIST,MIN_DIST,MAX_GAMMA,MIN_GAMMA,
+          COLORMAP,Horizon,model_nums, newmodel_name='newmodel.json',
+          figname='fig2')
 
+          For use after model.json files are produced via XgenESeSS. Will produce a
+          network interaction map of all the models.
+          Inputs:
+            model_path(str)- path to the model.json files.
+            MAX_DIST(int)- max distance cutoff in render network.
+            MIN_DIST(int)- min distance cutoff in render network.
+            MAX_GAMMA(float)- max gamma cutoff in render network.
+            MIN_GAMMA(float)- min gamma cutoff in render network.
+            COLORMAP(str)- colormap in render network.
+            Horizon(int)- prediction horizons to test in unit of temporal
+                quantization.
+            model_nums(int)- number of models to use in prediction.
+            newmodel_name(str): Name to save the newmodel as. This new model
+                will be loaded in by viz.
+            figname(str)-Name of figure drawn)
+
+      render_network_parallel(model_path,MAX_DIST,MIN_DIST,MAX_GAMMA,MIN_GAMMA,
+          COLORMAP,Horizon,model_nums, newmodel_name='newmodel.json',
+          figname='fig2',workers=4,rendered_glob='models/*_rendered.json')
+
+          This function aims to achieve the same thing as render_network but in
+          parallel. Outputs json files and combines them at the end.
+          Inputs:
+            model_path(str)- path to the model.json files.
+            MAX_DIST(int)- max distance cutoff in render network.
+            MIN_DIST(int)- min distance cutoff in render network.
+            MAX_GAMMA(float)- max gamma cutoff in render network.
+            MIN_GAMMA(float)- min gamma cutoff in render network.
+            COLORMAP(str)- colormap in render network.
+            Horizon(int)- prediction horizons to test in unit of temporal
+              quantization.
+            model_nums(int)- number of models to use in prediction.
+            newmodel_name(str): Name to save the newmodel as. This new model
+              will be loaded in by viz.
+            figname(str)-Name of figure drawn)
+
+      individual_render(arguments)
+
+          A rendering for a single file. This function is called by render_network_parallel.
+          arguments(list)-list of arguments for the rendering.
+          arguments[0]:model_path(str)- path to the model.json files.
+          arguments[1]:MIN_DIST(int)- min distance cutoff in render network.
+          arguments[2]:MAX_DIST(int)- max distance cutoff in render network.
+          arguments[3]:MIN_GAMMA(float)- min gamma cutoff in render network.
+          arguments[4]:MAX_GAMMA(float)- max gamma cutoff in render network.
+          arguments[5]:Horizon(int)- prediction horizons to test in unit of temporal
+              quantization.
+          arguments[6]:model_nums(int)- number of models to use in prediction.
+          arguments[7]:counter(int)- a number to keep track of model progress.
 
 **bokeh_pipe library:**
   visualization library for Network Models produced by uNetworkModels based on
@@ -746,4 +798,4 @@ Description of Pipeline:
             method (string): method for interpolation. 'cubic','linear', or 'nearest'
 
 
-VERSION 1.1.03
+VERSION 1.1.44
