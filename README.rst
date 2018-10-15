@@ -50,7 +50,8 @@ Description of Pipeline:
   You may find two examples of this pipeline in your enviroment's bin folder
   after installing the cynet package.
 
-  Step 1: Use the spatioTemporal class and its utility functions to fit and
+  Step 1:
+    Use the spatioTemporal class and its utility functions to fit and
     manipulate your data into a timeseries grid. The end outputs will be triplets:
     files that contain the rows (coordinates), the columns (dates), and the timeseries.
     The splitTS function will help generate rows of the timeseries. Generally, we
@@ -58,7 +59,8 @@ Description of Pipeline:
     We use the triplets to generate predictive models and then split, which have
     the longer timeseries to evaluate those models.
 
-  Step 2: Run xGenESeSS on the triplets to generate predictive models. The
+  Step 2:
+    Run xGenESeSS on the triplets to generate predictive models. The
     xgModels class can be used to assist in this step. If running on a cluster,
     set run local to false and calling xgModels.run() will generate the shell
     commands to run xGenESeSS in a text file. Otherwise, xgModels will run
@@ -66,13 +68,17 @@ Description of Pipeline:
     models. Note that example 1 starts at this point. Thus there are sample models
     provided.
 
-  Step 3: To evaluate the models afterwards, use the run_pipeline utility function.
+  Step 3:
+    To evaluate the models afterwards, use the run_pipeline utility function.
     This calls uNetworkModels and simulateModels in parallel to evaluate each model.
     simulateModels calls the cynet and flexroc binaries. Outputs will be auc, tpr,
     and fpr statistics.
 
+    See example 2 for an example of the entire pipeline.
+
 **class spatioTemporal**
-  Utilities for spatial-temporal analysis
+  Utilities for spatial-temporal analysis. Used to fit timeseries onto a grid
+  and output data into xGenESeSS friendly format.
 
   **Attributes:**
       * log_store (Pickle): Pickle storage of class data & dataframes
@@ -437,6 +443,45 @@ Description of Pipeline:
         Returns:
         auc, tpr, and fpr statistics from flexroc.
 
+**class xgModels**
+  Utility for running xGenESeSS to generate models. Used to produce shell
+  commands which will be run on a cluster. Can also be used to run those shell
+  commands locally.
+
+  **Attributes**
+    *TS_PATH(string)-path to file which has the rowwise multiline time series data
+    *NAME_PATH(string)-path to file with name of the variables
+    *LOG_PATH(string)-path to log file for xgenesess inference
+    *BEG(int) & END(int)- xgenesses run parameters (not hyperparameters,
+            Beg is 0, End is whatever tempral memory is)
+    *NUM(int)-number of restarts (20 is good)
+    *PARTITION(float)-partition sequence
+    *XgenESeSS_PATH(str)-path to XgenESeSS
+    *RUN_LOCAL(bool)- whether to run XgenESeSS locally or produce a list of
+        commands to run on a cluster.
+
+  **Methods**
+    .. code-block::
+
+      run_oneXG(self,command):
+
+      This function is intended to be called by the run method in xgModels. This
+      function uses the subprocess module to execute a XgenESeSS command
+      and wait for its completion.
+      Input-
+        command(str): the XgenESeSS command to be executed.
+        command_count(int): the command number of this command.
+
+      run(self, calls_name='program_calls.txt', workers = 4):
+
+      Here we run XgenESeSS. This either happens locally or this function
+      will output the program calls text file to run on a cluster.
+      Input-
+        calls_name(str)-Name of file containing program_calls. Only used if
+          RUN_LOCAL = 0.
+        workers(int)- Number of workers to use in pool. If none, then will
+          default to number of cores in the system.
+
   **Utility functions for simulateModel:**
     .. code-block::
 
@@ -495,6 +540,45 @@ Description of Pipeline:
                     VARNAMES(str)- List of the variable name from the dataset
                     to consider.
                     Ex: VARNAMES=['Personnel','Infrastructure','Casualties']
+
+**class xgModels**
+  Utility for running xGenESeSS to generate models. Used to produce shell
+  commands which will be run on a cluster. Can also be used to run those shell
+  commands locally.
+
+  **Attributes**
+    *TS_PATH(string)-path to file which has the rowwise multiline time series data
+    *NAME_PATH(string)-path to file with name of the variables
+    *LOG_PATH(string)-path to log file for xgenesess inference
+    *BEG(int) & END(int)- xgenesses run parameters (not hyperparameters,
+      Beg is 0, End is whatever tempral memory is)
+    *NUM(int)-number of restarts (20 is good)
+    *PARTITION(float)-partition sequence
+    *XgenESeSS_PATH(str)-path to XgenESeSS
+    *RUN_LOCAL(bool)- whether to run XgenESeSS locally or produce a list of
+      commands to run on a cluster.
+
+    **Methods**
+      .. code-block::
+
+        run_oneXG(self,command)
+
+        This function is intended to be called by the run method in xgModels. This
+        function uses the subprocess module to execute a XgenESeSS command
+        and wait for its completion.
+        Input-
+          command(str): the XgenESeSS command to be executed.
+          command_count(int): the command number of this command.
+
+        run(self, calls_name='program_calls.txt', workers = 4):
+
+        Here we run XgenESeSS. This either happens locally or this function
+        will output the program calls text file to run on a cluster.
+        Input-
+          calls_name(str)-Name of file containing program_calls. Only used if
+            RUN_LOCAL = 0.
+          workers(int)- Number of workers to use in pool. If none, then will
+            default to number of cores in the system.
 
 **viscynet library classes:**
   visualization library for Network Models produced by uNetworkModels based on
