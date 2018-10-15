@@ -443,45 +443,6 @@ Description of Pipeline:
         Returns:
         auc, tpr, and fpr statistics from flexroc.
 
-**class xgModels**
-  Utility for running xGenESeSS to generate models. Used to produce shell
-  commands which will be run on a cluster. Can also be used to run those shell
-  commands locally.
-
-  **Attributes**
-    *TS_PATH(string)-path to file which has the rowwise multiline time series data
-    *NAME_PATH(string)-path to file with name of the variables
-    *LOG_PATH(string)-path to log file for xgenesess inference
-    *BEG(int) & END(int)- xgenesses run parameters (not hyperparameters,
-            Beg is 0, End is whatever tempral memory is)
-    *NUM(int)-number of restarts (20 is good)
-    *PARTITION(float)-partition sequence
-    *XgenESeSS_PATH(str)-path to XgenESeSS
-    *RUN_LOCAL(bool)- whether to run XgenESeSS locally or produce a list of
-        commands to run on a cluster.
-
-  **Methods**
-    .. code-block::
-
-      run_oneXG(self,command):
-
-      This function is intended to be called by the run method in xgModels. This
-      function uses the subprocess module to execute a XgenESeSS command
-      and wait for its completion.
-      Input-
-        command(str): the XgenESeSS command to be executed.
-        command_count(int): the command number of this command.
-
-      run(self, calls_name='program_calls.txt', workers = 4):
-
-      Here we run XgenESeSS. This either happens locally or this function
-      will output the program calls text file to run on a cluster.
-      Input-
-        calls_name(str)-Name of file containing program_calls. Only used if
-          RUN_LOCAL = 0.
-        workers(int)- Number of workers to use in pool. If none, then will
-          default to number of cores in the system.
-
   **Utility functions for simulateModel:**
     .. code-block::
 
@@ -550,13 +511,11 @@ Description of Pipeline:
     *TS_PATH(string)-path to file which has the rowwise multiline time series data
     *NAME_PATH(string)-path to file with name of the variables
     *LOG_PATH(string)-path to log file for xgenesess inference
-    *BEG(int) & END(int)- xgenesses run parameters (not hyperparameters,
-      Beg is 0, End is whatever tempral memory is)
+    *BEG(int) & END(int)- xgenesses run parameters
     *NUM(int)-number of restarts (20 is good)
     *PARTITION(float)-partition sequence
     *XgenESeSS_PATH(str)-path to XgenESeSS
-    *RUN_LOCAL(bool)- whether to run XgenESeSS locally or produce a list of
-      commands to run on a cluster.
+    *RUN_LOCAL(bool)- whether to run XgenESeSS locally or produce a list of commands
 
     **Methods**
       .. code-block::
