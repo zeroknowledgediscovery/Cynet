@@ -1,5 +1,5 @@
 ===============
-cynet 
+cynet
 ===============
 
 .. figure:: https://pypistats.com/badge/cynet.png
@@ -44,6 +44,10 @@ cynet library classes:
 * spatioTemporal
 * uNetworkModels
 * simulateModels
+* xgModels
+
+Description of Pipeline:
+This is a test.
 
 **class spatioTemporal**
   Utilities for spatial-temporal analysis
