@@ -18,8 +18,8 @@ plt.style.use('dark_background')
 import warnings
 LOGFILE= 'terror.csv'
 STOREFILE='terror.p'
-'''
-EPS=5
+
+EPS=5 #ONLY AND EXAMPLE. USE A LARGER EPS.
 DATES = []
 for year in range(1995, 2014):
     period_start = str(year) + '-01-01'
@@ -102,7 +102,7 @@ for period in DATES:
     cn.readTS(CSVfile,csvNAME=name,BEG=begin,END=end)
     cn.splitTS(CSVfile, BEG = begin, END = extended_end, dirname = './split', prefix = begin + '_' + extended_end)
 
-'''
+
 stream = file('config_pypi.yaml', 'r')
 settings_dict = yaml.load(stream)
 
@@ -149,4 +149,5 @@ MAX_GAMMA=settings_dict['MAX_GAMMA']
 MIN_GAMMA=settings_dict['MIN_GAMMA']
 COLORMAP=settings_dict['COLORMAP']
 
+#This will error, since by using such small EPS, we will get no models after sorting.
 vis.render_network_parallel(model_path,MAX_DIST,MIN_DIST,MAX_GAMMA,MIN_GAMMA,COLORMAP,horizon,model_nums[0], newmodel_name='newmodel.json')
