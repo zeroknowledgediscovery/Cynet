@@ -117,7 +117,7 @@ PARTITION=settings_dict['PARTITION']
 XgenESeSS=settings_dict['XgenESeSS']
 RUN_LOCAL=settings_dict['RUN_LOCAL']
 
-XG = .xgModels(TS_PATH,NAME_PATH, LOG_PATH,FILEPATH, BEG, END, NUM, PARTITION, XgenESeSS,RUN_LOCAL)
+XG = cn.xgModels(TS_PATH,NAME_PATH, LOG_PATH,FILEPATH, BEG, END, NUM, PARTITION, XgenESeSS,RUN_LOCAL)
 XG.run(workers=4)
 
 model_nums = settings_dict['model_nums']
