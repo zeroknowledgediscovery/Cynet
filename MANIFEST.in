@@ -10,7 +10,7 @@ include example_cynet/example2/models/empty.txt
 include example_cynet/example2/split/empty.txt
 include example_cynet/example2/triplet/empty.txt
 include example_cynet/example1/*
-include example_cynet/example1.zip
+include example_cynet/example1.tar.xz
 include bokeh_pipe/*.csv
 include bokeh_pipe/*.py
 include viscynet/*.py
