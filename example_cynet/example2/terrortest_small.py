@@ -130,7 +130,7 @@ FLEX_TAIL_LEN = settings_dict['FLEX_TAIL_LEN']
 VARNAME=list(set([i.split('#')[-1] for i in glob.glob(DATA_PATH+"*")]))+['ALL']
 print(VARNAME)
 
-cn.run_pipeline(MODEL_GLOB,model_nums, horizon, DATA_PATH, RUNLEN, VARNAME, RESPATH, FLEX_TAIL_LEN=FLEX_TAIL_LEN,cores=4)
+cn.run_pipeline(MODEL_GLOB,model_nums, horizon, DATA_PATH, RUNLEN, VARNAME, RESPATH, FLEX_TAIL_LEN=FLEX_TAIL_LEN,cores=4,gamma=True)
 cn.flexroc_only_parallel('models/*.log',tpr_threshold=0.85,fpr_threshold=None,FLEX_TAIL_LEN=FLEX_TAIL_LEN, cores=4)
 
 VARNAMES=['Personnel','Infrastructure','Casualties']

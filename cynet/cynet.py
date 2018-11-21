@@ -1584,6 +1584,8 @@ def parallel_process(arguments):
     EVENTCOL = arguments[15]
     tpr_threshold = arguments[16]
     fpr_threshold = arguments[17]
+    gamma = arguments[18]
+    distance = arguments[19]
     RESULT = []
     header=['loc_id','lattgt1','lattgt2','lontgt1','lontgt2','varsrc','vartgt','num_models','auc','tpr','fpr','horizon']
 
@@ -1599,8 +1601,10 @@ def parallel_process(arguments):
             M.select(var='src_var',equal=varname,inplace=True)
 
         M.select(var='delay',inplace=True,low=Horizon)
-        #M.select(var='distance',n=model_nums,store=stored_model,reverse=False,inplace=True)
-        M.select(var='gamma',n=model_nums,store=stored_model,reverse=True,inplace=True)
+        if distance:
+            M.select(var='distance',n=model_nums,store=stored_model,reverse=False,inplace=True)
+        if gamma:
+            M.select(var='gamma',n=model_nums,store=stored_model,reverse=True,inplace=True)
 
         if M.models:
             LOG_PATH = FILE + 'use{}models'.format(model_nums) + '#' + varname + '.log'
@@ -1636,7 +1640,9 @@ def run_pipeline(glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_PA
                 POSITIVE_CLASS_COLUMN=5,
                 EVENTCOL=3,
                 tpr_threshold=0.85,
-                fpr_threshold=0.15):
+                fpr_threshold=0.15,
+                gamma=False,
+                distance=False):
     '''
     This function is intended to take the output models from midway, process
     them, and produce graphs. This will call the parallel_process function
@@ -1652,6 +1658,8 @@ def run_pipeline(glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_PA
         RES_PATH(str)- glob string for glob to locate all result files. Ex:'./models/*model*res'
         RESUFFIX(str)- suffix to add to the end of results.Ex:'.res'
         cores(int)-cores to use for parrallel processing.
+        gamma(bool)- Whether to sort by gamma.
+        distance(bool)- Whether to sort by distance.
         kwargs- other arguments for cynet and flexroc. See simulateModel class.
 
     Outputs: Produces graphs of statistics.
@@ -1675,7 +1683,9 @@ def run_pipeline(glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_PA
             POSITIVE_CLASS_COLUMN,
             EVENTCOL,
             tpr_threshold,
-            fpr_threshold])
+            fpr_threshold,
+            gamma,
+            distance])
     Parallel(n_jobs = cores, verbose = 1, backend = 'threading')\
     (map(delayed(parallel_process), args))
     df=pd.concat([pd.read_csv(i) for i in glob.glob(RES_PATH)])
