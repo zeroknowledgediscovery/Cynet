@@ -58,6 +58,7 @@ setup(
                 ('example_cynet/example2/models/',['example_cynet/example2/models/empty.txt']),
                 ('example_cynet/example2/triplet/',['example_cynet/example2/triplet/empty.txt']),
                 ('example_cynet/example2/split/',['example_cynet/example2/split/empty.txt']),
-                ('example_cynet/',['example_cynet/example1.tar.xz'])],
+                ('example_cynet/',['example_cynet/example1.tar.xz']),
+                ('bin',['cynet/bin/cynet','cynet/bin/flexroc','cynet/bin/XgenESeSS'])],
     include_package_data=True
 )
