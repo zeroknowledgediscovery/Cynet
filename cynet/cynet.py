@@ -926,7 +926,7 @@ class uNetworkModels:
 
             dist = haversine((np.mean(src[0:2]),np.mean(src[2:])),
                            (np.mean(tgt[0:2]),np.mean(tgt[2:])),
-                           miles=True)
+                           unit = 'mi')
             self._models[key]['distance'] = dist
 
         return
@@ -1149,12 +1149,14 @@ class simulateModel:
             + ' -l ' + LOG_PATH\
             + ' -w ' + self.DATA_PATH
         cyrstr_arg = shlex.split(cyrstr)
+        #print cyrstr
         subprocess.check_call(cyrstr_arg, shell=False)
         flexroc_str = self.FLEXROC_PATH + ' -i ' + LOG_PATH\
             + ' -w ' + str(FLEXWIDTH) + ' -x '\
             + str(FLEX_TAIL_LEN) + ' -C '\
             + str(POSITIVE_CLASS_COLUMN) + ' -E ' + str(EVENTCOL)\
             + ' -t ' + str(tpr_threshold) + ' -f ' + str(fpr_threshold)
+        #print flexroc_str
         flexstr_arg = shlex.split(flexroc_str)
         output_str = subprocess.check_output(flexstr_arg, shell=False)
         results = np.array(output_str.split())
@@ -1586,6 +1588,8 @@ def parallel_process(arguments):
     fpr_threshold = arguments[17]
     gamma = arguments[18]
     distance = arguments[19]
+    testing = arguments[20]
+    sample_num = arguments[21]
     RESULT = []
     header=['loc_id','lattgt1','lattgt2','lontgt1','lontgt2','varsrc','vartgt','num_models','auc','tpr','fpr','horizon']
 
@@ -1607,7 +1611,10 @@ def parallel_process(arguments):
             M.select(var='gamma',n=model_nums,store=stored_model,reverse=True,inplace=True)
 
         if M.models:
-            LOG_PATH = FILE + 'use{}models'.format(model_nums) + '#' + varname + '.log'
+            if testing:
+                LOG_PATH = FILE + 'use{}models'.format(model_nums) + '#' + varname + 'sample' + str(sample_num) + 'test.log'
+            else:
+                LOG_PATH = FILE + 'use{}models'.format(model_nums) + '#' + varname + '.log'
             simulation = simulateModel(stored_model, DATA_PATH, RUNLEN, CYNET_PATH=CYNET_PATH,FLEXROC_PATH=FLEXROC_PATH)
             [auc, tpr, fpr] = simulation.run(LOG_PATH = LOG_PATH,
             PARTITION = PARTITION,
@@ -1626,7 +1633,7 @@ def parallel_process(arguments):
             result=[FILE]+list(tgt)+[varname,varnametgt,model_nums,auc,tpr,fpr,Horizon]
             RESULT.append(result)
 
-    pd.DataFrame(RESULT,columns=header).to_csv(FILE+'_'+str(model_nums)+'_'+str(Horizon)+RESSUFIX,index=None)
+    pd.DataFrame(RESULT,columns=header).to_csv(FILE+'_'+str(model_nums)+'_'+str(Horizon)+ '_' +str(sample_num) + RESSUFIX,index=None)
     #print pd.DataFrame(RESULT,columns=header)[['lattgt1','lattgt2','varsrc','vartgt','auc']]
 
 
@@ -1685,11 +1692,84 @@ def run_pipeline(glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_PA
             tpr_threshold,
             fpr_threshold,
             gamma,
-            distance])
+            distance,
+            False,
+            0])
     Parallel(n_jobs = cores, verbose = 1, backend = 'threading')\
     (map(delayed(parallel_process), args))
     df=pd.concat([pd.read_csv(i) for i in glob.glob(RES_PATH)])
     df.to_csv('res_all.csv',index=None)
+
+
+def test_model_nums(sample_size,glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_PATH,
+                RESSUFIX = '.res', cores = 4,
+                LOG_PATH=None,
+                PARTITION=0.5,
+                DATA_TYPE='continuous',
+                FLEXWIDTH=1,
+                FLEX_TAIL_LEN=100,
+                POSITIVE_CLASS_COLUMN=5,
+                EVENTCOL=3,
+                tpr_threshold=0.85,
+                fpr_threshold=0.15,
+                gamma=False,
+                distance=False,
+                resamples=1):
+    '''
+    This function is intended to help test for the best model numbers to use for
+    highest auc results. This will largely run the same processes as run_pipeline
+    but on a sample of the models to get through all the model numbers quickly.
+    Inputs:
+        sample_size(int)- Number of models to be sampled and used in the test.
+        Glob_path(str)-The glob string to be used to find all models. EX: 'models/*model.json'
+        model_nums(list of ints)- The model numbers to use. Ex; [10,15,20,25]
+        Horizon(int)- prediction horizons to test in unit of temporal quantization (using cynet binary)
+        DATA_PATH(str)-Path to the split files. Ex: './split/1995-01-01_1999-12-31'
+        RUNLEN(int)-Length of run. Ex: 2291.
+        VARNAME(list of str)- List of variables to consider.
+        RES_PATH(str)- glob string for glob to locate all result files. Ex:'./models/*model*res'
+        RESUFFIX(str)- suffix to add to the end of results.Ex:'.res'
+        cores(int)-cores to use for parrallel processing.
+        gamma(bool)- Whether to sort by gamma.
+        distance(bool)- Whether to sort by distance.
+        resamples(int)- Number of times to resample
+        kwargs- other arguments for cynet and flexroc. See simulateModel class.
+    Outputs: Sampled auc results.
+    '''
+    args = []
+    models_files = glob.glob(glob_path)
+    models_files = [m.split('.')[0] for m in models_files]
+    CYNET_PATH = os.path.dirname(sys.modules['cynet'].__file__) + '/bin/cynet'
+    FLEXROC_PATH = os.path.dirname(sys.modules['cynet'].__file__) + '/bin/flexroc'
+
+    for num in model_nums:
+        for sample_num in range(1,resamples + 1):
+            random_sample = [models_files[i] for i in random.sample(range(len(models_files)), sample_size)]
+            for model in random_sample:
+                args.append([model, num, horizon, DATA_PATH, RUNLEN, VARNAME, RESSUFIX, \
+                CYNET_PATH, FLEXROC_PATH,
+                LOG_PATH, #Here onwards are the run parameters of the pipeline.
+                PARTITION,
+                DATA_TYPE,
+                FLEXWIDTH,
+                FLEX_TAIL_LEN,
+                POSITIVE_CLASS_COLUMN,
+                EVENTCOL,
+                tpr_threshold,
+                fpr_threshold,
+                gamma,
+                distance,
+                True,
+                sample_num])
+    print len(args)
+    Parallel(n_jobs = cores, verbose = 1, backend = 'threading')\
+    (map(delayed(parallel_process), args))
+    df=pd.concat([pd.read_csv(i) for i in glob.glob(RES_PATH)])
+    df.to_csv('testres_all.csv',index=None)
+    performance = df.groupby('num_models').mean()['auc'].sort_values(ascending=False)
+    best_model_num = performance.index[0]
+    print "The best number of models is {}".format(best_model_num)
+    return args
 
 
 def get_var(res_csv, coords,varname='auc',VARNAMES=None):
