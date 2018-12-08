@@ -1344,7 +1344,7 @@ def flexroc_only_parallel(glob_path,
                 positive_str='positive_event'):
     '''
     In the event that we do not need to rerun cynet, but only flexroc on some files
-    we will use this pipeline. This pipeline assumes that run_pipeline has already
+    we will use this pipeline. This pipeline assumes that line has already
     been run and thus the cynet logfiles already exist. This function will apply
     flexroc to all of the cynet files and produce csvs from them. These csvs are
     pandas friendly.
@@ -1649,7 +1649,8 @@ def run_pipeline(glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_PA
                 tpr_threshold=0.85,
                 fpr_threshold=0.15,
                 gamma=False,
-                distance=False):
+                distance=False,
+                res_filename='res_all.csv'):
     '''
     This function is intended to take the output models from midway, process
     them, and produce graphs. This will call the parallel_process function
@@ -1698,7 +1699,7 @@ def run_pipeline(glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_PA
     Parallel(n_jobs = cores, verbose = 1, backend = 'threading')\
     (map(delayed(parallel_process), args))
     df=pd.concat([pd.read_csv(i) for i in glob.glob(RES_PATH)])
-    df.to_csv('res_all.csv',index=None)
+    df.to_csv(res_filename,index=None)
 
 
 def test_model_nums(sample_size,glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_PATH,
