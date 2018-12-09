@@ -464,6 +464,7 @@ class spatioTemporal:
                 tiles=tiles,_types=_types,poly_tile=poly_tile)
                 opt_freq = self.get_opt_freq(df=rand_tile_df,incr=incr,\
                                              max_incr=max_incr,TS_NAME=ts_name)
+                self._FREQ = opt_freq
                 _TS = pd.concat([self.getTS(tile=coord_set,_types=_types,\
                                 freq=opt_freq,poly_tile=poly_tile) for coord_set in tqdm(tiles)])
             else:
@@ -474,6 +475,7 @@ class spatioTemporal:
                 rand_tile_df,ts_name=self.get_rand_tile(LAT=LAT,LON=LON,EPS=EPS,_types=_types)
                 opt_freq = self.get_opt_freq(df=rand_tile_df,incr=incr,\
                                              max_incr=max_incr,TS_NAME=ts_name)
+                self._FREQ = opt_freq
                 _TS = pd.concat([self.getTS(tile=[i,i+EPS,j,j+EPS],freq=opt_freq,\
                                             _types=_types) for i in tqdm(LAT)
                                             for j in tqdm(LON)])
