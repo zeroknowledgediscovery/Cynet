@@ -281,29 +281,30 @@ class spatioTemporal:
         return out
 
 
-    def get_rand_tiles(self,tiles=None,LAT=None,LON=None,EPS=None,_types=None,poly_tile=False,num_tiles=20):
+    def get_rand_tile(self,tiles=None,LAT=None,LON=None,EPS=None,_types=None,poly_tile=False):
         '''
-            Utilities for spatio temporal analysis
-            @author zed.uchicago.edu
+        Utilities for spatio temporal analysis
+        @author zed.uchicago.edu
 
-            Picks random number of tiles from options fed into timeseries method
-            which maps to a non-empty subset within the larger dataset
+        Picks random tile from options fed into timeseries method which maps to a
+        non-empty subset within the larger dataset
 
-            Inputs -
-                LAT (float or list of floats): singular coordinate float or list of
-                                               coordinate start floats
-                LON (float or list of floats): singular coordinate float or list of
-                                               coordinate start floats
-                EPS (float): coordinate increment EPS
-                _types (list): event type filter; accepted event type list
-                tiles (list of lists): list of tiles to build where tile can be
-                a (list of floats i.e. [lat1 lat2 lon1 lon2]) or tuples (i.e. [(x1,y1),(x2,y2)])
-                defining polygons
-                poly_tile (boolean): whether input for tile specifies a polygon
+        Inputs -
+            LAT (float or list of floats): singular coordinate float or list of
+                                           coordinate start floats
+            LON (float or list of floats): singular coordinate float or list of
+                                           coordinate start floats
+            EPS (float): coordinate increment ESP
+            _types (list): event type filter; accepted event type list
+            tiles (list of lists): list of tiles to build where tile can be
+            a (list of floats i.e. [lat1 lat2 lon1 lon2]) or tuples (i.e. [(x1,y1),(x2,y2)])
+            defining polygons
+            poly_tile (boolean): whether input for tile specifies a polygon
 
-            Outputs -
-                tile dataframe (pd.DataFrame)
+        Outputs -
+            tile dataframe (pd.DataFrame)
         '''
+
         if self._value_limits is None:
             df = self._logdf[self._columns]\
                      .loc[self._logdf[self._EVENT].isin(_types)]\
@@ -314,9 +315,11 @@ class spatioTemporal:
                           .between(self._value_limits[0],
                                    self._value_limits[1])]\
                      .sort_values(by=self._DATE).dropna()
-        TS_NAMES = []
+        TS_NAME=None
+        stop = False
+
         if tiles is not None:
-            while len(TS_NAMES) < num_tiles:
+            while not stop:
                 tile = random.choice(tiles)
                 TS_NAME = ('#'.join(str(x) for x in tile))+"#"+stringify(_types)
                 if not poly_tile:
@@ -327,80 +330,88 @@ class spatioTemporal:
                                 & (df[self._coord1] <= lat_[1])
                                 & (df[self._coord2] > lon_[0])
                                 & (df[self._coord2] <= lon_[1])]
-                    if test.shape[0] > 0 and TS_NAME not in TS_NAMES:
-                        TS_NAMES.append((TS_NAME,tile))
+
+                    if test.shape[0] > 0:
+                        stop = True
+                else: #poly_tile is true
+                    poly_lat = [point[0] for point in tile]
+                    poly_lon = [point[1] for point in tile]
+                    hull_pts = np.column_stack((poly_lat, poly_lon))
+                    pred_pt = np.column_stack((df[self._coord1], df[self._coord2]))
+
+                    if not isinstance(hull_pts, Delaunay):
+                        hull = Delaunay(hull_pts)
+                    mask = hull.find_simplex(pred_pt)>=0
+                    if df[mask].shape[0] > 0:
+                        stop = True
         else:
-            while len(TS_NAMES) < num_tiles:
-                for i in LAT:
-                    for j in LON:
-                        tile = [i, i + EPS, j, j + EPS]
-                        TS_NAME = ('#'.join(str(x) for x in tile))+"#"+stringify(_types)
-                        lat_ = tile[0:2]
-                        lon_ = tile[2:4]
+            for i in LAT:
+                if stop:
+                    break
+                for j in LON:
+                    tile = [i, i + EPS, j, j + EPS]
 
-                        test = df.loc[(df[self._coord1] > lat_[0])
-                                    & (df[self._coord1] <= lat_[1])
-                                    & (df[self._coord2] > lon_[0])
-                                    & (df[self._coord2] <= lon_[1])]
+                    TS_NAME = ('#'.join(str(x) for x in tile))+"#"+stringify(_types)
+                    lat_ = tile[0:2]
+                    lon_ = tile[2:4]
 
-                        if test.shape[0] > 0 and TS_NAME not in TS_NAMES:
-                            TS_NAMES.append((TS_NAME,tile))
+                    test = df.loc[(df[self._coord1] > lat_[0])
+                                & (df[self._coord1] <= lat_[1])
+                                & (df[self._coord2] > lon_[0])
+                                & (df[self._coord2] <= lon_[1])]
 
+                    if test.shape[0] > 0:
+                        stop=True
+                        break
+
+        # make the DATE the index and keep only the event col
         df.index = df[self._DATE]
-        return df, TS_NAMES
+        df=df[[self._EVENT]]
+
+        return df,TS_NAME
 
 
-    def get_opt_freq(self, df, TS_NAMES, incr=6,max_incr=24):
+    def get_opt_freq(self,df,TS_NAME,incr=6,max_incr=24):
         '''
         Utilities for spatio temporal analysis
         @author zed.uchicago.edu
 
-        Returns the optimal frequency for timeseries based on ratio of events
-        and nonevents that is closest to 0.5.
+        Returns the optimal frequency for timeseries based on highest non-zero
+        to zero timeseries event count
 
         Input -
             df (pd.DataFrame): filtered subset of dataset corresponding to
             random tile from get_rand_tile
             incr (int): frequency increment
             max_incr (int): user-specified maximum increment
-            TS_NAME(list)-list of tiles to calculate ratios for.
+            TS_NAME
 
         Output -
             (string) to pass to pd.date_range(freq=) argument
         '''
-        ratio_avgs = []
+
+        ratios = []
         for i in range(max_incr/incr):
-            ratio_sum = 0
             curr_incr = ((i+1)*incr)
             curr_freq = str(curr_incr)+'H'
             curr_trng = pd.date_range(start=self._INIT,
                                        end=self._END,freq=curr_freq)
+            ts = [df.loc[curr_trng[i]:curr_trng[i + 1]].size for i in
+                  np.arange(curr_trng.size - 1)]
+            out = pd.DataFrame(ts, columns=[TS_NAME],
+                                index=curr_trng[:-1]).transpose()
             tot = curr_trng.size+0.0
-            print "Testing frequency {}".format(curr_freq)
-            for tile in tqdm(TS_NAMES):
-                lat = tile[1][0:2]
-                lon = tile[1][2:4]
-                tile_df = df.loc[(df[self._coord1] > lat[0])
-                            & (df[self._coord1] <= lat[1])
-                            & (df[self._coord2] > lon[0])
-                            & (df[self._coord2] <= lon[1])]
-                ts = [tile_df.loc[curr_trng[n]:curr_trng[n + 1]].size for n in
-                      np.arange(curr_trng.size - 1)]
+            non_zero_ratio = out.astype(bool).sum(axis=1)/tot
+            ratios.append((curr_freq, non_zero_ratio[0]))
 
-                out = pd.DataFrame(ts, columns=[tile[0]],
-                                    index=curr_trng[:-1]).transpose()
-                non_zero_ratio = out.astype(bool).sum(axis=1)/tot
-                ratio_sum += non_zero_ratio[0]
+        ratios.sort(key=operator.itemgetter(1))
 
-            ratio_avg = ratio_sum / len(TS_NAMES)
-            ratio_avgs.append((curr_freq, ratio_avg, abs(0.5 - ratio_avg)))
-        ratio_avgs.sort(key= lambda x: x[2])
-        return ratio_avgs[0][0]
+        return ratios[-1][0]
 
 
     def timeseries(self,LAT=None,LON=None,EPS=None,_types=None,CSVfile='TS.csv',
                    THRESHOLD=None,tiles=None,auto_adjust_time=False,incr=6,
-                   max_incr=24,poly_tile=False,num_tiles=num_tiles):
+                   max_incr=24,poly_tile=False):
         """
         Utilities for spatio temporal analysis
         @author zed.uchicago.edu
@@ -449,11 +460,10 @@ class spatioTemporal:
 
         if tiles is not None:
             if auto_adjust_time:
-                df,ts_name=self.get_rand_tiles(\
-                tiles=tiles,_types=_types,poly_tile=poly_tile, num_tiles=num_tiles)
-                opt_freq = self.get_opt_freq(df,ts_name,incr=incr,\
-                                             max_incr=max_incr)
-                self._FREQ = opt_freq
+                rand_tile_df,ts_name=self.get_rand_tile(\
+                tiles=tiles,_types=_types,poly_tile=poly_tile)
+                opt_freq = self.get_opt_freq(df=rand_tile_df,incr=incr,\
+                                             max_incr=max_incr,TS_NAME=ts_name)
                 _TS = pd.concat([self.getTS(tile=coord_set,_types=_types,\
                                 freq=opt_freq,poly_tile=poly_tile) for coord_set in tqdm(tiles)])
             else:
@@ -461,11 +471,9 @@ class spatioTemporal:
                                 for coord_set in tqdm(tiles)])
         else: # note custom coordinate boundaries takes precedence
             if auto_adjust_time:
-                df,ts_name=self.get_rand_tiles(LAT=LAT,LON=LON,EPS=EPS,_types=_types,\
-                                                num_tiles=num_tiles)
-                opt_freq = self.get_opt_freq(df,ts_name,incr=incr,\
-                                             max_incr=max_incr)
-                self._FREQ = opt_freq
+                rand_tile_df,ts_name=self.get_rand_tile(LAT=LAT,LON=LON,EPS=EPS,_types=_types)
+                opt_freq = self.get_opt_freq(df=rand_tile_df,incr=incr,\
+                                             max_incr=max_incr,TS_NAME=ts_name)
                 _TS = pd.concat([self.getTS(tile=[i,i+EPS,j,j+EPS],freq=opt_freq,\
                                             _types=_types) for i in tqdm(LAT)
                                             for j in tqdm(LON)])
@@ -490,7 +498,7 @@ class spatioTemporal:
 
 
     def fit(self,grid=None,INIT=None,END=None,THRESHOLD=None,csvPREF='TS',
-            auto_adjust_time=False,incr=6,max_incr=24,poly_tile=False,num_tiles=20):
+            auto_adjust_time=False,incr=6,max_incr=24,poly_tile=False):
         """
         Utilities for spatio temporal analysis
         @author zed.uchicago.edu
@@ -553,16 +561,14 @@ class spatioTemporal:
                                     CSVfile=csvPREF+stringify(key)+'.csv',
                                     THRESHOLD=THRESHOLD,
                                     auto_adjust_time=auto_adjust_time,
-                                    incr=incr,max_incr=max_incr,poly_tile=poly_tile,
-                                    num_tiles=num_tiles)
+                                    incr=incr,max_incr=max_incr,poly_tile=poly_tile)
                 else:
                     self.timeseries(tiles=self._grid,
                                     _types=key,
                                     CSVfile=csvPREF+stringify(key)+'.csv',
                                     THRESHOLD=THRESHOLD,
                                     auto_adjust_time=auto_adjust_time,
-                                    incr=incr,max_incr=max_incr,poly_tile=poly_tile,
-                                    num_tiles=num_tiles)
+                                    incr=incr,max_incr=max_incr,poly_tile=poly_tile)
             return
         else:
             assert(self._value_limits is not None), \
@@ -575,16 +581,14 @@ class spatioTemporal:
                                 CSVfile=csvPREF+'.csv',
                                 THRESHOLD=THRESHOLD,
                                 auto_adjust_time=auto_adjust_time,
-                                incr=incr,max_incr=max_incr,poly_tile=poly_tile,
-                                num_tiles=num_tiles)
+                                incr=incr,max_incr=max_incr,poly_tile=poly_tile)
             else:
                 self.timeseries(tiles=self._grid,
                                 _types=None,
                                 CSVfile=csvPREF+'.csv',
                                 THRESHOLD=THRESHOLD,
                                 auto_adjust_time=auto_adjust_time,
-                                incr=incr,max_incr=max_incr,poly_tile=poly_tile,
-                                num_tiles=num_tiles)
+                                incr=incr,max_incr=max_incr,poly_tile=poly_tile)
             return
 
 
@@ -922,7 +926,7 @@ class uNetworkModels:
 
             dist = haversine((np.mean(src[0:2]),np.mean(src[2:])),
                            (np.mean(tgt[0:2]),np.mean(tgt[2:])),
-                           unit = 'mi')
+                           miles=True)
             self._models[key]['distance'] = dist
 
         return
@@ -1145,14 +1149,12 @@ class simulateModel:
             + ' -l ' + LOG_PATH\
             + ' -w ' + self.DATA_PATH
         cyrstr_arg = shlex.split(cyrstr)
-        #print cyrstr
         subprocess.check_call(cyrstr_arg, shell=False)
         flexroc_str = self.FLEXROC_PATH + ' -i ' + LOG_PATH\
             + ' -w ' + str(FLEXWIDTH) + ' -x '\
             + str(FLEX_TAIL_LEN) + ' -C '\
             + str(POSITIVE_CLASS_COLUMN) + ' -E ' + str(EVENTCOL)\
             + ' -t ' + str(tpr_threshold) + ' -f ' + str(fpr_threshold)
-        #print flexroc_str
         flexstr_arg = shlex.split(flexroc_str)
         output_str = subprocess.check_output(flexstr_arg, shell=False)
         results = np.array(output_str.split())
@@ -1340,7 +1342,7 @@ def flexroc_only_parallel(glob_path,
                 positive_str='positive_event'):
     '''
     In the event that we do not need to rerun cynet, but only flexroc on some files
-    we will use this pipeline. This pipeline assumes that line has already
+    we will use this pipeline. This pipeline assumes that run_pipeline has already
     been run and thus the cynet logfiles already exist. This function will apply
     flexroc to all of the cynet files and produce csvs from them. These csvs are
     pandas friendly.
@@ -1584,8 +1586,6 @@ def parallel_process(arguments):
     fpr_threshold = arguments[17]
     gamma = arguments[18]
     distance = arguments[19]
-    testing = arguments[20]
-    sample_num = arguments[21]
     RESULT = []
     header=['loc_id','lattgt1','lattgt2','lontgt1','lontgt2','varsrc','vartgt','num_models','auc','tpr','fpr','horizon']
 
@@ -1607,10 +1607,7 @@ def parallel_process(arguments):
             M.select(var='gamma',n=model_nums,store=stored_model,reverse=True,inplace=True)
 
         if M.models:
-            if testing:
-                LOG_PATH = FILE + 'use{}models'.format(model_nums) + '#' + varname + 'sample' + str(sample_num) + 'test.log'
-            else:
-                LOG_PATH = FILE + 'use{}models'.format(model_nums) + '#' + varname + '.log'
+            LOG_PATH = FILE + 'use{}models'.format(model_nums) + '#' + varname + '.log'
             simulation = simulateModel(stored_model, DATA_PATH, RUNLEN, CYNET_PATH=CYNET_PATH,FLEXROC_PATH=FLEXROC_PATH)
             [auc, tpr, fpr] = simulation.run(LOG_PATH = LOG_PATH,
             PARTITION = PARTITION,
@@ -1629,7 +1626,7 @@ def parallel_process(arguments):
             result=[FILE]+list(tgt)+[varname,varnametgt,model_nums,auc,tpr,fpr,Horizon]
             RESULT.append(result)
 
-    pd.DataFrame(RESULT,columns=header).to_csv(FILE+'_'+str(model_nums)+'_'+str(Horizon)+ '_' +str(sample_num) + RESSUFIX,index=None)
+    pd.DataFrame(RESULT,columns=header).to_csv(FILE+'_'+str(model_nums)+'_'+str(Horizon)+RESSUFIX,index=None)
     #print pd.DataFrame(RESULT,columns=header)[['lattgt1','lattgt2','varsrc','vartgt','auc']]
 
 
@@ -1645,8 +1642,7 @@ def run_pipeline(glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_PA
                 tpr_threshold=0.85,
                 fpr_threshold=0.15,
                 gamma=False,
-                distance=False,
-                res_filename='res_all.csv'):
+                distance=False):
     '''
     This function is intended to take the output models from midway, process
     them, and produce graphs. This will call the parallel_process function
@@ -1689,84 +1685,11 @@ def run_pipeline(glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_PA
             tpr_threshold,
             fpr_threshold,
             gamma,
-            distance,
-            False,
-            0])
+            distance])
     Parallel(n_jobs = cores, verbose = 1, backend = 'threading')\
     (map(delayed(parallel_process), args))
     df=pd.concat([pd.read_csv(i) for i in glob.glob(RES_PATH)])
-    df.to_csv(res_filename,index=None)
-
-
-def test_model_nums(sample_size,glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_PATH,
-                RESSUFIX = '.res', cores = 4,
-                LOG_PATH=None,
-                PARTITION=0.5,
-                DATA_TYPE='continuous',
-                FLEXWIDTH=1,
-                FLEX_TAIL_LEN=100,
-                POSITIVE_CLASS_COLUMN=5,
-                EVENTCOL=3,
-                tpr_threshold=0.85,
-                fpr_threshold=0.15,
-                gamma=False,
-                distance=False,
-                resamples=1):
-    '''
-    This function is intended to help test for the best model numbers to use for
-    highest auc results. This will largely run the same processes as run_pipeline
-    but on a sample of the models to get through all the model numbers quickly.
-    Inputs:
-        sample_size(int)- Number of models to be sampled and used in the test.
-        Glob_path(str)-The glob string to be used to find all models. EX: 'models/*model.json'
-        model_nums(list of ints)- The model numbers to use. Ex; [10,15,20,25]
-        Horizon(int)- prediction horizons to test in unit of temporal quantization (using cynet binary)
-        DATA_PATH(str)-Path to the split files. Ex: './split/1995-01-01_1999-12-31'
-        RUNLEN(int)-Length of run. Ex: 2291.
-        VARNAME(list of str)- List of variables to consider.
-        RES_PATH(str)- glob string for glob to locate all result files. Ex:'./models/*model*res'
-        RESUFFIX(str)- suffix to add to the end of results.Ex:'.res'
-        cores(int)-cores to use for parrallel processing.
-        gamma(bool)- Whether to sort by gamma.
-        distance(bool)- Whether to sort by distance.
-        resamples(int)- Number of times to resample
-        kwargs- other arguments for cynet and flexroc. See simulateModel class.
-    Outputs: Sampled auc results.
-    '''
-    args = []
-    models_files = glob.glob(glob_path)
-    models_files = [m.split('.')[0] for m in models_files]
-    CYNET_PATH = os.path.dirname(sys.modules['cynet'].__file__) + '/bin/cynet'
-    FLEXROC_PATH = os.path.dirname(sys.modules['cynet'].__file__) + '/bin/flexroc'
-
-    for num in model_nums:
-        for sample_num in range(1,resamples + 1):
-            random_sample = [models_files[i] for i in random.sample(range(len(models_files)), sample_size)]
-            for model in random_sample:
-                args.append([model, num, horizon, DATA_PATH, RUNLEN, VARNAME, RESSUFIX, \
-                CYNET_PATH, FLEXROC_PATH,
-                LOG_PATH, #Here onwards are the run parameters of the pipeline.
-                PARTITION,
-                DATA_TYPE,
-                FLEXWIDTH,
-                FLEX_TAIL_LEN,
-                POSITIVE_CLASS_COLUMN,
-                EVENTCOL,
-                tpr_threshold,
-                fpr_threshold,
-                gamma,
-                distance,
-                True,
-                sample_num])
-    print len(args)
-    Parallel(n_jobs = cores, verbose = 1, backend = 'threading')\
-    (map(delayed(parallel_process), args))
-    df=pd.concat([pd.read_csv(i) for i in glob.glob(RES_PATH)])
-    df.to_csv('testres_all.csv',index=None)
-    performance = df.groupby('num_models').mean()['auc'].sort_values(ascending=False)
-    best_model_num = performance.index[0]
-    print "The best number of models is {}".format(best_model_num)
-    return args
+    df.to_csv('res_all.csv',index=None)
 
 
 def get_var(res_csv, coords,varname='auc',VARNAMES=None):
