@@ -400,7 +400,7 @@ class spatioTemporal:
 
     def timeseries(self,LAT=None,LON=None,EPS=None,_types=None,CSVfile='TS.csv',
                    THRESHOLD=None,tiles=None,auto_adjust_time=False,incr=6,
-                   max_incr=24,poly_tile=False,num_tiles=num_tiles):
+                   max_incr=24,poly_tile=False,num_tiles=20):
         """
         Utilities for spatio temporal analysis
         @author zed.uchicago.edu
