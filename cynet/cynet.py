@@ -281,30 +281,29 @@ class spatioTemporal:
         return out
 
 
-    def get_rand_tile(self,tiles=None,LAT=None,LON=None,EPS=None,_types=None,poly_tile=False):
+    def get_rand_tiles(self,tiles=None,LAT=None,LON=None,EPS=None,_types=None,poly_tile=False,num_tiles=20):
         '''
-        Utilities for spatio temporal analysis
-        @author zed.uchicago.edu
+            Utilities for spatio temporal analysis
+            @author zed.uchicago.edu
 
-        Picks random tile from options fed into timeseries method which maps to a
-        non-empty subset within the larger dataset
+            Picks random number of tiles from options fed into timeseries method
+            which maps to a non-empty subset within the larger dataset
 
-        Inputs -
-            LAT (float or list of floats): singular coordinate float or list of
-                                           coordinate start floats
-            LON (float or list of floats): singular coordinate float or list of
-                                           coordinate start floats
-            EPS (float): coordinate increment ESP
-            _types (list): event type filter; accepted event type list
-            tiles (list of lists): list of tiles to build where tile can be
-            a (list of floats i.e. [lat1 lat2 lon1 lon2]) or tuples (i.e. [(x1,y1),(x2,y2)])
-            defining polygons
-            poly_tile (boolean): whether input for tile specifies a polygon
+            Inputs -
+                LAT (float or list of floats): singular coordinate float or list of
+                                               coordinate start floats
+                LON (float or list of floats): singular coordinate float or list of
+                                               coordinate start floats
+                EPS (float): coordinate increment EPS
+                _types (list): event type filter; accepted event type list
+                tiles (list of lists): list of tiles to build where tile can be
+                a (list of floats i.e. [lat1 lat2 lon1 lon2]) or tuples (i.e. [(x1,y1),(x2,y2)])
+                defining polygons
+                poly_tile (boolean): whether input for tile specifies a polygon
 
-        Outputs -
-            tile dataframe (pd.DataFrame)
+            Outputs -
+                tile dataframe (pd.DataFrame)
         '''
-
         if self._value_limits is None:
             df = self._logdf[self._columns]\
                      .loc[self._logdf[self._EVENT].isin(_types)]\
@@ -315,11 +314,9 @@ class spatioTemporal:
                           .between(self._value_limits[0],
                                    self._value_limits[1])]\
                      .sort_values(by=self._DATE).dropna()
-        TS_NAME=None
-        stop = False
-
+        TS_NAMES = []
         if tiles is not None:
-            while not stop:
+            while len(TS_NAMES) < num_tiles:
                 tile = random.choice(tiles)
                 TS_NAME = ('#'.join(str(x) for x in tile))+"#"+stringify(_types)
                 if not poly_tile:
@@ -330,83 +327,75 @@ class spatioTemporal:
                                 & (df[self._coord1] <= lat_[1])
                                 & (df[self._coord2] > lon_[0])
                                 & (df[self._coord2] <= lon_[1])]
-
-                    if test.shape[0] > 0:
-                        stop = True
-                else: #poly_tile is true
-                    poly_lat = [point[0] for point in tile]
-                    poly_lon = [point[1] for point in tile]
-                    hull_pts = np.column_stack((poly_lat, poly_lon))
-                    pred_pt = np.column_stack((df[self._coord1], df[self._coord2]))
-
-                    if not isinstance(hull_pts, Delaunay):
-                        hull = Delaunay(hull_pts)
-                    mask = hull.find_simplex(pred_pt)>=0
-                    if df[mask].shape[0] > 0:
-                        stop = True
+                    if test.shape[0] > 0 and TS_NAME not in TS_NAMES:
+                        TS_NAMES.append((TS_NAME,tile))
         else:
-            for i in LAT:
-                if stop:
-                    break
-                for j in LON:
-                    tile = [i, i + EPS, j, j + EPS]
+            while len(TS_NAMES) < num_tiles:
+                for i in LAT:
+                    for j in LON:
+                        tile = [i, i + EPS, j, j + EPS]
+                        TS_NAME = ('#'.join(str(x) for x in tile))+"#"+stringify(_types)
+                        lat_ = tile[0:2]
+                        lon_ = tile[2:4]
 
-                    TS_NAME = ('#'.join(str(x) for x in tile))+"#"+stringify(_types)
-                    lat_ = tile[0:2]
-                    lon_ = tile[2:4]
+                        test = df.loc[(df[self._coord1] > lat_[0])
+                                    & (df[self._coord1] <= lat_[1])
+                                    & (df[self._coord2] > lon_[0])
+                                    & (df[self._coord2] <= lon_[1])]
 
-                    test = df.loc[(df[self._coord1] > lat_[0])
-                                & (df[self._coord1] <= lat_[1])
-                                & (df[self._coord2] > lon_[0])
-                                & (df[self._coord2] <= lon_[1])]
+                        if test.shape[0] > 0 and TS_NAME not in TS_NAMES:
+                            TS_NAMES.append((TS_NAME,tile))
 
-                    if test.shape[0] > 0:
-                        stop=True
-                        break
-
-        # make the DATE the index and keep only the event col
         df.index = df[self._DATE]
-        df=df[[self._EVENT]]
-
-        return df,TS_NAME
+        return df, TS_NAMES
 
 
-    def get_opt_freq(self,df,TS_NAME,incr=6,max_incr=24):
+    def get_opt_freq(self, df, TS_NAMES, incr=6,max_incr=24):
         '''
         Utilities for spatio temporal analysis
         @author zed.uchicago.edu
 
-        Returns the optimal frequency for timeseries based on highest non-zero
-        to zero timeseries event count
+        Returns the optimal frequency for timeseries based on ratio of events
+        and nonevents that is closest to 0.5.
 
         Input -
             df (pd.DataFrame): filtered subset of dataset corresponding to
             random tile from get_rand_tile
             incr (int): frequency increment
             max_incr (int): user-specified maximum increment
-            TS_NAME
+            TS_NAME(list)-list of tiles to calculate ratios for.
 
         Output -
             (string) to pass to pd.date_range(freq=) argument
         '''
-
-        ratios = []
+        ratio_avgs = []
         for i in range(max_incr/incr):
+            ratio_sum = 0
             curr_incr = ((i+1)*incr)
             curr_freq = str(curr_incr)+'H'
             curr_trng = pd.date_range(start=self._INIT,
                                        end=self._END,freq=curr_freq)
-            ts = [df.loc[curr_trng[i]:curr_trng[i + 1]].size for i in
-                  np.arange(curr_trng.size - 1)]
-            out = pd.DataFrame(ts, columns=[TS_NAME],
-                                index=curr_trng[:-1]).transpose()
             tot = curr_trng.size+0.0
-            non_zero_ratio = out.astype(bool).sum(axis=1)/tot
-            ratios.append((curr_freq, non_zero_ratio[0]))
+            print "Testing frequency {}".format(curr_freq)
+            for tile in tqdm(TS_NAMES):
+                lat = tile[1][0:2]
+                lon = tile[1][2:4]
+                tile_df = df.loc[(df[self._coord1] > lat[0])
+                            & (df[self._coord1] <= lat[1])
+                            & (df[self._coord2] > lon[0])
+                            & (df[self._coord2] <= lon[1])]
+                ts = [tile_df.loc[curr_trng[n]:curr_trng[n + 1]].size for n in
+                      np.arange(curr_trng.size - 1)]
 
-        ratios.sort(key=operator.itemgetter(1))
+                out = pd.DataFrame(ts, columns=[tile[0]],
+                                    index=curr_trng[:-1]).transpose()
+                non_zero_ratio = out.astype(bool).sum(axis=1)/tot
+                ratio_sum += non_zero_ratio[0]
 
-        return ratios[-1][0]
+            ratio_avg = ratio_sum / len(TS_NAMES)
+            ratio_avgs.append((curr_freq, ratio_avg, abs(0.5 - ratio_avg)))
+        ratio_avgs.sort(key= lambda x: x[2])
+        return ratio_avgs[0][0]
 
 
     def timeseries(self,LAT=None,LON=None,EPS=None,_types=None,CSVfile='TS.csv',
@@ -460,10 +449,10 @@ class spatioTemporal:
 
         if tiles is not None:
             if auto_adjust_time:
-                rand_tile_df,ts_name=self.get_rand_tile(\
+                df,ts_name=self.get_rand_tiles(\
                 tiles=tiles,_types=_types,poly_tile=poly_tile)
-                opt_freq = self.get_opt_freq(df=rand_tile_df,incr=incr,\
-                                             max_incr=max_incr,TS_NAME=ts_name)
+                opt_freq = self.get_opt_freq(df,ts_name,incr=incr,\
+                                             max_incr=max_incr)
                 self._FREQ = opt_freq
                 _TS = pd.concat([self.getTS(tile=coord_set,_types=_types,\
                                 freq=opt_freq,poly_tile=poly_tile) for coord_set in tqdm(tiles)])
@@ -472,9 +461,9 @@ class spatioTemporal:
                                 for coord_set in tqdm(tiles)])
         else: # note custom coordinate boundaries takes precedence
             if auto_adjust_time:
-                rand_tile_df,ts_name=self.get_rand_tile(LAT=LAT,LON=LON,EPS=EPS,_types=_types)
-                opt_freq = self.get_opt_freq(df=rand_tile_df,incr=incr,\
-                                             max_incr=max_incr,TS_NAME=ts_name)
+                df,ts_name=self.get_rand_tiles(LAT=LAT,LON=LON,EPS=EPS,_types=_types)
+                opt_freq = self.get_opt_freq(df,ts_name,incr=incr,\
+                                             max_incr=max_incr)
                 self._FREQ = opt_freq
                 _TS = pd.concat([self.getTS(tile=[i,i+EPS,j,j+EPS],freq=opt_freq,\
                                             _types=_types) for i in tqdm(LAT)
