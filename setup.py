@@ -58,7 +58,6 @@ setup(
     data_files=[('example_cynet/example2/',['example_cynet/example2/config_pypi.yaml','example_cynet/example2/terrortest_small.py']),
                 ('example_cynet/example2/models/',['example_cynet/example2/models/empty.txt']),
                 ('example_cynet/example2/triplet/',['example_cynet/example2/triplet/empty.txt']),
-                ('example_cynet/example2/split/',['example_cynet/example2/split/empty.txt']),
-                ('example_cynet/','example_cynet/example3.zip')],
+                ('example_cynet/example2/split/',['example_cynet/example2/split/empty.txt'])],
     include_package_data=True
 )
