@@ -11,6 +11,7 @@ include example_cynet/example2/split/empty.txt
 include example_cynet/example2/triplet/empty.txt
 include example_cynet/example1/*
 include example_cynet/example1.tar.xz
+include example_cynet/example3/*
 include bokeh_pipe/*.csv
 include bokeh_pipe/*.py
 include viscynet/*.py

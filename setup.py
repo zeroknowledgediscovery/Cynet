@@ -3,6 +3,7 @@ from codecs import open
 from os import path
 # import subprocess as sp
 import warnings
+import glob
 
 version = {}
 with open("version.py") as fp:
@@ -58,6 +59,9 @@ setup(
                 ('example_cynet/example2/models/',['example_cynet/example2/models/empty.txt']),
                 ('example_cynet/example2/triplet/',['example_cynet/example2/triplet/empty.txt']),
                 ('example_cynet/example2/split/',['example_cynet/example2/split/empty.txt']),
-                ('example_cynet/',['example_cynet/example1.tar.xz'])],
+                ('example_cynet/',['example_cynet/example1.tar.xz']),
+                ('example_cynet/example3/split/',glob.glob('example_cynet/example3/split/*')),
+                ('example_cynet/example3/payload2012_2016/',glob.glob('example_cynet/example3/payload2012_2016/*')),
+                ('example_cynet/example3/payload2012_2016/models/',glob.glob('example_cynet/example3/payload2012_2016/models/*'))],
     include_package_data=True
 )
