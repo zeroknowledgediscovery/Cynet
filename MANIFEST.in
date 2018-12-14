@@ -9,8 +9,6 @@ include example_cynet/example2/config_pypi.yaml
 include example_cynet/example2/models/empty.txt
 include example_cynet/example2/split/empty.txt
 include example_cynet/example2/triplet/empty.txt
-include example_cynet/example1/*
-include example_cynet/example1.tar.xz
 include example_cynet/example3/*
 include bokeh_pipe/*.csv
 include bokeh_pipe/*.py
