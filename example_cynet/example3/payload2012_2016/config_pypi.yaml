@@ -33,10 +33,10 @@ horizons:
 
 # length of run using cynet (generally length of individual ts in split folder)
 
-RUNLEN: 913
+RUNLEN: 1827
 
 #Periods to predict for
-FLEX_TAIL_LEN: 183
+FLEX_TAIL_LEN: 365
 
 # path to split series
 
