@@ -1,0 +1,50 @@
+Change 5 percent:
+
+Var as source
+
+1. Target:VAR
+Count: 2339
+Average: -0.121
+
+2. Target: Nonviolent
+Count: 2339
+Average: -0.048
+
+3. Target: Violent
+Count: 1487
+Average: -0.076
+
+----------------------
+
+Nonviolent as source
+
+1. Target:VAR
+Count: 2339
+Average: -0.187
+
+2. Target: Nonv
+Count: 2339
+Average: -0.0117
+
+3. Target: Violent
+Count: 1487
+Average: -0.042
+
+----------------------
+Violent as source
+
+1. Target: VAR
+Count: 2339
+Average: -0.194
+
+2. Target: Nonv
+Count: 2339
+Average: -0.041
+
+3. Target: Violent
+Count: 1487
+Average: -0.065
+
+BURGLARY-THEFT-MOTOR_VEHICLE_THEFT
+HOMICIDE-ASSAULT-BATTERY
+VAR
