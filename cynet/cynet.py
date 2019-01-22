@@ -28,6 +28,8 @@ import subprocess
 from joblib import Parallel , delayed
 import yaml
 import shlex
+import csv
+import random
 
 import matplotlib as mpl
 mpl.use('Agg')
@@ -846,8 +848,12 @@ class uNetworkModels:
         #assert var in self._models.keys(), "Error: Model parameter specified not valid"
 
         if equal is not None:
-            out={key:value
-                 for (key,value) in self._models.iteritems() if value[var]==equal }
+            if isinstance(equal,list):
+                out={key:value
+                 for (key,value) in self._models.iteritems() if value[var] in equal }
+            else:
+                out={key:value
+                     for (key,value) in self._models.iteritems() if value[var]==equal }
         else:
 
             this_dict={value[var]:key
@@ -1134,9 +1140,7 @@ class simulateModel:
             auc (float)- Area under the curve
             tpr (float)- True positive rate at specified maximum false positive rate
             fpr (float)- False positive rate at specified minimum true positive rate
-
         '''
-
         if LOG_PATH is None:
             LOG_PATH = self.MODEL_PATH + '-XX.log'
         cyrstr = self.CYNET_PATH + ' -J ' + self.MODEL_PATH\
@@ -1288,11 +1292,13 @@ def flexroc_only(arguments):
     flexroc_only_parallel. For details on the arguments, see flexroc_only_parallel
     '''
     logfile,tpr_threshold,fpr_threshold,FLEXWIDTH,FLEX_TAIL_LEN,coord_col,day_col,EVENTCOL,\
-    NEGATIVE_CLASS_COLUMN,POSITIVE_CLASS_COLUMN,header,positive_str,FLEXROC_PATH = \
+    NEGATIVE_CLASS_COLUMN,POSITIVE_CLASS_COLUMN,header,positive_str,FLEXROC_PATH, custom_threshold = \
     arguments[0],arguments[1],arguments[2],arguments[3],arguments[4],arguments[5],\
-    arguments[6],arguments[7],arguments[8],arguments[9],arguments[10],arguments[11],arguments[12]
-
-    threshold = get_flexroc_threshold(logfile, FLEXROC_PATH,tpr_threshold,fpr_threshold,FLEXWIDTH,FLEX_TAIL_LEN,POSITIVE_CLASS_COLUMN,EVENTCOL)
+    arguments[6],arguments[7],arguments[8],arguments[9],arguments[10],arguments[11],arguments[12],arguments[13]
+    if custom_threshold:
+        threshold = custom_threshold
+    else:
+        threshold = get_flexroc_threshold(logfile, FLEXROC_PATH,tpr_threshold,fpr_threshold,FLEXWIDTH,FLEX_TAIL_LEN,POSITIVE_CLASS_COLUMN,EVENTCOL)
     with open(logfile,'r') as file:
         content = file.readlines()
 
@@ -1323,6 +1329,8 @@ def flexroc_only(arguments):
     outfile = log_prefix + '#' + variable + '.csv'
     df.to_csv(outfile, index=False)
 
+    return threshold
+
 
 def flexroc_only_parallel(glob_path,
                 cores = 4,
@@ -1337,7 +1345,8 @@ def flexroc_only_parallel(glob_path,
                 NEGATIVE_CLASS_COLUMN=4,
                 header=['lat1','lat2','lon1','lon2','target','day',\
                         'actual_event','negative_event','positive_event'],
-                positive_str='positive_event'):
+                positive_str='positive_event',
+                custom_threshold=None):
     '''
     In the event that we do not need to rerun cynet, but only flexroc on some files
     we will use this pipeline. This pipeline assumes that line has already
@@ -1347,7 +1356,7 @@ def flexroc_only_parallel(glob_path,
     Input-
         glob_path(str)- glob path matching cynet log files.
         cores(int)-number of cores to use in multiprocessing.
-        FLEXWIDTH(int)-grace period. flexroc argument.
+        FLEXWIDTH(int)-grace period.FLEX_T flexroc argument.
         FLEX_TAIL_LEN(int)- prediction length. flexroc argument.
         X_Column(int)- column of cynet logfile where X is.
         tpr_threshold(float)-desired tpr. Only tpr or fpr may be specified.
@@ -1360,10 +1369,132 @@ def flexroc_only_parallel(glob_path,
     FLEXROC_PATH = os.path.dirname(sys.modules['cynet'].__file__) + '/bin/flexroc'
     args = []
     for logfile in cynet_logfile:
-        args.append([logfile,tpr_threshold,fpr_threshold,FLEXWIDTH,FLEX_TAIL_LEN,coord_col,day_col,EVENTCOL,NEGATIVE_CLASS_COLUMN,POSITIVE_CLASS_COLUMN,header,positive_str,FLEXROC_PATH])
+        args.append([logfile,tpr_threshold,fpr_threshold,FLEXWIDTH,FLEX_TAIL_LEN,coord_col,day_col,\
+            EVENTCOL,NEGATIVE_CLASS_COLUMN,POSITIVE_CLASS_COLUMN,header,positive_str,FLEXROC_PATH,custom_threshold])
 
     Parallel(n_jobs = cores, verbose = 1, backend = 'threading')\
     (map(delayed(flexroc_only), args))
+
+
+class PerturbPair:
+    '''
+    This class will allow for the pairwise transformation of two log files into
+    csvs. This is intended for use in perturbation analysis. It will take the
+    threshold of the baseline, returned by get_threshold and apply it to the
+    baseline and the peturbed files.
+    '''
+    def __init__(self,baseline_logfile, peturbed_logfile):
+        assert os.path.exists(baseline_logfile), "Baseline file not found"
+        assert os.path.exists(peturbed_logfile), "Peturbed file not found"
+
+        self.baseline_logfile = baseline_logfile
+        self.peturbed_logfile = peturbed_logfile
+        self.FLEXROC_PATH = os.path.dirname(sys.modules['cynet'].__file__) + '/bin/flexroc'
+
+    def transform_both(self,FLEXWIDTH=1,
+        FLEX_TAIL_LEN=100,
+        POSITIVE_CLASS_COLUMN=5,
+        EVENTCOL=3,
+        tpr_threshold=0.85,
+        fpr_threshold=0.15,
+        coord_col=1,
+        day_col=2,
+        NEGATIVE_CLASS_COLUMN=4,
+        header=['lat1','lat2','lon1','lon2','target','day',\
+            'actual_event','negative_event','positive_event'],
+        positive_str='positive_event',):
+        '''
+        Does the transformation of both log files into csvs.
+        Input-
+            glob_path(str)- glob path matching cynet log files.
+            cores(int)-number of cores to use in multiprocessing.
+            FLEXWIDTH(int)-grace period. flexroc argument.
+            FLEX_TAIL_LEN(int)- prediction length. flexroc argument.
+            X_Column(int)- column of cynet logfile where X is.
+            tpr_threshold(float)-desired tpr. Only tpr or fpr may be specified.
+            fpr_threshold(float)-desired fpr. Only tpr or fpr may be specified.
+            header(list)-column names of the csvs.
+            positive_str(str)- name of the positive event column.
+        '''
+        #We use no custom threshold for the baseline, we will calculate with
+        #flexroc_only()
+        baseline_args = [self.baseline_logfile,tpr_threshold,fpr_threshold,FLEXWIDTH,\
+            FLEX_TAIL_LEN,coord_col,day_col,EVENTCOL,NEGATIVE_CLASS_COLUMN,\
+            POSITIVE_CLASS_COLUMN,header,positive_str,self.FLEXROC_PATH, None]
+
+        custom_threshold = flexroc_only(baseline_args)
+        #flexroc_only returns threshold used by baseline
+        perturbed_args = [self.peturbed_logfile,tpr_threshold,fpr_threshold,FLEXWIDTH,\
+            FLEX_TAIL_LEN,coord_col,day_col,EVENTCOL,NEGATIVE_CLASS_COLUMN,\
+            POSITIVE_CLASS_COLUMN,header,positive_str,self.FLEXROC_PATH, custom_threshold]
+        flexroc_only(perturbed_args)
+
+
+def pair_transform(arguments):
+    '''
+    This function is intended to be called in parallel by perturbation_pipeline.
+    This will take a logfile pair and transform them into csvs, using one threshold.
+    Inputs:
+        see peturbation_parallel
+    '''
+    baseline_logfile,peturbed_logfile,tpr_threshold,fpr_threshold,FLEXWIDTH,FLEX_TAIL_LEN,coord_col,day_col,EVENTCOL,\
+    NEGATIVE_CLASS_COLUMN,POSITIVE_CLASS_COLUMN,header,positive_str = \
+    arguments[0],arguments[1],arguments[2],arguments[3],arguments[4],arguments[5],\
+    arguments[6],arguments[7],arguments[8],arguments[9],arguments[10],arguments[11],arguments[12]
+
+    pair_obj = PerturbPair(baseline_logfile, peturbed_logfile)
+
+    pair_obj.transform_both(FLEXWIDTH=FLEXWIDTH,FLEX_TAIL_LEN=FLEX_TAIL_LEN,POSITIVE_CLASS_COLUMN=POSITIVE_CLASS_COLUMN,\
+            EVENTCOL=EVENTCOL,tpr_threshold=tpr_threshold,fpr_threshold=fpr_threshold,\
+            coord_col=coord_col,day_col=day_col,NEGATIVE_CLASS_COLUMN=NEGATIVE_CLASS_COLUMN,
+            header=header,positive_str=positive_str)
+
+
+def peturbation_parallel(baseline_dir, peturbed_dir, glob_string,
+                cores = 4,
+                FLEXWIDTH=1,
+                FLEX_TAIL_LEN=100,
+                POSITIVE_CLASS_COLUMN=5,
+                EVENTCOL=3,
+                tpr_threshold=0.85,
+                fpr_threshold=0.15,
+                coord_col=1,
+                day_col=2,
+                NEGATIVE_CLASS_COLUMN=4,
+                header=['lat1','lat2','lon1','lon2','target','day',\
+                        'actual_event','negative_event','positive_event'],
+                positive_str='positive_event'):
+    '''
+    This function serves as utility for transforming baseline and peturbed log
+    file pairs in parallel.It calls the function pair_transform in parallel.
+    Inputs:
+        baseline_dir(str)- path to directory containing baseline files.
+        peturbed_dir(str)- path to directory containing peturbed files.
+        glob_string(str)- a glob path that when combined with either directory
+        path will yield a list of desired files to be transformed in either directory
+        glob_path(str)- glob path matching cynet log files.
+        cores(int)-number of cores to use in multiprocessing.
+        FLEXWIDTH(int)-grace period. flexroc argument.
+        FLEX_TAIL_LEN(int)- prediction length. flexroc argument.
+        X_Column(int)- column of cynet logfile where X is.
+        tpr_threshold(float)-desired tpr. Only tpr or fpr may be specified.
+        fpr_threshold(float)-desired fpr. Only tpr or fpr may be specified.
+        header(list)-column names of the csvs.
+        positive_str(str)- name of the positive event column.
+    '''
+    baseline_glob = baseline_dir + glob_string
+
+    arguments = []
+    baseline_files = glob.glob(baseline_glob)
+    for basefile in baseline_files:
+        filename = basefile.split('/')[1]
+        peturbfile = peturbed_dir + filename
+        arguments.append([basefile,peturbfile,tpr_threshold,fpr_threshold,FLEXWIDTH,\
+                        FLEX_TAIL_LEN,coord_col, day_col,EVENTCOL,NEGATIVE_CLASS_COLUMN,\
+                        POSITIVE_CLASS_COLUMN,header,positive_str])
+    print "{} Pairs found".format(len(arguments))
+    Parallel(n_jobs = cores, verbose = 1, backend = 'threading')\
+    (map(delayed(pair_transform), arguments))
 
 
 def get_flexroc_threshold(cynet_logfile,FLEXROC_PATH, tpr=None, fpr=None,
@@ -1586,12 +1717,12 @@ def parallel_process(arguments):
     distance = arguments[19]
     testing = arguments[20]
     sample_num = arguments[21]
+    READLEN = arguments[22]
     RESULT = []
     header=['loc_id','lattgt1','lattgt2','lontgt1','lontgt2','varsrc','vartgt','num_models','auc','tpr','fpr','horizon']
 
     for varname in VARNAME:
         stored_model=FILE+'_sel_'+str(uuid.uuid4())+'.json'
-
 
         M=uNetworkModels(FILE + '.json')
         M.setVarname()
@@ -1607,11 +1738,17 @@ def parallel_process(arguments):
             M.select(var='gamma',n=model_nums,store=stored_model,reverse=True,inplace=True)
 
         if M.models:
-            if testing:
-                LOG_PATH = FILE + 'use{}models'.format(model_nums) + '#' + varname + 'sample' + str(sample_num) + 'test.log'
+            if isinstance(varname,list):
+                source = '+'.join(varname)
             else:
-                LOG_PATH = FILE + 'use{}models'.format(model_nums) + '#' + varname + '.log'
-            simulation = simulateModel(stored_model, DATA_PATH, RUNLEN, CYNET_PATH=CYNET_PATH,FLEXROC_PATH=FLEXROC_PATH)
+                source = varname
+
+            if testing:
+                LOG_PATH = FILE + 'use{}models'.format(model_nums) + '#' + source + 'sample' + str(sample_num) + 'test.log'
+            else:
+                LOG_PATH = FILE + 'use{}models'.format(model_nums) + '#' + source + '.log'
+
+            simulation = simulateModel(stored_model, DATA_PATH, RUNLEN, CYNET_PATH=CYNET_PATH,FLEXROC_PATH=FLEXROC_PATH,READLEN=READLEN)
             [auc, tpr, fpr] = simulation.run(LOG_PATH = LOG_PATH,
             PARTITION = PARTITION,
             DATA_TYPE = DATA_TYPE,
@@ -1646,7 +1783,8 @@ def run_pipeline(glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_PA
                 fpr_threshold=0.15,
                 gamma=False,
                 distance=False,
-                res_filename='res_all.csv'):
+                res_filename='res_all.csv',
+                READLEN=None):
     '''
     This function is intended to take the output models from midway, process
     them, and produce graphs. This will call the parallel_process function
@@ -1691,7 +1829,8 @@ def run_pipeline(glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_PA
             gamma,
             distance,
             False,
-            0])
+            0,
+            READLEN])
     Parallel(n_jobs = cores, verbose = 1, backend = 'threading')\
     (map(delayed(parallel_process), args))
     df=pd.concat([pd.read_csv(i) for i in glob.glob(RES_PATH)])
@@ -1758,7 +1897,6 @@ def test_model_nums(sample_size,glob_path,model_nums,horizon, DATA_PATH, RUNLEN,
                 distance,
                 True,
                 sample_num])
-    print len(args)
     Parallel(n_jobs = cores, verbose = 1, backend = 'threading')\
     (map(delayed(parallel_process), args))
     df=pd.concat([pd.read_csv(i) for i in glob.glob(RES_PATH)])
@@ -1970,3 +2108,53 @@ class mapped_events:
         print("Concating {} files.".format(len(glob.glob(self.csv_glob))))
         df = pd.concat([pd.read_csv(csv) for csv in glob.glob(self.csv_glob)])
         df.to_csv(outfile,index=False)
+
+
+def pertub_file(file,newfile,theta=0.1,negative=False):
+    '''
+    Takes a split file, which is typically only one row with many columns. 
+    If we are doing a positive perturbation, we take all the zero events 
+    in the file and with a probability, theta, change them into positive 
+    events. If negative perturbation, change positive events into zeros.
+    Inputs:
+        file(str)- name of the original split file
+        newfile(str)- name of the new file to be written out.
+        theta(float)- probability of zero events being converted to 1's.
+        negative
+    '''
+    with open(file) as csvfile:
+        reader = csv.reader(csvfile, delimiter= ' ')
+        with open(newfile,'w') as newcsvfile:
+            writer = csv.writer(newcsvfile, delimiter= ' ')
+
+            if negative:
+	            for row in reader:
+	                for n in range(len(row)):
+	                    if int(row[n]) > 0:
+	                        if random.uniform(0,1) < theta:
+	                            row[n] = 0
+	                writer.writerow(row)
+            else:
+	            for row in reader:
+	                for n in range(len(row)):
+	                    if row[n] == '0':
+	                        if random.uniform(0,1) < theta:
+	                            row[n] = 1
+	                writer.writerow(row)
+
+
+def alter_splitfiles(globpath, new_dir, theta=0.1,negative=False):
+    '''
+    Takes all split files that matches the glob path and outputs the pertubed
+    version of those files into a new directory.
+    Inputs:
+        globpath(str)- path to all split files.
+        new_dir(str)- directory to send files to.
+        theta(float)- probability of zero events being converted to 1's.
+        negative(bool)- Whether to do a negative perturbation.
+    '''
+    split_files = glob.glob(globpath)
+    print(len(split_files))
+    for file in split_files:
+        newfile_name = new_dir + file.split('/')[-1]
+        pertub_file(file, newfile_name, theta=theta, negative=negative)
