@@ -13,6 +13,8 @@ try:
     import cartopy as crt
     import cartopy.io.shapereader as shpreader
     import cartopy.feature as cfeature
+    from cartopy.io.shapereader import Reader
+    from cartopy.feature import ShapelyFeature
     import cartopy.io.img_tiles as cimgt
 except ImportError:
     raise ImportError('Error: Please ensure cartopy is installed.\
@@ -33,8 +35,10 @@ from scipy.spatial import ConvexHull
 from cynet.cynet import uNetworkModels
 import glob
 from tqdm import tqdm
-
+import multiprocessing
 from multiprocessing import Pool
+from sklearn import metrics
+import geopy.distance
 
 def _scaleforsize(a):
     """
@@ -394,3 +398,285 @@ def individual_render(arguments):
         json.dump(M.models, outfile)
 
     return
+
+
+def getHausdorf(coord,pt):
+    '''
+    Uses the geopy library distance function to find
+    the minimal distance(on the spherical globe) from a point
+    given by a lat and lon coordinates and other points
+    in coord.
+    Inputs
+    '''
+    return np.min([geopy.distance.distance(pt,i).miles for i in coord])
+
+
+def getHausdorf_df(df,pt,EPS=0.0001):
+    '''
+    Uses getHausdorf function to find the smallest distance between
+    pt and a tile in df. Will be used to find the closest tile with
+    intensity greater than Z. Used to allow for distance grace.
+    '''
+    while True:
+        T=[tuple(i) for i in df[(np.abs(df.lat-pt[0])<EPS) 
+                                          & (np.abs(df.lon-pt[1])<EPS)].values]
+        if len(T)>0:
+            break
+        else:
+            EPS=2*EPS
+    return getHausdorf(T,tuple(pt)),T
+
+def get_intensity(intensity,lon_mesh,lat_mesh,pt_,sigma=3,radius=2):
+    '''
+    single point spread calculation with Gaussian diffusion. Used
+    to find the intensity of a tile.
+    '''
+    lon_del=lon_mesh[0,:]
+    lat_del=lat_mesh[:,0]
+
+    lon_index=np.arange(len(lon_del))[(pt_[1]-lon_del<radius)*(pt_[1]-lon_del>-radius)]
+    lat_index=np.arange(len(lat_del))[(pt_[0]-lat_del<radius)*(pt_[0]-lat_del>-radius)]
+
+    mu=np.mean(lon_index)
+    bins=lon_index
+    intensity_lon=1/(sigma*np.sqrt(2*np.pi))*np.exp(-(bins - mu)**2/(2 * sigma**2))
+
+    mu=np.mean(lat_index)
+    bins=lat_index
+    intensity_lat=1/(sigma*np.sqrt(2*np.pi))*np.exp(-(bins - mu)**2/(2 * sigma**2))
+    for i in np.arange(len(lon_index)):
+        for j in np.arange(len(lat_index)):
+            intensity[lat_index[j],lon_index[i]]=intensity[lat_index[j],lon_index[i]]\
+                                                +intensity_lon[i]*intensity_lat[j]
+
+    return intensity
+
+
+def get_mesh(df0,lat_min,lat_max,lon_min,lon_max,radius=2,detail=0.25,lat_col='lat2',lon_col='lon2'):
+    '''
+    Returns the mesh grid and the coordinates used to generate them.
+    '''
+    coord_=df0[[lat_col,lon_col]].values
+
+    lon_grid=np.arange(lon_min-radius,lon_max+radius,detail)
+    lat_grid=np.arange(lat_min-radius,lat_max+radius,detail)
+    lon_mesh,lat_mesh=np.meshgrid(lon_grid,lat_grid)
+    return lon_mesh,lat_mesh,coord_
+
+def df_intersect(df1,df2,columns=[]):
+    '''
+    Returns the intersection of dataframes. Specifically used here
+    with tiles. So we use this to find the set of tiles in
+    both dataframes.
+    '''
+    df1__=df1[columns]
+    df2__=df2[columns]
+    
+    df1__m = df1__.apply(lambda x: hash(tuple(x)), axis=1)
+    df2__m = df2__.apply(lambda x: hash(tuple(x)), axis=1)
+    #bl=df1__['match'].isin(df2__['match']).values
+    df_=df1[df1__m.isin(df2__m)]
+    
+    return df_
+
+
+def df_setdiff(df1,df2,columns=[]):
+    '''
+    Returns the set of tiles in dataframe 1 that is not in 
+    dataframe 2.
+    '''
+    df1__=df1[columns]
+    df2__=df2[columns]
+    
+    df1__m = df1__.apply(lambda x: hash(tuple(x)), axis=1)
+    df2__m = df2__.apply(lambda x: hash(tuple(x)), axis=1)
+    #bl=df1__['match'].isin(df2__['match']).values
+    df_=df1[~df1__m.isin(df2__m)]
+    
+    return df_
+
+
+def get_prediction(df,days,lat_min,lat_max,lon_min,lon_max,source,types,
+                   radius=0.01,detail=0.2,save=False,
+                   startdate="12/31/2016",offset=1095,Z=1.0,SINGLE=True,
+                   day_col='day',grace=1,variable_col='target',source_col='source',
+                   actual_event_col='actual_event',prediction_col='predictions',
+                   lat_col='lat2',lon_col = 'lon2'):
+    '''
+    For use with Chicago crime example only.
+    Calculates the true positives, false positives, and false negatives
+    of our predictions. We do allow for a grace of one day in our
+    predictions. That is, if we are off by one day in our prediction,
+    we count that as a correct prediction. Also allows for a small distance 
+    grace in our predictions. 
+    '''
+    dt=pd.to_datetime(startdate) + pd.DateOffset(days=days-offset)
+    dt=dt.strftime('%m-%d-%Y')
+    
+    df = df[df[day_col].between(days-grace,days+grace)]
+    df = df[df[variable_col].isin(types)]
+    df = df[df[source_col] == source]
+    df_gnd = df[(df[day_col]==days) & (df[actual_event_col]==1)]
+    df_prd0 = df[(df[day_col]==days) & (df[prediction_col]==1)]
+    df_prd1 = df[(df[day_col]==days-grace) & (df[prediction_col]==1)]
+    df_prd2 = df[(df[day_col]==days+grace) & (df[prediction_col]==1)]
+
+    # true positives .. will need to add true positives from yesterday matches.
+    df_prd0_tp = df_prd0[df_prd0[actual_event_col]==1]
+    tp=df_prd0_tp.index.size
+
+    # this is not quite false positives, because of possible matches in grace (false pos=_fp)
+    df_prd0_fp = df_prd0[df_prd0[actual_event_col]==0]
+    df_prd0_fp = df_setdiff(df_prd0_fp,df_prd0_tp,columns=[lat_col,lon_col])
+    #Actual events from yesterday and tommorow.
+    df_gnd1 = df[(df[day_col]==days-1) & (df[actual_event_col]==1)]
+    df_gnd2 = df[(df[day_col]==days+1) & (df[actual_event_col]==1)]
+
+    c1 = df_intersect(df_gnd1,df_prd0_fp,columns=[lat_col,lon_col])
+    c2 = df_intersect(df_gnd2,df_prd0_fp,columns=[lat_col,lon_col])
+    df_c = pd.concat([c1,c2], sort=True)
+    #Predictions of today that did not match with events from today but
+    #did match with either yesterday or tommorow.
+
+    # Now we calculate correct false positives
+    df_prd0_fp = df_setdiff(df_prd0_fp,df_c,columns=[lat_col,lon_col])
+    #Predictions that do not match today, yesterday, or tommorow.
+
+    # account for grace tp from day before
+    df_gnd0=df_gnd.copy()
+    df_gnd = df_intersect(df_gnd,df_prd1, columns=[lat_col,lon_col])
+    df_prd0_ = df_intersect(df_prd1,df_gnd, columns=[lat_col,lon_col])
+    #Predictions of yesterday that matched with today.
+
+    df_prd0_fp = df_setdiff(df_prd0_fp,df_prd0_,columns=[lat_col,lon_col])
+    #False positives that do not coincide with correct predictions made
+    #yesterday either.
+
+    fp=df_prd0_fp.index.size
+    #Include true positives from matching yesterday.
+    tp=tp+df_prd0_.index.size
+        
+    #concat df_prd0_tp  df_prd0_fp df_prd0_
+    df_prd0 = pd.concat([df_prd0_tp , df_prd0_fp, df_prd0_], sort=True)
+    
+    df_fn = df_setdiff(df_gnd0,df_prd0,columns=[lat_col,lon_col])
+    fn =  df_fn.index.size
+
+    lon_grid=np.arange(lon_min-radius,lon_max+radius,detail)
+    lat_grid=np.arange(lat_min-radius,lat_max+radius,detail)
+    lon_mesh,lat_mesh=np.meshgrid(lon_grid,lat_grid)
+
+    lon_mesh0,lat_mesh0,coord_=get_mesh(df_prd0,lat_min,lat_max,lon_min,lon_max,radius=radius,detail=detail)
+    intensity0=np.zeros(lat_mesh0.shape)
+    if SINGLE:
+        print 'calculating intensity'
+        for i in tqdm(coord_):
+            intensity0=get_intensity(intensity0,lon_mesh0,lat_mesh0,i,sigma=3.5,radius=radius)
+    else:
+        for i in coord_:
+            intensity0=get_intensity(intensity0,lon_mesh0,lat_mesh0,i,sigma=3.5,radius=radius)
+
+    intensity0=np.multiply(intensity0,(intensity0>Z))    
+    
+    dfpu=df_prd0_fp[[lat_col,lon_col]].drop_duplicates()
+    lon_del=lon_mesh0[0,:]
+    lat_del=lat_mesh0[:,0]
+    A=(intensity0>Z).nonzero()
+    coordNZ=[(lat_del[A[0][i]],lon_del[A[1][i]]) for i in np.arange(len(A[0]))]
+    df_cnz=pd.DataFrame(coordNZ,columns=['lat','lon'])
+    if SINGLE:
+        print 'calculating FP'
+        xg=np.array([getHausdorf_df(df_cnz,tuple(i),EPS=0.0001)[0] for i in tqdm(dfpu.values)])
+    else:
+        xg=np.array([getHausdorf_df(df_cnz,tuple(i),EPS=0.0001)[0] for i in (dfpu.values)])
+    fp=np.sum(xg<0.01)
+    
+    
+    dfnu=df_gnd0[[lat_col,lon_col]].drop_duplicates()
+    lon_del=lon_mesh0[0,:]
+    lat_del=lat_mesh0[:,0]
+    if SINGLE:
+        print 'Calculating FN'
+        xgfn=np.array([getHausdorf_df(df_cnz,tuple(i),EPS=0.0001)[0] for i in tqdm(dfnu.values)])
+    else:
+        xgfn=np.array([getHausdorf_df(df_cnz,tuple(i),EPS=0.0001)[0] for i in (dfnu.values)])
+    fn=np.sum(xgfn>0.02)
+    
+    df_gnd_augmented = pd.concat([df_prd0_,df_gnd0], sort=True)
+    
+    return dt,fp,fn,tp,df_gnd_augmented,lon_mesh0,lat_mesh0,intensity0
+ 
+
+def getFigure(days,dt,fp,fn,tp,df_gnd_augmented,lon_mesh,lat_mesh,intensity,
+                types,short_type_names,spatial_resolution_lat,spatial_resolution_lon,
+                lat_col='lat2',lon_col='lon2', fname=None,cmap='terrain',
+                temporal_quantization='1 day',save=True,PREFIX='fig'):
+    '''
+    Draws a heatmap. For use with the getPrediction function. Mainly used in
+    the UChicago example.
+    '''
+    fig=plt.figure(figsize=(10,5.5))
+    ax = plt.axes(projection=ccrs.PlateCarree())
+    if fname is not None:
+        ax.add_geometries(Reader(fname).geometries(),ccrs.PlateCarree(),
+                          edgecolor='w', lw=1.5, facecolor="w",alpha=.15)
+
+    
+    plt.plot(df_gnd_augmented[lon_col].values,df_gnd_augmented[lat_col].values,'ro',alpha=.4,ms=1)
+    plt.pcolormesh(lon_mesh,lat_mesh,intensity,cmap=cmap,
+                   alpha=1,edgecolor=None,linewidth=0)
+    plt.xlim(lon_mesh.min(),lon_mesh.max())
+    plt.ylim(lat_mesh.min(),lat_mesh.max())
+    props = dict(boxstyle='round', facecolor='w', alpha=0.95)
+    props1 = dict(boxstyle='round', facecolor=None,lw=0, edgecolor=None,alpha=0.05)
+
+    ax.text(0.98, 0.9,dt, transform=ax.transAxes,fontweight='bold',fontsize=8,color='k',
+            verticalalignment='top', horizontalalignment='right', bbox=props)
+    ax.text(0.02, 0.02,'zed.uchicago.edu', transform=ax.transAxes,fontweight='bold',
+            fontsize=8,color='k',
+            verticalalignment='bottom', horizontalalignment='left', bbox=props)
+    ax.text(0.02, 0.06,'data source: City of Chicago', transform=ax.transAxes,fontweight='bold',
+            fontsize=8,color='.7',
+            verticalalignment='bottom', horizontalalignment='left', bbox=props1)
+
+    sourcetype='('+', '.join([short_type_names[i] for i in types])+')'
+    ax.text(0.98, 0.98,'Event Prediction '+sourcetype+'\nHorizon: 6-8 days',
+            transform=ax.transAxes, fontsize=8,color='w',fontweight='bold',
+            verticalalignment='top', horizontalalignment='right', bbox=props1)
+
+    ax.text(0.98, 0.02,'Red dots: actual events\nLatitude Res.: '+\
+            spatial_resolution_lat+'\nLongitude Res.: '+spatial_resolution_lon
+            +'\nTemporal Res.: '+temporal_quantization+'\nRegions With Event Rate > 5% Considered',
+            transform=ax.transAxes, fontsize=8,color='.7',fontweight='bold',
+            verticalalignment='bottom', horizontalalignment='right', bbox=props1)
+
+    ax2 = plt.gcf().add_axes([0.325, 0.2, 0.07, 0.15])
+    ax2.patch.set_alpha(0)
+
+
+    plt.bar(['FN','TP','FP'],[fn,tp,fp],color='r',lw=0,alpha=.5)
+
+    ax2.spines['bottom'].set_color('w')
+    ax2.spines['top'].set_color('w') 
+    ax2.spines['right'].set_visible(False) 
+    ax2.spines['left'].set_visible(False) 
+
+    ax2.tick_params(axis='x', colors='w')
+    ax2.tick_params(axis='y', colors='w')
+    ax2.grid(True)
+    for label in ax2.get_yticklabels():
+        label.set_color('w')
+        label.set_fontsize(6)
+        label.set_fontweight('bold')
+    for label in ax2.get_xticklabels():
+        label.set_color('w')
+        label.set_fontsize(8)
+        label.set_fontweight('bold')
+
+    ax2.tick_params(axis=u'both', which=u'both',length=0)
+    plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0, hspace = 0, wspace = 0)
+    plt.margins(0,0)
+
+    if save:
+        plt.savefig(PREFIX+str(days).zfill(5)+'.png',dpi=300, bbox_inches='tight',pad_inches = 0)
+    return ax
