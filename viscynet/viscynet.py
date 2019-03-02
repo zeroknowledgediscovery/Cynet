@@ -498,7 +498,7 @@ def df_setdiff(df1,df2,columns=[]):
 
 def get_prediction(df,days,lat_min,lat_max,lon_min,lon_max,source,types,
                    radius=0.01,detail=0.2,save=False,
-                   startdate="12/31/2016",offset=1095,Z=1.0,SINGLE=True,
+                   startdate="12/31/2017",offset=1095,Z=1.0,SINGLE=True,
                    day_col='day',grace=1,variable_col='target',source_col='source',
                    actual_event_col='actual_event',prediction_col='predictions',
                    lat_col='lat2',lon_col = 'lon2'):
@@ -542,7 +542,6 @@ def get_prediction(df,days,lat_min,lat_max,lon_min,lon_max,source,types,
     df_prd0_fp = df_setdiff(df_prd0_fp,df_c,columns=[lat_col,lon_col])
     #Predictions that do not match today, yesterday, or tommorow.
 
-    # account for grace tp from day before
     df_gnd0=df_gnd.copy()
     df_gnd = df_intersect(df_gnd,df_prd1, columns=[lat_col,lon_col])
     df_prd0_ = df_intersect(df_prd1,df_gnd, columns=[lat_col,lon_col])
@@ -552,19 +551,11 @@ def get_prediction(df,days,lat_min,lat_max,lon_min,lon_max,source,types,
     #False positives that do not coincide with correct predictions made
     #yesterday either.
 
-    fp=df_prd0_fp.index.size
     #Include true positives from matching yesterday.
     tp=tp+df_prd0_.index.size
         
     #concat df_prd0_tp  df_prd0_fp df_prd0_
     df_prd0 = pd.concat([df_prd0_tp , df_prd0_fp, df_prd0_], sort=True)
-    
-    df_fn = df_setdiff(df_gnd0,df_prd0,columns=[lat_col,lon_col])
-    fn =  df_fn.index.size
-
-    lon_grid=np.arange(lon_min-radius,lon_max+radius,detail)
-    lat_grid=np.arange(lat_min-radius,lat_max+radius,detail)
-    lon_mesh,lat_mesh=np.meshgrid(lon_grid,lat_grid)
 
     lon_mesh0,lat_mesh0,coord_=get_mesh(df_prd0,lat_min,lat_max,lon_min,lon_max,radius=radius,detail=detail)
     intensity0=np.zeros(lat_mesh0.shape)
@@ -577,37 +568,96 @@ def get_prediction(df,days,lat_min,lat_max,lon_min,lon_max,source,types,
             intensity0=get_intensity(intensity0,lon_mesh0,lat_mesh0,i,sigma=3.5,radius=radius)
 
     intensity0=np.multiply(intensity0,(intensity0>Z))    
-    
     dfpu=df_prd0_fp[[lat_col,lon_col]].drop_duplicates()
     lon_del=lon_mesh0[0,:]
     lat_del=lat_mesh0[:,0]
     A=(intensity0>Z).nonzero()
     coordNZ=[(lat_del[A[0][i]],lon_del[A[1][i]]) for i in np.arange(len(A[0]))]
     df_cnz=pd.DataFrame(coordNZ,columns=['lat','lon'])
+    #df_cnz is dataframe of coordinates of tiles whose intensity are greater than 0.
     if SINGLE:
         print 'calculating FP'
         xg=np.array([getHausdorf_df(df_cnz,tuple(i),EPS=0.0001)[0] for i in tqdm(dfpu.values)])
     else:
         xg=np.array([getHausdorf_df(df_cnz,tuple(i),EPS=0.0001)[0] for i in (dfpu.values)])
+    #Tiles not close enough to other tiles with positive intensity are false positives.
     fp=np.sum(xg<0.01)
     
     
     dfnu=df_gnd0[[lat_col,lon_col]].drop_duplicates()
-    lon_del=lon_mesh0[0,:]
-    lat_del=lat_mesh0[:,0]
     if SINGLE:
         print 'Calculating FN'
         xgfn=np.array([getHausdorf_df(df_cnz,tuple(i),EPS=0.0001)[0] for i in tqdm(dfnu.values)])
     else:
         xgfn=np.array([getHausdorf_df(df_cnz,tuple(i),EPS=0.0001)[0] for i in (dfnu.values)])
     fn=np.sum(xgfn>0.02)
-    
+    #Tiles which we fail to predict and are not close enough to one of our predictions
+    #is considered false negatives.
     df_gnd_augmented = pd.concat([df_prd0_,df_gnd0], sort=True)
     
     return dt,fp,fn,tp,df_gnd_augmented,lon_mesh0,lat_mesh0,intensity0
  
 
 def getFigure(days,dt,fp,fn,tp,df_gnd_augmented,lon_mesh,lat_mesh,intensity,
+                lat_col='lat2',lon_col='lon2',
+                fname=None,cmap='terrain',temporal_quantization='1 day',
+                save=True,PREFIX='fig'):
+    '''
+    Draws a heatmap. For use with the getPrediction function. Mainly used in
+    the UChicago example.
+    '''
+    fig=plt.figure(figsize=(10,5.5))
+    ax = plt.axes(projection=ccrs.PlateCarree())
+    if fname is not None:
+        ax.add_geometries(Reader(fname).geometries(),ccrs.PlateCarree(),
+                          edgecolor='w', lw=1.5, facecolor="w",alpha=.15)
+
+    plt.plot(df_gnd_augmented[lon_col].values,df_gnd_augmented[lat_col].values,'ro',alpha=.4,ms=1)
+    plt.pcolormesh(lon_mesh,lat_mesh,intensity,cmap=cmap,
+                   alpha=1,edgecolor=None,linewidth=0)
+    plt.xlim(lon_mesh.min(),lon_mesh.max())
+    plt.ylim(lat_mesh.min(),lat_mesh.max())
+    props = dict(boxstyle='round', facecolor='w', alpha=0.95)
+    props1 = dict(boxstyle='round', facecolor=None,lw=0, edgecolor=None,alpha=0.05)
+
+    ax.text(0.98, 0.9,dt, transform=ax.transAxes,fontweight='bold',fontsize=8,color='k',
+            verticalalignment='top', horizontalalignment='right', bbox=props)
+
+    ax.text(0.98, 0.98,'Horizon: 6-8 days',
+            transform=ax.transAxes, fontsize=8,color='w',fontweight='bold',
+            verticalalignment='top', horizontalalignment='right', bbox=props1)
+
+    ax2 = plt.gcf().add_axes([0.325, 0.2, 0.07, 0.15])
+    ax2.patch.set_alpha(0)
+
+    plt.bar(['FN','TP','FP'],[fn,tp,fp],color='r',lw=0,alpha=.5)
+
+    ax2.spines['bottom'].set_color('w')
+    ax2.spines['top'].set_color('w') 
+    ax2.spines['right'].set_visible(False) 
+    ax2.spines['left'].set_visible(False) 
+
+    ax2.tick_params(axis='x', colors='w')
+    ax2.tick_params(axis='y', colors='w')
+    ax2.grid(True)
+    for label in ax2.get_yticklabels():
+        label.set_color('w')
+        label.set_fontsize(6)
+        label.set_fontweight('bold')
+    for label in ax2.get_xticklabels():
+        label.set_color('w')
+        label.set_fontsize(8)
+        label.set_fontweight('bold')
+
+    ax2.tick_params(axis=u'both', which=u'both',length=0)
+    plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0, hspace = 0, wspace = 0)
+    plt.margins(0,0)
+
+    if save:
+        plt.savefig(PREFIX+str(days).zfill(5)+'.png',dpi=300, bbox_inches='tight',pad_inches = 0)
+    return ax
+
+def getFigure_detailed(days,dt,fp,fn,tp,df_gnd_augmented,lon_mesh,lat_mesh,intensity,
                 types,short_type_names,spatial_resolution_lat,spatial_resolution_lon,
                 lat_col='lat2',lon_col='lon2', fname=None,cmap='terrain',
                 temporal_quantization='1 day',save=True,PREFIX='fig'):
