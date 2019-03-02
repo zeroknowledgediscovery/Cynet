@@ -600,7 +600,7 @@ def get_prediction(df,days,lat_min,lat_max,lon_min,lon_max,source,types,
 
 def getFigure(days,dt,fp,fn,tp,df_gnd_augmented,lon_mesh,lat_mesh,intensity,
                 lat_col='lat2',lon_col='lon2',
-                fname=None,cmap='terrain',temporal_quantization='1 day',
+                fname=None,cmap='terrain',
                 save=True,PREFIX='fig'):
     '''
     Draws a heatmap. For use with the getPrediction function. Mainly used in
