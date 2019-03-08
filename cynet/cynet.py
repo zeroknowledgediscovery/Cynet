@@ -2128,19 +2128,41 @@ def pertub_file(file,newfile,theta=0.1,negative=False):
             writer = csv.writer(newcsvfile, delimiter= ' ')
 
             if negative:
-	            for row in reader:
-	                for n in range(len(row)):
-	                    if int(row[n]) > 0:
-	                        if random.uniform(0,1) < theta:
-	                            row[n] = 0
-	                writer.writerow(row)
+                for row in reader:
+                    for n in range(len(row)):
+                        if int(row[n]) > 0:
+                            if random.uniform(0,1) < theta:
+                                row[n] = 0
+                    writer.writerow(row)
             else:
-	            for row in reader:
-	                for n in range(len(row)):
-	                    if row[n] == '0':
-	                        if random.uniform(0,1) < theta:
-	                            row[n] = 1
-	                writer.writerow(row)
+                for row in reader:
+                    for n in range(len(row)):
+                        if row[n] == '0':
+                            if random.uniform(0,1) < theta:
+                                row[n] = 1
+                    writer.writerow(row)
+
+
+def negative_pertub_file(file,newfile,theta=0.1):
+    '''
+    Takes a split file, which is typically only one row with many columns. We
+    take all the zero events in the file and with a probability, theta, change
+    them into positive events.
+    Inputs:
+        file(str)- name of the original split file
+        newfile(str)- name of the new file to be written out.
+        theta(float)- probability of zero events being converted to 1's.
+    '''
+    with open(file) as csvfile:
+        reader = csv.reader(csvfile, delimiter= ' ')
+        with open(newfile,'w') as newcsvfile:
+            writer = csv.writer(newcsvfile, delimiter= ' ')
+            for row in reader:
+                for n in range(len(row)):
+                    if int(row[n]) > 0:
+                        if random.uniform(0,1) < theta:
+                            row[n] = 0
+                writer.writerow(row)
 
 
 def alter_splitfiles(globpath, new_dir, theta=0.1,negative=False):
@@ -2158,3 +2180,19 @@ def alter_splitfiles(globpath, new_dir, theta=0.1,negative=False):
     for file in split_files:
         newfile_name = new_dir + file.split('/')[-1]
         pertub_file(file, newfile_name, theta=theta, negative=negative)
+
+
+def negative_alter_splitfiles(globpath, new_dir, theta=0.1):
+    '''
+    Takes all split files that matches the glob path and outputs the pertubed
+    version of those files into a new directory.
+    Inputs:
+        globpath(str)- path to all split files.
+        new_dir(str)- directory to send files to.
+        theta(float)- probability of zero events being converted to 1's.
+    '''
+    split_files = glob.glob(globpath)
+    print(len(split_files))
+    for file in split_files:
+        newfile_name = new_dir + file.split('/')[-1]
+        negative_pertub_file(file, newfile_name, theta=theta)
