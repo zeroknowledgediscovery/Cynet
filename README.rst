@@ -2,8 +2,10 @@
 cynet
 ===============
 
-.. figure:: https://pypistats.com/badge/cynet.png
+.. figure:: https://img.shields.io/pypi/dm/cynet.svg
    :alt: cynet PyPI Downloads
+.. figure:: https://img.shields.io/pypi/v/cynet.svg
+   :alt: cynet version
 
 .. image:: http://zed.uchicago.edu/logo/logozed1.png
    :height: 400px
