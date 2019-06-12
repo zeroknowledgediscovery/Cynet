@@ -278,6 +278,8 @@ class spatioTemporal:
         if self.selvar is not None:
             for key in self.selvar.keys():
                 df=df[df[key]==self.selvar[key]]
+                TS_NAME=TS_NAME+str(self.selvar[key])
+                
         df=df[[self._EVENT]]
 
         if freq is None:
