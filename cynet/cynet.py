@@ -173,10 +173,9 @@ class spatioTemporal:
         self._coord2 = coord2
         self._coord3 = coord3
 
-        if columns is None:
-            self._columns = [EVENT, coord1, coord2, DATE]
-        else:
-            self._columns = columns
+        self._columns = [EVENT, coord1, coord2, DATE]
+        if columns is not  None:
+            self._columns.extend(columns)
 
         self._types = types
         self._value_limits = value_limits
@@ -276,10 +275,10 @@ class spatioTemporal:
 
         # make the DATE the index and keep only the event col
         df.index = df[self._DATE]
-        df=df[[self._EVENT]]
         if self.selvar is not None:
             for key in self.selvar.keys():
                 df=df[df[key]==self.selvar[key]]
+        df=df[[self._EVENT]]
 
         if freq is None:
             ts = [local_func(df.loc[self._trng[i]:self._trng[i + 1]].values) for i in
