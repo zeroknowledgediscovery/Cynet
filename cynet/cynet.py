@@ -278,7 +278,7 @@ class spatioTemporal:
         df.index = df[self._DATE]
         df=df[[self._EVENT]]
         if self.selvar is not None:
-            for key in sel.selvar.keys():
+            for key in self.selvar.keys():
                 df=df[df[key]==self.selvar[key]]
 
         if freq is None:
