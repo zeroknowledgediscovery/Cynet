@@ -96,7 +96,8 @@ class spatioTemporal:
                  value_limits=None,
                  grid=None,
                  threshold=None,
-                 local_func=len
+                 local_func=len,
+                 sel=None
     ):
 
         # either types is specified
@@ -148,6 +149,7 @@ class spatioTemporal:
         self._THRESHOLD=threshold
 
         self.local_func = local_func
+        self.selvar = sel
         
         if freq is None:
             self._FREQ = 'D'
@@ -209,7 +211,8 @@ class spatioTemporal:
 
 
 
-    def getTS(self,_types=None,tile=None,freq=None,poly_tile=False,local_func=len):
+    def getTS(self,_types=None,tile=None,freq=None,poly_tile=False,
+              local_func=len):
         """
         Utilities for spatio temporal analysis
         @author zed.uchicago.edu
@@ -274,6 +277,9 @@ class spatioTemporal:
         # make the DATE the index and keep only the event col
         df.index = df[self._DATE]
         df=df[[self._EVENT]]
+        if self.selvar is not None:
+            for key in sel.selvar.keys():
+                df=df[df[key]==self.selvar[key]]
 
         if freq is None:
             ts = [local_func(df.loc[self._trng[i]:self._trng[i + 1]].values) for i in
