@@ -1988,15 +1988,16 @@ class xgModels:
         commands to run on a cluster.
     '''
     def __init__(self, TS_PATH,
-                NAME_PATH,
-                LOG_PATH,
-                FILEPATH,
-                BEG,
-                END,
-                NUM,
-                PARTITION,
-                XgenESeSS_PATH,
-                RUN_LOCAL):
+                 NAME_PATH,
+                 LOG_PATH,
+                 FILEPATH,
+                 BEG,
+                 END,
+                 NUM,
+                 PARTITION,
+                 XgenESeSS_PATH,
+                 RUN_LOCAL,
+                 DERIVATIVE=0):
 
         assert os.path.exists(TS_PATH), "Time series file not found"
         assert os.path.exists(NAME_PATH), "Name file not found"
@@ -2010,6 +2011,7 @@ class xgModels:
         self.NUM = NUM
         self.PARTITION = PARTITION
         self.RUN_LOCAL = RUN_LOCAL
+        self.DERIVATIVE = DERIVATIVE
 
         if self.RUN_LOCAL:
             #Find the local copy of XgenESeSS binary
@@ -2055,7 +2057,7 @@ class xgModels:
                  + "  -E " +str(self.END) + ' -n ' +str(self.NUM)+ ' -p '\
                  + " ".join(str(x) for x in self.PARTITION) + ' -S -N '\
                  + self.NAME_PATH + ' -l ' + self.FILEPATH+str(INDEX)\
-                 + self.LOG_PATH + ' -m -g 0.01 -G 10000 -v 0 -A .5 -q -w '\
+                 + self.LOG_PATH + ' -u '+self.DERIVATIVE +' -m -g 0.01 -G 10000 -v 0 -A .5 -q -w '\
                  + self.FILEPATH+str(INDEX)
                 command_count += 1
                 commands.append([xgstr,command_count])
@@ -2072,7 +2074,7 @@ class xgModels:
                      + "  -E " +str(self.END) + ' -n ' +str(self.NUM)+ ' -p '\
                      + " ".join(str(x) for x in self.PARTITION) + ' -S -N '\
                      + self.NAME_PATH + ' -l ' + self.FILEPATH+str(INDEX)\
-                     + self.LOG_PATH + ' -m -g 0.01 -G 10000 -v 0 -A .5 -q -w '\
+                     + self.LOG_PATH + ' -u '+self.DERIVATIVE +' -m -g 0.01 -G 10000 -v 0 -A .5 -q -w '\
                      + self.FILEPATH+str(INDEX)
                     file.write(xgstr + '\n')
 
