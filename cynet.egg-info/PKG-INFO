@@ -1,18 +1,20 @@
 Metadata-Version: 2.1
 Name: cynet
-Version: 1.1.41
+Version: 1.1.78
 Summary: Learning Point Processes Using Deep Granger Nets
 Home-page: https://github.com/zeroknowledgediscovery/
 Author: zed.uchicago.edu
 Author-email: ishanu@uchicago.edu
 License: LICENSE.txt
-Download-URL: https://github.com/zeroknowledgediscovery/Cynet/archive/1.1.41.tar.gz
+Download-URL: https://github.com/zeroknowledgediscovery/Cynet/archive/1.1.78.tar.gz
 Description: ===============
-        cynet 
+        cynet
         ===============
         
-        .. figure:: https://pypistats.com/badge/cynet.png
+        .. figure:: https://img.shields.io/pypi/dm/cynet.svg
            :alt: cynet PyPI Downloads
+        .. figure:: https://img.shields.io/pypi/v/cynet.svg
+           :alt: cynet version
         
         .. image:: http://zed.uchicago.edu/logo/logozed1.png
            :height: 400px
@@ -53,9 +55,41 @@ Description: ===============
         * spatioTemporal
         * uNetworkModels
         * simulateModels
+        * xgModels
+        
+        Description of Pipeline:
+          You may find two examples of this pipeline in your enviroment's bin folder
+          after installing the cynet package.
+        
+          Step 1:
+            Use the spatioTemporal class and its utility functions to fit and
+            manipulate your data into a timeseries grid. The end outputs will be triplets:
+            files that contain the rows (coordinates), the columns (dates), and the timeseries.
+            The splitTS function will help generate rows of the timeseries. Generally, we
+            use this to create timeseries beyond the length of the data in the triplets.
+            We use the triplets to generate predictive models and then split, which have
+            the longer timeseries to evaluate those models.
+        
+          Step 2:
+            Run xGenESeSS on the triplets to generate predictive models. The
+            xgModels class can be used to assist in this step. If running on a cluster,
+            set run local to false and calling xgModels.run() will generate the shell
+            commands to run xGenESeSS in a text file. Otherwise, xgModels will run
+            locally using the binary installed with the package. The end result are predictive
+            models. Note that example 1 starts at this point. Thus there are sample models
+            provided.
+        
+          Step 3:
+            To evaluate the models afterwards, use the run_pipeline utility function.
+            This calls uNetworkModels and simulateModels in parallel to evaluate each model.
+            simulateModels calls the cynet and flexroc binaries. Outputs will be auc, tpr,
+            and fpr statistics.
+        
+            See example 2 for an example of the entire pipeline.
         
         **class spatioTemporal**
-          Utilities for spatial-temporal analysis
+          Utilities for spatial-temporal analysis. Used to fit timeseries onto a grid
+          and output data into xGenESeSS friendly format.
         
           **Attributes:**
               * log_store (Pickle): Pickle storage of class data & dataframes
@@ -479,6 +513,43 @@ Description: ===============
                             to consider.
                             Ex: VARNAMES=['Personnel','Infrastructure','Casualties']
         
+        **class xgModels**
+          Utility for running xGenESeSS to generate models. Used to produce shell
+          commands which will be run on a cluster. Can also be used to run those shell
+          commands locally.
+        
+          **Attributes**
+            * TS_PATH(string)-path to file which has the rowwise multiline time series data
+            * NAME_PATH(string)-path to file with name of the variables
+            * LOG_PATH(string)-path to log file for xgenesess inference
+            * BEG(int) & END(int)- xgenesses run parameters
+            * NUM(int)-number of restarts (20 is good)
+            * PARTITION(float)-partition sequence
+            * XgenESeSS_PATH(str)-path to XgenESeSS
+            * RUN_LOCAL(bool)- whether to run XgenESeSS locally or produce a list of commands
+        
+            **Methods**
+              .. code-block::
+        
+                run_oneXG(self,command)
+        
+                This function is intended to be called by the run method in xgModels. This
+                function uses the subprocess module to execute a XgenESeSS command
+                and wait for its completion.
+                Input-
+                  command(str): the XgenESeSS command to be executed.
+                  command_count(int): the command number of this command.
+        
+                run(self, calls_name='program_calls.txt', workers = 4):
+        
+                Here we run XgenESeSS. This either happens locally or this function
+                will output the program calls text file to run on a cluster.
+                Input-
+                  calls_name(str)-Name of file containing program_calls. Only used if
+                    RUN_LOCAL = 0.
+                  workers(int)- Number of workers to use in pool. If none, then will
+                    default to number of cores in the system.
+        
         **viscynet library classes:**
           visualization library for Network Models produced by uNetworkModels based on
           matplotlib
@@ -565,7 +636,59 @@ Description: ===============
                   Output -
                       a (ndarray): output array
         
+              render_network(model_path,MAX_DIST,MIN_DIST,MAX_GAMMA,MIN_GAMMA,
+                  COLORMAP,Horizon,model_nums, newmodel_name='newmodel.json',
+                  figname='fig2')
         
+                  For use after model.json files are produced via XgenESeSS. Will produce a
+                  network interaction map of all the models.
+                  Inputs:
+                    model_path(str)- path to the model.json files.
+                    MAX_DIST(int)- max distance cutoff in render network.
+                    MIN_DIST(int)- min distance cutoff in render network.
+                    MAX_GAMMA(float)- max gamma cutoff in render network.
+                    MIN_GAMMA(float)- min gamma cutoff in render network.
+                    COLORMAP(str)- colormap in render network.
+                    Horizon(int)- prediction horizons to test in unit of temporal
+                        quantization.
+                    model_nums(int)- number of models to use in prediction.
+                    newmodel_name(str): Name to save the newmodel as. This new model
+                        will be loaded in by viz.
+                    figname(str)-Name of figure drawn)
+        
+              render_network_parallel(model_path,MAX_DIST,MIN_DIST,MAX_GAMMA,MIN_GAMMA,
+                  COLORMAP,Horizon,model_nums, newmodel_name='newmodel.json',
+                  figname='fig2',workers=4,rendered_glob='models/*_rendered.json')
+        
+                  This function aims to achieve the same thing as render_network but in
+                  parallel. Outputs json files and combines them at the end.
+                  Inputs:
+                    model_path(str)- path to the model.json files.
+                    MAX_DIST(int)- max distance cutoff in render network.
+                    MIN_DIST(int)- min distance cutoff in render network.
+                    MAX_GAMMA(float)- max gamma cutoff in render network.
+                    MIN_GAMMA(float)- min gamma cutoff in render network.
+                    COLORMAP(str)- colormap in render network.
+                    Horizon(int)- prediction horizons to test in unit of temporal
+                      quantization.
+                    model_nums(int)- number of models to use in prediction.
+                    newmodel_name(str): Name to save the newmodel as. This new model
+                      will be loaded in by viz.
+                    figname(str)-Name of figure drawn)
+        
+              individual_render(arguments)
+        
+                  A rendering for a single file. This function is called by render_network_parallel.
+                  arguments(list)-list of arguments for the rendering.
+                  arguments[0]:model_path(str)- path to the model.json files.
+                  arguments[1]:MIN_DIST(int)- min distance cutoff in render network.
+                  arguments[2]:MAX_DIST(int)- max distance cutoff in render network.
+                  arguments[3]:MIN_GAMMA(float)- min gamma cutoff in render network.
+                  arguments[4]:MAX_GAMMA(float)- max gamma cutoff in render network.
+                  arguments[5]:Horizon(int)- prediction horizons to test in unit of temporal
+                      quantization.
+                  arguments[6]:model_nums(int)- number of models to use in prediction.
+                  arguments[7]:counter(int)- a number to keep track of model progress.
         
         **bokeh_pipe library:**
           visualization library for Network Models produced by uNetworkModels based on
@@ -686,7 +809,7 @@ Description: ===============
                     method (string): method for interpolation. 'cubic','linear', or 'nearest'
         
         
-        VERSION 1.1.03
+        VERSION 1.1.76
         
 Keywords: spatial,temporal,inference,statistical,causality
 Platform: UNKNOWN

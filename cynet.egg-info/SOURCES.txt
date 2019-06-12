@@ -27,12 +27,7 @@ cynet.egg-info/top_level.txt
 cynet/bin/XgenESeSS
 cynet/bin/cynet
 cynet/bin/flexroc
-example_cynet/example1.tar.gz
-example_cynet/example1/config_pypi.yaml
-example_cynet/example1/render.py
-example_cynet/example1/render_parallel.py
-example_cynet/example1/run_parallel.py
-example_cynet/example1/terrortest_50eps.py
+example_cynet/example3.zip
 example_cynet/example2/config_pypi.yaml
 example_cynet/example2/terrortest_small.py
 example_cynet/example2/models/empty.txt

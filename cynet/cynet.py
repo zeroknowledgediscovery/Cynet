@@ -77,25 +77,27 @@ class spatioTemporal:
     """
 
     def __init__(self,
-            log_store='log.p',
-            log_file=None,
-            ts_store=None,
-            DATE='Date',
-            year=None,
-            month=None,
-            day=None,
-            EVENT='Primary Type',
-            coord1='Latitude',
-            coord2='Longitude',
-            coord3=None,
-            init_date=None,
-            end_date=None,
-            freq=None,
-            columns=None,
-            types=None,
-            value_limits=None,
-            grid=None,
-            threshold=None):
+                 log_store='log.p',
+                 log_file=None,
+                 ts_store=None,
+                 DATE='Date',
+                 year=None,
+                 month=None,
+                 day=None,
+                 EVENT='Primary Type',
+                 coord1='Latitude',
+                 coord2='Longitude',
+                 coord3=None,
+                 init_date=None,
+                 end_date=None,
+                 freq=None,
+                 columns=None,
+                 types=None,
+                 value_limits=None,
+                 grid=None,
+                 threshold=None,
+                 local_func=len
+    ):
 
         # either types is specified
         # or value limits are specified, not both
@@ -145,6 +147,8 @@ class spatioTemporal:
         self._dates = None
         self._THRESHOLD=threshold
 
+        self.local_func = local_func
+        
         if freq is None:
             self._FREQ = 'D'
         else:
@@ -205,7 +209,7 @@ class spatioTemporal:
 
 
 
-    def getTS(self,_types=None,tile=None,freq=None,poly_tile=False):
+    def getTS(self,_types=None,tile=None,freq=None,poly_tile=False,local_func=len):
         """
         Utilities for spatio temporal analysis
         @author zed.uchicago.edu
@@ -222,6 +226,10 @@ class spatioTemporal:
             freq (string): intervals of time between timeseries columns
             poly_tile (boolean): whether or not input for tiles defines
             a polygon filter
+            local_func: function to process observed values within a tile to map to 
+            timeseries. By default this is len(), which addresses the case the logdf
+            logs events. For data that is essentially continuous monitoring, we should
+            use mean, max, min etc
 
         Outputs:
             pd.Dataframe of timeseries data to corresponding grid tile
@@ -268,22 +276,31 @@ class spatioTemporal:
         df=df[[self._EVENT]]
 
         if freq is None:
-            ts = [df.loc[self._trng[i]:self._trng[i + 1]].size for i in
+            ts = [local_func(df.loc[self._trng[i]:self._trng[i + 1]].values) for i in
                   np.arange(self._trng.size - 1)]
+
+            #ts = [df.loc[self._trng[i]:self._trng[i + 1]].size for i in
+            #      np.arange(self._trng.size - 1)]
+
             out = pd.DataFrame(ts, columns=[TS_NAME],
                             index=self._trng[:-1]).transpose()
         else:
             trng = pd.date_range(start=self._INIT,
                                        end=self._END,freq=freq)
-            ts = [df.loc[trng[i]:trng[i + 1]].size for i in
+            ts = [local_func(df.loc[trng[i]:trng[i + 1]].values) for i in
                   np.arange(trng.size - 1)]
+
+            #ts = [df.loc[trng[i]:trng[i + 1]].size for i in
+            #      np.arange(trng.size - 1)]
+
             out = pd.DataFrame(ts, columns=[TS_NAME],
                             index=trng[:-1]).transpose()
 
         return out
 
 
-    def get_rand_tiles(self,tiles=None,LAT=None,LON=None,EPS=None,_types=None,poly_tile=False,num_tiles=20):
+    def get_rand_tiles(self,tiles=None,LAT=None,LON=None,
+                       EPS=None,_types=None,poly_tile=False,num_tiles=20):
         '''
             Utilities for spatio temporal analysis
             @author zed.uchicago.edu
@@ -457,9 +474,11 @@ class spatioTemporal:
                                              max_incr=max_incr)
                 self._FREQ = opt_freq
                 _TS = pd.concat([self.getTS(tile=coord_set,_types=_types,\
-                                freq=opt_freq,poly_tile=poly_tile) for coord_set in tqdm(tiles)])
+                                            freq=opt_freq,poly_tile=poly_tile,\
+                                            local_func=self.local_func) for coord_set in tqdm(tiles)])
             else:
-                _TS = pd.concat([self.getTS(tile=coord_set,_types=_types,poly_tile=poly_tile)\
+                _TS = pd.concat([self.getTS(tile=coord_set,_types=_types,poly_tile=poly_tile,\
+                                            local_func=self.local_func)\
                                 for coord_set in tqdm(tiles)])
         else: # note custom coordinate boundaries takes precedence
             if auto_adjust_time:
@@ -469,11 +488,11 @@ class spatioTemporal:
                                              max_incr=max_incr)
                 self._FREQ = opt_freq
                 _TS = pd.concat([self.getTS(tile=[i,i+EPS,j,j+EPS],freq=opt_freq,\
-                                            _types=_types) for i in tqdm(LAT)
+                                            _types=_types,local_func=self.local_func) for i in tqdm(LAT)
                                             for j in tqdm(LON)])
             else: # note custom coordinate boundaries takes precedence
                 _TS = pd.concat([self.getTS(tile=[i,i+EPS,j,j+EPS],\
-                                            _types=_types) for i in tqdm(LAT)
+                                            _types=_types,local_func=self.local_func) for i in tqdm(LAT)
                                             for j in tqdm(LON)])
 
         LEN = pd.date_range(start=self._INIT,
