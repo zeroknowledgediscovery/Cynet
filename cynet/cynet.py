@@ -1118,7 +1118,8 @@ class simulateModel:
                  RUNLEN,
                  CYNET_PATH,
                  FLEXROC_PATH,
-                 READLEN=None):
+                 READLEN=None,
+                 DERIVATIVE=0):
 
         assert os.path.exists(CYNET_PATH), "cynet binary cannot be found."
         assert os.path.exists(FLEXROC_PATH), "roc binary cannot be found."
@@ -1132,6 +1133,7 @@ class simulateModel:
         self.CYNET_PATH = CYNET_PATH
         self.FLEXROC_PATH = FLEXROC_PATH
         self.RUNLEN = RUNLEN
+        self.DERIVATIVE = DERIVATIVE
 
         if READLEN is None:
             self.READLEN = RUNLEN
@@ -1173,9 +1175,10 @@ class simulateModel:
             + ' -T ' + DATA_TYPE + ' -p ' + str(PARTITION) + ' -N '\
             + str(self.RUNLEN) + ' -x ' + str(self.READLEN)\
             + ' -l ' + LOG_PATH\
-            + ' -w ' + self.DATA_PATH
+            + ' -w ' + self.DATA_PATH + ' -U ' + str(self.DERIVATIVE)
         cyrstr_arg = shlex.split(cyrstr)
-        #print cyrstr
+        print cyrstr
+        print cyrstr_arg
         subprocess.check_call(cyrstr_arg, shell=False)
         flexroc_str = self.FLEXROC_PATH + ' -i ' + LOG_PATH\
             + ' -w ' + str(FLEXWIDTH) + ' -x '\
@@ -1189,7 +1192,7 @@ class simulateModel:
         auc = float(results[1])
         tpr = float(results[7])
         fpr = float(results[13])
-
+        
         return auc, tpr, fpr
 
     def get_threshold(self, cynet_logfile, tpr=None, fpr=None,
@@ -1744,6 +1747,7 @@ def parallel_process(arguments):
     testing = arguments[20]
     sample_num = arguments[21]
     READLEN = arguments[22]
+    DERIVATIVE = arguments[23]
     RESULT = []
     header=['loc_id','lattgt1','lattgt2','lontgt1','lontgt2','varsrc','vartgt','num_models','auc','tpr','fpr','horizon']
 
@@ -1774,7 +1778,7 @@ def parallel_process(arguments):
             else:
                 LOG_PATH = FILE + 'use{}models'.format(model_nums) + '#' + source + '.log'
 
-            simulation = simulateModel(stored_model, DATA_PATH, RUNLEN, CYNET_PATH=CYNET_PATH,FLEXROC_PATH=FLEXROC_PATH,READLEN=READLEN)
+            simulation = simulateModel(stored_model, DATA_PATH, RUNLEN, CYNET_PATH=CYNET_PATH,FLEXROC_PATH=FLEXROC_PATH,READLEN=READLEN,DERIVATIVE=DERIVATIVE)   
             [auc, tpr, fpr] = simulation.run(LOG_PATH = LOG_PATH,
             PARTITION = PARTITION,
             DATA_TYPE = DATA_TYPE,
@@ -1784,7 +1788,6 @@ def parallel_process(arguments):
             EVENTCOL = EVENTCOL,
             tpr_threshold = tpr_threshold,
             fpr_threshold = fpr_threshold)
-
             f=lambda x: x[:-1] if len(x)%2==1  else x
             tgt=[float(j) for j in f((M.models).itervalues().next()['tgt'].replace('#',' ').split())]
 
@@ -1810,7 +1813,8 @@ def run_pipeline(glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_PA
                 gamma=False,
                 distance=False,
                 res_filename='res_all.csv',
-                READLEN=None):
+                READLEN=None,
+                DERIVATIVE=0):
     '''
     This function is intended to take the output models from midway, process
     them, and produce graphs. This will call the parallel_process function
@@ -1856,7 +1860,8 @@ def run_pipeline(glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_PA
             distance,
             False,
             0,
-            READLEN])
+            READLEN,
+            DERIVATIVE])
     Parallel(n_jobs = cores, verbose = 1, backend = 'threading')\
     (map(delayed(parallel_process), args))
     df=pd.concat([pd.read_csv(i) for i in glob.glob(RES_PATH)])
@@ -1947,22 +1952,37 @@ def get_var(res_csv, coords,varname='auc',VARNAMES=None):
     '''
     plt.figure()
     df = pd.read_csv(res_csv)
+    #print df.groupby(coords,squeeze=True)[varname].max()
     df1=df.groupby(coords,squeeze=True)[varname].max().reset_index()
+    #print df1
     df1=df1[df1[varname].between(0.01,0.99)]
-    if len(coords)%2 == 0:
-        ax=sns.distplot(df1[varname])
-        ax.set_xlabel(varname,fontsize=18,fontweight='bold');
-        Type=''
-    else:
-        Type='vartgt'
-        print coords
-        print varname
-        print df1
-        ax=sns.violinplot(x=coords[-1],y=varname,data=df1,cut=0)
-        if VARNAMES is not None:
-            ax.set_xticklabels(VARNAMES)
-        ax.set_xlabel('Event Type',fontsize=18,fontweight='bold')
-        ax.set_ylabel(varname,fontsize=18,fontweight='bold');
+
+    ax=sns.distplot(df1[varname])
+    ax.set_xlabel(varname,fontsize=18,fontweight='bold');
+    Type=''
+
+    df1.to_csv(varname+Type+'.csv',sep=" ",index=None)
+    plt.savefig(varname+Type+'.pdf',dpi=600, bbox_inches='tight',transparent=False)
+
+
+def violin_plot(res_csv, coords,varname='auc',VARNAMES=None):
+    plt.figure()
+    df = pd.read_csv(res_csv)
+    #print df.groupby(coords,squeeze=True)[varname].max()
+    df1=df.groupby(coords,squeeze=True)[varname].max().reset_index()
+    #print df1
+    df1=df1[df1[varname].between(0.01,0.99)]
+
+    Type='vartgt'
+    #print coords
+    ##print varname
+    #print df1
+    ax=sns.violinplot(x=coords[-1],y=varname,data=df1,cut=0)
+    if VARNAMES is not None:
+        ax.set_xticklabels(VARNAMES)
+    ax.set_xlabel('Event Type',fontsize=18,fontweight='bold')
+    ax.set_ylabel(varname,fontsize=18,fontweight='bold');
+
     df1.to_csv(varname+Type+'.csv',sep=" ",index=None)
     plt.savefig(varname+Type+'.pdf',dpi=600, bbox_inches='tight',transparent=False)
 
