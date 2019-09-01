@@ -51,7 +51,7 @@ Examples of Pipeline:
 
 Produces detailed timeseries predictions using Deep Granger Nets.
 
-.. image:: https://github.com/zeroknowledgediscovery/Cynet/blob/master/detailed_Homicide01415.png
+.. image:: https://raw.githubusercontent.com/zeroknowledgediscovery/Cynet/blob/master/detailed_Homicide01415.png
   :align: center
   :scale: 50 %
 
