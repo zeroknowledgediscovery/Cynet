@@ -44,9 +44,10 @@ cynet library classes:
 * simulateModels
 * xgModels
 
-Description of Pipeline:
+Examples of Pipeline:
   You may find two examples of this pipeline in your enviroment's bin folder
-  after installing the cynet package.
+  after installing the cynet package. There will also be a pdf walking through
+  another extremely detailed example.
 
 Produces detailed timeseries predictions using Deep Granger Nets.
 
