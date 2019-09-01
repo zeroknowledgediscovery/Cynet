@@ -15,3 +15,5 @@ include bokeh_pipe/*.py
 include viscynet/*.py
 include *.py
 include logo.png
+include cynet_crime_example.pdf
+include detailed_Homicide01415.png
