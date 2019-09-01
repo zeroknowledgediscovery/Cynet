@@ -53,4 +53,5 @@ Produces detailed timeseries predictions using Deep Granger Nets.
 
 .. image:: detailed_Homicide01415.png
   :align: center
+  :scale: 50 %
 
