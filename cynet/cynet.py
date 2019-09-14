@@ -2077,7 +2077,7 @@ class xgModels:
                  + "  -E " +str(self.END) + ' -n ' +str(self.NUM)+ ' -p '\
                  + " ".join(str(x) for x in self.PARTITION) + ' -S -N '\
                  + self.NAME_PATH + ' -l ' + self.FILEPATH+str(INDEX)\
-                 + self.LOG_PATH + ' -u '+self.DERIVATIVE +' -m -g 0.01 -G 10000 -v 0 -A .5 -q -w '\
+                 + self.LOG_PATH + ' -u '+ str(self.DERIVATIVE) +' -m -g 0.01 -G 10000 -v 0 -A .5 -q -w '\
                  + self.FILEPATH+str(INDEX)
                 command_count += 1
                 commands.append([xgstr,command_count])
@@ -2094,7 +2094,7 @@ class xgModels:
                      + "  -E " +str(self.END) + ' -n ' +str(self.NUM)+ ' -p '\
                      + " ".join(str(x) for x in self.PARTITION) + ' -S -N '\
                      + self.NAME_PATH + ' -l ' + self.FILEPATH+str(INDEX)\
-                     + self.LOG_PATH + ' -u '+self.DERIVATIVE +' -m -g 0.01 -G 10000 -v 0 -A .5 -q -w '\
+                     + self.LOG_PATH + ' -u '+ str(self.DERIVATIVE) +' -m -g 0.01 -G 10000 -v 0 -A .5 -q -w '\
                      + self.FILEPATH+str(INDEX)
                     file.write(xgstr + '\n')
 
