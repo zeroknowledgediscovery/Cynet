@@ -1800,6 +1800,23 @@ def parallel_process(arguments):
     #print pd.DataFrame(RESULT,columns=header)[['lattgt1','lattgt2','varsrc','vartgt','auc']]
 
 
+def getSplitLen(file):
+
+    with open(file, 'r') as fh:
+        reader = csv.reader(fh, delimiter = ' ')
+        rows = list(reader)
+
+        return len(rows[0])
+
+
+def timeDiff(start, end, days):
+    dt_start = pd.to_datetime(start)
+    dt_end = pd.to_datetime(end)
+
+    delta = datetime.timedelta(days = days)
+    return int((dt_end - dt_start) / delta)
+
+
 def run_pipeline(glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_PATH,
                 RESSUFIX = '.res', cores = 4,
                 LOG_PATH=None,
@@ -1837,6 +1854,10 @@ def run_pipeline(glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_PA
 
     Outputs: Produces graphs of statistics.
     '''
+    if RUNLEN == -1:
+        filename = glob.glob('DATA_PATH + *')[0]
+        RUNLEN = getSplitLen(filename)
+
     models_files = glob.glob(glob_path)
     models_files = [m.split('.')[0] for m in models_files]
 
