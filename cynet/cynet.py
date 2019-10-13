@@ -97,7 +97,8 @@ class spatioTemporal:
                  grid=None,
                  threshold=None,
                  local_func=len,
-                 sel=None
+                 sel=None,
+                 name_override=None,
     ):
 
         # either types is specified
@@ -150,7 +151,7 @@ class spatioTemporal:
 
         self.local_func = local_func
         self.selvar = sel
-        
+
         if freq is None:
             self._FREQ = 'D'
         else:
@@ -179,6 +180,7 @@ class spatioTemporal:
 
         self._types = types
         self._value_limits = value_limits
+        self.name_override = name_override
 
         # pandas timeseries will be stored as separate entries in a dict with
         # the filter as the name
@@ -208,8 +210,6 @@ class spatioTemporal:
         self._trng = pd.date_range(start=self._INIT,
                                    end=self._END,freq=self._FREQ)
 
-
-
     def getTS(self,_types=None,tile=None,freq=None,poly_tile=False,
               local_func=len):
         """
@@ -228,7 +228,7 @@ class spatioTemporal:
             freq (string): intervals of time between timeseries columns
             poly_tile (boolean): whether or not input for tiles defines
             a polygon filter
-            local_func: function to process observed values within a tile to map to 
+            local_func: function to process observed values within a tile to map to
             timeseries. By default this is len(), which addresses the case the logdf
             logs events. For data that is essentially continuous monitoring, we should
             use mean, max, min etc
@@ -240,7 +240,10 @@ class spatioTemporal:
         """
 
         assert(self._END is not None)
-        TS_NAME = ('#'.join(str(x) for x in tile))+"#"+stringify(_types)
+        if not self.name_override:
+            TS_NAME = ('#'.join(str(x) for x in tile))+"#"+stringify(_types)
+        else:
+            TS_NAME = ('#'.join(str(x) for x in tile))+"#"+ self.name_override
 
         if self._value_limits is None:
             df = self._logdf[self._columns]\
@@ -279,7 +282,7 @@ class spatioTemporal:
             for key in self.selvar.keys():
                 df=df[df[key]==self.selvar[key]]
                 TS_NAME=TS_NAME+str(self.selvar[key])
-                
+
         df=df[[self._EVENT]]
 
         if freq is None:
@@ -506,7 +509,7 @@ class spatioTemporal:
                           end=self._END,freq=self._FREQ).size+0.0
 
         statbool = _TS.astype(bool).sum(axis=1) / LEN
-        _TS = _TS.loc[statbool > THRESHOLD]
+        _TS = _TS.loc[statbool >= THRESHOLD]
         self._ts_dict[repr(_types)] = _TS
 
         self._TS=_TS
@@ -1190,7 +1193,7 @@ class simulateModel:
         auc = float(results[1])
         tpr = float(results[7])
         fpr = float(results[13])
-        
+
         return auc, tpr, fpr
 
     def get_threshold(self, cynet_logfile, tpr=None, fpr=None,
@@ -1776,7 +1779,7 @@ def parallel_process(arguments):
             else:
                 LOG_PATH = FILE + 'use{}models'.format(model_nums) + '#' + source + '.log'
 
-            simulation = simulateModel(stored_model, DATA_PATH, RUNLEN, CYNET_PATH=CYNET_PATH,FLEXROC_PATH=FLEXROC_PATH,READLEN=READLEN,DERIVATIVE=DERIVATIVE)   
+            simulation = simulateModel(stored_model, DATA_PATH, RUNLEN, CYNET_PATH=CYNET_PATH,FLEXROC_PATH=FLEXROC_PATH,READLEN=READLEN,DERIVATIVE=DERIVATIVE)
             [auc, tpr, fpr] = simulation.run(LOG_PATH = LOG_PATH,
             PARTITION = PARTITION,
             DATA_TYPE = DATA_TYPE,
@@ -2075,7 +2078,7 @@ class xgModels:
                  + "  -E " +str(self.END) + ' -n ' +str(self.NUM)+ ' -p '\
                  + " ".join(str(x) for x in self.PARTITION) + ' -S -N '\
                  + self.NAME_PATH + ' -l ' + self.FILEPATH+str(INDEX)\
-                 + self.LOG_PATH + ' -u '+ str(self.DERIVATIVE) +' -m -g 0.01 -G 10000 -v 0 -A .5 -q -w '\
+                 + self.LOG_PATH + ' -u '+ str(self.DERIVATIVE) +' -m -g 0.005 -G 10000 -v 0 -A 1 -q -w '\
                  + self.FILEPATH+str(INDEX)
                 command_count += 1
                 commands.append([xgstr,command_count])
@@ -2092,7 +2095,7 @@ class xgModels:
                      + "  -E " +str(self.END) + ' -n ' +str(self.NUM)+ ' -p '\
                      + " ".join(str(x) for x in self.PARTITION) + ' -S -N '\
                      + self.NAME_PATH + ' -l ' + self.FILEPATH+str(INDEX)\
-                     + self.LOG_PATH + ' -u '+ str(self.DERIVATIVE) +' -m -g 0.01 -G 10000 -v 0 -A .5 -q -w '\
+                     + self.LOG_PATH + ' -u '+ str(self.DERIVATIVE) +' -m -g 0.005 -G 10000 -v 0 -A 1 -q -w '\
                      + self.FILEPATH+str(INDEX)
                     file.write(xgstr + '\n')
 
@@ -2158,9 +2161,9 @@ class mapped_events:
 
 def pertub_file(file,newfile,theta=0.1,negative=False):
     '''
-    Takes a split file, which is typically only one row with many columns. 
-    If we are doing a positive perturbation, we take all the zero events 
-    in the file and with a probability, theta, change them into positive 
+    Takes a split file, which is typically only one row with many columns.
+    If we are doing a positive perturbation, we take all the zero events
+    in the file and with a probability, theta, change them into positive
     events. If negative perturbation, change positive events into zeros.
     Inputs:
         file(str)- name of the original split file
