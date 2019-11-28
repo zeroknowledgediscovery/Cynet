@@ -30,6 +30,7 @@ import yaml
 import shlex
 import csv
 import random
+import re
 
 import matplotlib as mpl
 mpl.use('Agg')
@@ -1196,6 +1197,50 @@ class simulateModel:
 
         return auc, tpr, fpr
 
+    def chunk_only(self, LOG_PATH=None,
+            PARTITION=0.5,
+            DATA_TYPE='continuous',
+            FLEXWIDTH=1,
+            FLEX_TAIL_LEN=100,
+            POSITIVE_CLASS_COLUMN=5,
+            EVENTCOL=3,
+            tpr_threshold=0.85,
+            fpr_threshold=0.15,
+            FILE='',
+            VARNAME='VAR'):
+
+        if LOG_PATH is None:
+            LOG_PATH = self.MODEL_PATH + '-XX.log'
+        cyrstr = self.CYNET_PATH + ' -J ' + self.MODEL_PATH\
+            + ' -T ' + DATA_TYPE + ' -p ' + str(PARTITION) + ' -N '\
+            + str(self.RUNLEN) + ' -x ' + str(self.READLEN)\
+            + ' -l ' + LOG_PATH\
+            + ' -w ' + self.DATA_PATH + ' -U ' + str(self.DERIVATIVE) + ' -s 1'
+        cyrstr_arg = shlex.split(cyrstr)
+
+        subprocess.check_call(cyrstr_arg, shell=False)
+        if not os.path.exists('chunks/'):
+            os.makedirs('chunks/')
+        #subprocess.check_call('mv *.chk chunks/', shell=True)
+        with open(LOG_PATH,'r') as file:
+            content = file.readlines()[0]
+        suffix = content.split(' ')[2]
+        splitfile =  self.DATA_PATH + suffix
+        FILE = FILE.split('/')[-1]
+        combine_chunks('*.chk',splitfile,FILE=FILE,varname=VARNAME)
+
+        for n in range(0,10):
+            subprocess.check_call('rm *{}.chk'.format(n), shell=True)
+        try:
+            subprocess.check_output('rm *.chk', shell=True)
+        except:
+            print "except"
+        try:
+            outs = subprocess.check_output('ls *.chk | wc -l',shell = True)
+            print outs
+        except:
+            print "except"
+
     def get_threshold(self, cynet_logfile, tpr=None, fpr=None,
             FLEXWIDTH=1,
             FLEX_TAIL_LEN=100,
@@ -1799,7 +1844,6 @@ def parallel_process(arguments):
     pd.DataFrame(RESULT,columns=header).to_csv(FILE+'_'+str(model_nums)+'_'+str(Horizon)+ '_' +str(sample_num) + RESSUFIX,index=None)
     #print pd.DataFrame(RESULT,columns=header)[['lattgt1','lattgt2','varsrc','vartgt','auc']]
 
-
 def getSplitLen(file):
 
     with open(file, 'r') as fh:
@@ -1815,7 +1859,6 @@ def timeDiff(start, end, days):
 
     delta = timedelta(days = days)
     return int((dt_end - dt_start) / delta)
-
 
 def run_pipeline(glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_PATH,
                 RESSUFIX = '.res', cores = 4,
@@ -1888,6 +1931,222 @@ def run_pipeline(glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_PA
     df=pd.concat([pd.read_csv(i) for i in glob.glob(RES_PATH)])
     df.to_csv(res_filename,index=None)
 
+def resResults(log_glob,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_PATH,
+                RESSUFIX = '.res', cores = 4,
+                LOG_PATH=None,
+                PARTITION=0.5,
+                DATA_TYPE='continuous',
+                FLEXWIDTH=1,
+                FLEX_TAIL_LEN=100,
+                POSITIVE_CLASS_COLUMN=5,
+                EVENTCOL=3,
+                tpr_threshold=0.85,
+                fpr_threshold=0.15,
+                gamma=False,
+                distance=False,
+                res_filename='res_all.csv',
+                READLEN=None,
+                DERIVATIVE=0):
+    '''
+    Get the auc results from the log files.
+    '''
+
+    CYNET_PATH = os.path.dirname(sys.modules['cynet'].__file__) + '/bin/cynet'
+    FLEXROC_PATH = os.path.dirname(sys.modules['cynet'].__file__) + '/bin/flexroc'
+
+    header=['loc_id','lattgt1','lattgt2','lontgt1','lontgt2','varsrc','vartgt','num_models','auc','tpr','fpr','horizon']
+    RESULTS = []
+    for LOG_PATH in tqdm(glob.glob(log_glob)):
+
+        with open(LOG_PATH,'r') as file:
+            content = file.readlines()
+        coordinates = content[0].split(' ')[2].split('#')
+        lat1,lat2,lon1,lon2, varnametgt = float(coordinates[0]), float(coordinates[1]), float(coordinates[2]), float(coordinates[3]), coordinates[4]
+        #print lat1,lat2,lon1,lon2, varnametgt
+        FILE = LOG_PATH.split('use')[0]
+
+        varname = LOG_PATH.split('#')[1].strip('.log')
+        #print LOG_PATH, varname
+
+        flexroc_str = FLEXROC_PATH + ' -i ' + LOG_PATH\
+            + ' -w ' + str(FLEXWIDTH) + ' -x '\
+            + str(FLEX_TAIL_LEN) + ' -C '\
+            + str(POSITIVE_CLASS_COLUMN) + ' -E ' + str(EVENTCOL)\
+            + ' -t ' + str(tpr_threshold) + ' -f ' + str(fpr_threshold)
+        #print flexroc_str
+        flexstr_arg = shlex.split(flexroc_str)
+        output_str = subprocess.check_output(flexstr_arg, shell=False)
+        results = np.array(output_str.split())
+        auc = float(results[1])
+        tpr = float(results[7])
+        fpr = float(results[13])
+        RESULTS.append([FILE, lat1,lat2,lon1,lon2, varname, varnametgt, model_nums[0], auc, tpr, fpr, horizon])
+        #print FILE, lat1,lat2,lon1,lon2, varname, varnametgt, model_nums[0], auc, tpr, fpr, horizon
+
+    pd.DataFrame(RESULTS,columns=header).to_csv('res_all.csv',index=None)
+
+def cynet_chunker(glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_PATH,
+                RESSUFIX = '.res', cores = 4,
+                LOG_PATH=None,
+                PARTITION=0.5,
+                DATA_TYPE='continuous',
+                FLEXWIDTH=1,
+                FLEX_TAIL_LEN=100,
+                POSITIVE_CLASS_COLUMN=5,
+                EVENTCOL=3,
+                tpr_threshold=0.85,
+                fpr_threshold=0.15,
+                gamma=False,
+                distance=False,
+                res_filename='res_all.csv',
+                READLEN=None,
+                DERIVATIVE=0):
+
+    models_files = glob.glob(glob_path)
+    models_files = [m.split('.')[0] for m in models_files]
+
+    #CYNET_PATH = './bin/cynet'
+    #FLEXROC_PATH = './bin/flexroc'
+    CYNET_PATH = os.path.dirname(sys.modules['cynet'].__file__) + '/bin/cynet'
+    FLEXROC_PATH = os.path.dirname(sys.modules['cynet'].__file__) + '/bin/flexroc'
+    args = []
+    for model in models_files:
+        for num in model_nums:
+            args.append([model, num, horizon, DATA_PATH, RUNLEN, VARNAME, RESSUFIX, \
+            CYNET_PATH, FLEXROC_PATH,
+            LOG_PATH, #Here onwards are the run parameters of the pipeline.
+            PARTITION,
+            DATA_TYPE,
+            FLEXWIDTH,
+            FLEX_TAIL_LEN,
+            POSITIVE_CLASS_COLUMN,
+            EVENTCOL,
+            tpr_threshold,
+            fpr_threshold,
+            gamma,
+            distance,
+            False,
+            0,
+            READLEN,
+            DERIVATIVE])
+    for arg in tqdm(args):
+        chunk_single(arg)
+
+
+def chunk_single(arguments):
+
+    FILE = arguments[0]
+    model_nums = arguments[1]
+    Horizon = arguments[2]
+    DATA_PATH = arguments[3]
+    RUNLEN = arguments[4]
+    VARNAME = arguments[5]
+    RESSUFIX = arguments[6]
+    CYNET_PATH = arguments[7]
+    FLEXROC_PATH = arguments[8]
+    LOG_PATH = arguments[9]
+    PARTITION = arguments[10]
+    DATA_TYPE = arguments[11]
+    FLEXWIDTH = arguments[12]
+    FLEX_TAIL_LEN = arguments[13]
+    POSITIVE_CLASS_COLUMN = arguments[14]
+    EVENTCOL = arguments[15]
+    tpr_threshold = arguments[16]
+    fpr_threshold = arguments[17]
+    gamma = arguments[18]
+    distance = arguments[19]
+    testing = arguments[20]
+    sample_num = arguments[21]
+    READLEN = arguments[22]
+    DERIVATIVE = arguments[23]
+    RESULT = []
+
+    for varname in VARNAME:
+        stored_model=FILE+'_sel_'+str(uuid.uuid4())+'.json'
+
+        M=uNetworkModels(FILE + '.json')
+        M.setVarname()
+        M.augmentDistance()
+
+        if varname is not 'ALL':
+            M.select(var='src_var',equal=varname,inplace=True)
+
+        M.select(var='delay',inplace=True,low=Horizon)
+
+        if distance:
+            M.select(var='distance',n=model_nums,store=stored_model,reverse=False,inplace=True)
+
+        if gamma:
+            M.select(var='gamma',n=model_nums,store=stored_model,reverse=True,inplace=True)
+
+        if M.models:
+            if isinstance(varname,list):
+                source = '+'.join(varname)
+            else:
+                source = varname
+
+            LOG_PATH = FILE + 'use{}models'.format(model_nums) + '#' + source + '.log'
+
+            simulation = simulateModel(stored_model, DATA_PATH, RUNLEN, CYNET_PATH=CYNET_PATH,FLEXROC_PATH=FLEXROC_PATH,READLEN=READLEN,DERIVATIVE=DERIVATIVE)
+            simulation.chunk_only(LOG_PATH = LOG_PATH,
+            PARTITION = PARTITION,
+            DATA_TYPE = DATA_TYPE,
+            FLEXWIDTH = FLEXWIDTH,
+            FLEX_TAIL_LEN = FLEX_TAIL_LEN,
+            POSITIVE_CLASS_COLUMN = POSITIVE_CLASS_COLUMN,
+            EVENTCOL = EVENTCOL,
+            tpr_threshold = tpr_threshold,
+            fpr_threshold = fpr_threshold,
+            FILE=FILE,
+            VARNAME=source)
+
+
+def combine_chunks(globpath,splitfile,FILE,varname='VAR',outpath='csvs/'):
+    '''
+    Combines the chunks into csv.
+    '''
+    new_lines = []
+    ground_truth = pd.read_csv(splitfile,sep = ' ',header=None)
+    ground_truth = ground_truth.values[0]
+    time_min = 111000000
+    time_max = 0
+    LEN = len(ground_truth)
+
+    for filename in glob.glob(globpath):
+
+        string = filename.split('#')[-1].strip('.chk')
+        time = int(re.findall('[0-9]+',string)[0])
+        time = time - 1 #Account for 1 indexing
+
+        #time = int(filename.split('#')[-1].strip('.chk').strip(varname))
+        new_ftx = []
+
+        if time < time_min:
+            time_min = time
+        if time > time_max:
+            time_max = time
+        if time >= LEN:
+            truth = -1
+        else:
+            truth = ground_truth[time]
+        df = pd.read_csv(filename,sep = ' ', header = None).dropna(axis=1).round(5)
+        new_line = [time]
+        for vals in df.values:
+            new_line.extend(vals[0:-1])
+            new_ftx.append(vals)
+        new_line.append(truth)
+        new_lines.append(new_line)
+        '''
+        if time > 2000:
+
+            with open('FTX/' + str(FILE) + str(time) + '.ftx','w') as fh:
+                writer = csv.writer(fh)
+                for row in new_ftx:
+                    writer.writerow(row)
+        '''
+    #print LEN, time_min, time_max
+    combined_df = pd.DataFrame(new_lines)
+    combined_df.to_csv(outpath + str(FILE) + '.csv',header=None,index=False)
 
 def test_model_nums(sample_size,glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_PATH,
                 RESSUFIX = '.res', cores = 4,
@@ -1958,8 +2217,40 @@ def test_model_nums(sample_size,glob_path,model_nums,horizon, DATA_PATH, RUNLEN,
     print "The best number of models is {}".format(best_model_num)
     return args
 
-
 def get_var(res_csv, coords,varname='auc',VARNAMES=None):
+    '''
+    This function outputs graphs of the results produced by run_pipeline. The
+    graphs concern auc, fpr, and tpr statistics.
+    Inputs:
+        res_csv(str)- path to 'res_all.csv' file produced by run_pipeline.
+        coords(list of str)- the coords to consider.
+            Ex:['lattgt1','lattgt2','lontgt1','lontgt2']
+        varname(str)-the variable name to consider. Ex: 'auc'.
+        VARNAMES(str)- List of the variable name from the dataset to consider.
+            Ex: VARNAMES=['Personnel','Infrastructure','Casualties']
+    '''
+    plt.figure()
+    df = pd.read_csv(res_csv)
+    df1=df.groupby(coords,squeeze=True)[varname].max().reset_index()
+    df1=df1[df1[varname].between(0.01,0.99)]
+    if len(coords)%2 == 0:
+        ax=sns.distplot(df1[varname])
+        ax.set_xlabel(varname,fontsize=18,fontweight='bold');
+        Type=''
+    else:
+        Type='vartgt'
+        print coords
+        print varname
+        print df1
+        ax=sns.violinplot(x=coords[-1],y=varname,data=df1,cut=0)
+        if VARNAMES is not None:
+            ax.set_xticklabels(VARNAMES)
+        ax.set_xlabel('Event Type',fontsize=18,fontweight='bold')
+        ax.set_ylabel(varname,fontsize=18,fontweight='bold');
+    df1.to_csv(varname+Type+'.csv',sep=" ",index=None)
+    plt.savefig(varname+Type+'.pdf',dpi=600, bbox_inches='tight',transparent=False)
+
+def get_var_simple(res_csv, coords,varname='auc',VARNAMES=None):
     '''
     This function outputs graphs of the results produced by run_pipeline. The
     graphs concern auc, fpr, and tpr statistics.
@@ -1984,7 +2275,6 @@ def get_var(res_csv, coords,varname='auc',VARNAMES=None):
 
     df1.to_csv(varname+Type+'.csv',sep=" ",index=None)
     plt.savefig(varname+Type+'.pdf',dpi=600, bbox_inches='tight',transparent=False)
-
 
 def violin_plot(res_csv, coords,varname='auc',VARNAMES=None):
     plt.figure()
