@@ -100,6 +100,7 @@ class spatioTemporal:
                  local_func=len,
                  sel=None,
                  name_override=None,
+                 secondary_mask=None
     ):
 
         # either types is specified
@@ -182,6 +183,7 @@ class spatioTemporal:
         self._types = types
         self._value_limits = value_limits
         self.name_override = name_override
+        self.secondary_mask = secondary_mask
 
         # pandas timeseries will be stored as separate entries in a dict with
         # the filter as the name
@@ -251,11 +253,22 @@ class spatioTemporal:
                      .loc[self._logdf[self._EVENT].isin(_types)]\
                      .sort_values(by=self._DATE).dropna()
         else:
-            df = self._logdf[self._columns]\
-                     .loc[self._logdf[self._EVENT]\
-                          .between(self._value_limits[0],
-                                   self._value_limits[1])]\
-                     .sort_values(by=self._DATE).dropna()
+
+            if self.secondary_mask:
+                df = self._logdf[self._logdf[self.secondary_mask[0]].isin(self.secondary_mask[1])]
+                
+                df = df[self._columns]\
+                         .loc[df[self._EVENT]\
+                              .between(self._value_limits[0],
+                                       self._value_limits[1])]\
+                         .sort_values(by=self._DATE).dropna()
+
+            else:
+                df = self._logdf[self._columns]\
+                         .loc[self._logdf[self._EVENT]\
+                              .between(self._value_limits[0],
+                                       self._value_limits[1])]\
+                         .sort_values(by=self._DATE).dropna()
 
         if poly_tile:
                 poly_lat = [point[0] for point in tile]
@@ -278,35 +291,31 @@ class spatioTemporal:
                         & (df[self._coord2] <= lon_[1])]
 
         # make the DATE the index and keep only the event col
+
         df.index = df[self._DATE]
+
         if self.selvar is not None:
             for key in self.selvar.keys():
                 df=df[df[key]==self.selvar[key]]
                 TS_NAME=TS_NAME+str(self.selvar[key])
 
         df=df[[self._EVENT]]
-
         if freq is None:
+
             ts = [local_func(df.loc[self._trng[i]:self._trng[i + 1]].values) for i in
                   np.arange(self._trng.size - 1)]
-
-            #ts = [df.loc[self._trng[i]:self._trng[i + 1]].size for i in
-            #      np.arange(self._trng.size - 1)]
 
             out = pd.DataFrame(ts, columns=[TS_NAME],
                             index=self._trng[:-1]).transpose()
         else:
+
             trng = pd.date_range(start=self._INIT,
                                        end=self._END,freq=freq)
             ts = [local_func(df.loc[trng[i]:trng[i + 1]].values) for i in
                   np.arange(trng.size - 1)]
 
-            #ts = [df.loc[trng[i]:trng[i + 1]].size for i in
-            #      np.arange(trng.size - 1)]
-
             out = pd.DataFrame(ts, columns=[TS_NAME],
                             index=trng[:-1]).transpose()
-
         return out
 
 
@@ -488,9 +497,11 @@ class spatioTemporal:
                                             freq=opt_freq,poly_tile=poly_tile,\
                                             local_func=self.local_func) for coord_set in tqdm(tiles)])
             else:
+
                 _TS = pd.concat([self.getTS(tile=coord_set,_types=_types,poly_tile=poly_tile,\
                                             local_func=self.local_func)\
                                 for coord_set in tqdm(tiles)])
+
         else: # note custom coordinate boundaries takes precedence
             if auto_adjust_time:
                 df,ts_name=self.get_rand_tiles(LAT=LAT,LON=LON,EPS=EPS,_types=_types,\
@@ -754,7 +765,6 @@ def readTS(TSfile,csvNAME='TS1',BEG=None,END=None):
 
 
     dfts.columns = pd.to_datetime(dfts.columns)
-
     cols=dfts.columns[np.logical_and(dfts.columns >= pd.to_datetime(BEG),
                                      dfts.columns <= pd.to_datetime(END))]
 
@@ -763,6 +773,8 @@ def readTS(TSfile,csvNAME='TS1',BEG=None,END=None):
     for index, row in dfts.iterrows():
         if len(row.unique()) != 1:
             indices.append(index)
+        else:
+            print("found one with all dupes")
     dfts = dfts.loc[indices]
 
     dfts.to_csv(csvNAME+'.csv',sep=" ",header=None,index=None)
@@ -1123,7 +1135,8 @@ class simulateModel:
                  CYNET_PATH,
                  FLEXROC_PATH,
                  READLEN=None,
-                 DERIVATIVE=0):
+                 DERIVATIVE=0,
+                 CAP_P = False):
 
         assert os.path.exists(CYNET_PATH), "cynet binary cannot be found."
         assert os.path.exists(FLEXROC_PATH), "roc binary cannot be found."
@@ -1138,6 +1151,10 @@ class simulateModel:
         self.FLEXROC_PATH = FLEXROC_PATH
         self.RUNLEN = RUNLEN
         self.DERIVATIVE = DERIVATIVE
+        if CAP_P:
+            self.p = ' -P '
+        else:
+            self.p = ' -p '
 
         if READLEN is None:
             self.READLEN = RUNLEN
@@ -1176,18 +1193,19 @@ class simulateModel:
         if LOG_PATH is None:
             LOG_PATH = self.MODEL_PATH + '-XX.log'
         cyrstr = self.CYNET_PATH + ' -J ' + self.MODEL_PATH\
-            + ' -T ' + DATA_TYPE + ' -p ' + str(PARTITION) + ' -N '\
+            + ' -T ' + DATA_TYPE + self.p + str(PARTITION) + ' -N '\
             + str(self.RUNLEN) + ' -x ' + str(self.READLEN)\
             + ' -l ' + LOG_PATH\
             + ' -w ' + self.DATA_PATH + ' -U ' + str(self.DERIVATIVE)
+        #print cyrstr
         cyrstr_arg = shlex.split(cyrstr)
+
         subprocess.check_call(cyrstr_arg, shell=False)
         flexroc_str = self.FLEXROC_PATH + ' -i ' + LOG_PATH\
             + ' -w ' + str(FLEXWIDTH) + ' -x '\
             + str(FLEX_TAIL_LEN) + ' -C '\
             + str(POSITIVE_CLASS_COLUMN) + ' -E ' + str(EVENTCOL)\
             + ' -t ' + str(tpr_threshold) + ' -f ' + str(fpr_threshold)
-        #print flexroc_str
         flexstr_arg = shlex.split(flexroc_str)
         output_str = subprocess.check_output(flexstr_arg, shell=False)
         results = np.array(output_str.split())
@@ -1212,12 +1230,12 @@ class simulateModel:
         if LOG_PATH is None:
             LOG_PATH = self.MODEL_PATH + '-XX.log'
         cyrstr = self.CYNET_PATH + ' -J ' + self.MODEL_PATH\
-            + ' -T ' + DATA_TYPE + ' -p ' + str(PARTITION) + ' -N '\
+            + ' -T ' + DATA_TYPE + self.p + str(PARTITION) + ' -N '\
             + str(self.RUNLEN) + ' -x ' + str(self.READLEN)\
             + ' -l ' + LOG_PATH\
             + ' -w ' + self.DATA_PATH + ' -U ' + str(self.DERIVATIVE) + ' -s 1'
         cyrstr_arg = shlex.split(cyrstr)
-
+        #print cyrstr
         subprocess.check_call(cyrstr_arg, shell=False)
         if not os.path.exists('chunks/'):
             os.makedirs('chunks/')
@@ -1240,6 +1258,7 @@ class simulateModel:
             print outs
         except:
             print "except"
+
 
     def get_threshold(self, cynet_logfile, tpr=None, fpr=None,
             FLEXWIDTH=1,
@@ -1273,7 +1292,6 @@ class simulateModel:
         threshold = float(output_str.split()[5])
         return threshold
 
-
     def single_cynet(self,LOG_PATH=None, DATA_TYPE='continuous', PARTITION=0.5):
         '''
         A single call of the cynet binary on a model file and producing a
@@ -1286,13 +1304,12 @@ class simulateModel:
         if LOG_PATH is None:
             LOG_PATH = self.MODEL_PATH + '-XX.log'
         cyrstr = self.CYNET_PATH + ' -J ' + self.MODEL_PATH\
-            + ' -T ' + DATA_TYPE + ' -p ' + str(PARTITION) + ' -N '\
+            + ' -T ' + DATA_TYPE + self.p + str(PARTITION) + ' -N '\
             + str(self.RUNLEN) + ' -x ' + str(self.READLEN)\
             + ' -l ' + LOG_PATH\
             + ' -w ' + self.DATA_PATH
         cyrstr_arg = shlex.split(cyrstr)
         subprocess.check_call(cyrstr_arg, shell=False)
-
 
     def parse_cynet(self, cynet_logfile,
                     varname,
@@ -1648,6 +1665,7 @@ def single_map(arguments):
     header = arguments[21]
     positive_str = arguments[22]
     outfile = arguments[23]
+    CAP_P = arguments[24]
 
     for varname in VARNAME:
         stored_model=FILE+'_sel_'+str(uuid.uuid4())+'.json'
@@ -1666,7 +1684,7 @@ def single_map(arguments):
         if M.models:
             outfile = FILE + 'use{}models'.format(model_nums) + '#' + varname
             LOG_PATH = FILE + 'use{}models'.format(model_nums) + '#' + varname + '.log'
-            simulation = simulateModel(stored_model, DATA_PATH, RUNLEN, CYNET_PATH=CYNET_PATH,FLEXROC_PATH=FLEXROC_PATH)
+            simulation = simulateModel(stored_model, DATA_PATH, RUNLEN, CYNET_PATH=CYNET_PATH,FLEXROC_PATH=FLEXROC_PATH,CAP_P=CAP_P)
             simulation.single_cynet(LOG_PATH=LOG_PATH, DATA_TYPE=DATA_TYPE, PARTITION=PARTITION)
             simulation.parse_cynet(LOG_PATH,
                                    varname,
@@ -1700,7 +1718,8 @@ def map_events_parallel(glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME
                 NEGATIVE_CLASS_COLUMN=4,
                 header=['lat1','lat2','lon1','lon2','target','day',\
                         'actual_event','negative_event','positive_event'],
-                positive_str='positive_event'):
+                positive_str='positive_event',
+                CAP_P=False):
     '''
     The parallel function which will parallelize cynet and flexroc to map model
     predictions to actual events. Either happens or does not happen.
@@ -1743,7 +1762,8 @@ def map_events_parallel(glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME
             NEGATIVE_CLASS_COLUMN,
             header,
             positive_str,
-            outfile])
+            outfile,
+            CAP_P])
     Parallel(n_jobs = cores, verbose = 1, backend = 'threading')\
     (map(delayed(single_map), args))
 
@@ -1794,6 +1814,7 @@ def parallel_process(arguments):
     sample_num = arguments[21]
     READLEN = arguments[22]
     DERIVATIVE = arguments[23]
+    CAP_P = arguments[24]
     RESULT = []
     header=['loc_id','lattgt1','lattgt2','lontgt1','lontgt2','varsrc','vartgt','num_models','auc','tpr','fpr','horizon']
 
@@ -1801,17 +1822,18 @@ def parallel_process(arguments):
         stored_model=FILE+'_sel_'+str(uuid.uuid4())+'.json'
 
         M=uNetworkModels(FILE + '.json')
-        M.setVarname()
-        M.augmentDistance()
+        if M.models:
+            M.setVarname()
+            M.augmentDistance()
 
-        if varname is not 'ALL':
-            M.select(var='src_var',equal=varname,inplace=True)
+            if varname is not 'ALL':
+                M.select(var='src_var',equal=varname,inplace=True)
 
-        M.select(var='delay',inplace=True,low=Horizon)
-        if distance:
-            M.select(var='distance',n=model_nums,store=stored_model,reverse=False,inplace=True)
-        if gamma:
-            M.select(var='gamma',n=model_nums,store=stored_model,reverse=True,inplace=True)
+            M.select(var='delay',inplace=True,low=Horizon)
+            if distance:
+                M.select(var='distance',n=model_nums,store=stored_model,reverse=False,inplace=True)
+            if gamma:
+                M.select(var='gamma',n=model_nums,store=stored_model,reverse=True,inplace=True)
 
         if M.models:
             if isinstance(varname,list):
@@ -1824,7 +1846,7 @@ def parallel_process(arguments):
             else:
                 LOG_PATH = FILE + 'use{}models'.format(model_nums) + '#' + source + '.log'
 
-            simulation = simulateModel(stored_model, DATA_PATH, RUNLEN, CYNET_PATH=CYNET_PATH,FLEXROC_PATH=FLEXROC_PATH,READLEN=READLEN,DERIVATIVE=DERIVATIVE)
+            simulation = simulateModel(stored_model, DATA_PATH, RUNLEN, CYNET_PATH=CYNET_PATH,FLEXROC_PATH=FLEXROC_PATH,READLEN=READLEN,DERIVATIVE=DERIVATIVE,CAP_P=CAP_P)
             [auc, tpr, fpr] = simulation.run(LOG_PATH = LOG_PATH,
             PARTITION = PARTITION,
             DATA_TYPE = DATA_TYPE,
@@ -1875,7 +1897,8 @@ def run_pipeline(glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_PA
                 distance=False,
                 res_filename='res_all.csv',
                 READLEN=None,
-                DERIVATIVE=0):
+                DERIVATIVE=0,
+                CAP_P = False):
     '''
     This function is intended to take the output models from midway, process
     them, and produce graphs. This will call the parallel_process function
@@ -1925,7 +1948,8 @@ def run_pipeline(glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_PA
             False,
             0,
             READLEN,
-            DERIVATIVE])
+            DERIVATIVE,
+            CAP_P])
     Parallel(n_jobs = cores, verbose = 1, backend = 'threading')\
     (map(delayed(parallel_process), args))
     df=pd.concat([pd.read_csv(i) for i in glob.glob(RES_PATH)])
@@ -1985,6 +2009,7 @@ def resResults(log_glob,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_PATH,
 
     pd.DataFrame(RESULTS,columns=header).to_csv('res_all.csv',index=None)
 
+
 def cynet_chunker(glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_PATH,
                 RESSUFIX = '.res', cores = 4,
                 LOG_PATH=None,
@@ -2000,7 +2025,8 @@ def cynet_chunker(glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_P
                 distance=False,
                 res_filename='res_all.csv',
                 READLEN=None,
-                DERIVATIVE=0):
+                DERIVATIVE=0,
+                CAP_P = False):
 
     models_files = glob.glob(glob_path)
     models_files = [m.split('.')[0] for m in models_files]
@@ -2028,7 +2054,8 @@ def cynet_chunker(glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_P
             False,
             0,
             READLEN,
-            DERIVATIVE])
+            DERIVATIVE,
+            CAP_P])
     for arg in tqdm(args):
         chunk_single(arg)
 
@@ -2059,25 +2086,30 @@ def chunk_single(arguments):
     sample_num = arguments[21]
     READLEN = arguments[22]
     DERIVATIVE = arguments[23]
+    CAP_P = arguments[24]
     RESULT = []
 
     for varname in VARNAME:
         stored_model=FILE+'_sel_'+str(uuid.uuid4())+'.json'
 
         M=uNetworkModels(FILE + '.json')
-        M.setVarname()
-        M.augmentDistance()
+        #print M
+        if M.models != None:
+            M.setVarname()
+            M.augmentDistance()
 
-        if varname is not 'ALL':
-            M.select(var='src_var',equal=varname,inplace=True)
+            if varname is not 'ALL':
+                M.select(var='src_var',equal=varname,inplace=True)
 
-        M.select(var='delay',inplace=True,low=Horizon)
+            M.select(var='delay',inplace=True,low=Horizon)
 
-        if distance:
-            M.select(var='distance',n=model_nums,store=stored_model,reverse=False,inplace=True)
+            if distance:
+                M.select(var='distance',n=model_nums,store=stored_model,reverse=False,inplace=True)
 
-        if gamma:
-            M.select(var='gamma',n=model_nums,store=stored_model,reverse=True,inplace=True)
+            if gamma:
+                M.select(var='gamma',n=model_nums,store=stored_model,reverse=True,inplace=True)
+        else:
+            print "Empty Models: {}".format(FILE)
 
         if M.models:
             if isinstance(varname,list):
@@ -2087,7 +2119,7 @@ def chunk_single(arguments):
 
             LOG_PATH = FILE + 'use{}models'.format(model_nums) + '#' + source + '.log'
 
-            simulation = simulateModel(stored_model, DATA_PATH, RUNLEN, CYNET_PATH=CYNET_PATH,FLEXROC_PATH=FLEXROC_PATH,READLEN=READLEN,DERIVATIVE=DERIVATIVE)
+            simulation = simulateModel(stored_model, DATA_PATH, RUNLEN, CYNET_PATH=CYNET_PATH,FLEXROC_PATH=FLEXROC_PATH,READLEN=READLEN,DERIVATIVE=DERIVATIVE,CAP_P=CAP_P)
             simulation.chunk_only(LOG_PATH = LOG_PATH,
             PARTITION = PARTITION,
             DATA_TYPE = DATA_TYPE,
@@ -2107,10 +2139,12 @@ def combine_chunks(globpath,splitfile,FILE,varname='VAR',outpath='csvs/'):
     '''
     new_lines = []
     ground_truth = pd.read_csv(splitfile,sep = ' ',header=None)
+    #print splitfile
     ground_truth = ground_truth.values[0]
     time_min = 111000000
     time_max = 0
     LEN = len(ground_truth)
+    #print LEN
 
     for filename in glob.glob(globpath):
 
@@ -2232,8 +2266,11 @@ def get_var(res_csv, coords,varname='auc',VARNAMES=None):
     plt.figure()
     df = pd.read_csv(res_csv)
     df1=df.groupby(coords,squeeze=True)[varname].max().reset_index()
-    df1=df1[df1[varname].between(0.01,0.99)]
+    print df1
+    #df1=df1[df1[varname].between(0.01,1.0)]
+
     if len(coords)%2 == 0:
+        print(df1)
         ax=sns.distplot(df1[varname])
         ax.set_xlabel(varname,fontsize=18,fontweight='bold');
         Type=''
@@ -2275,6 +2312,7 @@ def get_var_simple(res_csv, coords,varname='auc',VARNAMES=None):
 
     df1.to_csv(varname+Type+'.csv',sep=" ",index=None)
     plt.savefig(varname+Type+'.pdf',dpi=600, bbox_inches='tight',transparent=False)
+
 
 def violin_plot(res_csv, coords,varname='auc',VARNAMES=None):
     plt.figure()
@@ -2328,7 +2366,8 @@ class xgModels:
                  PARTITION,
                  XgenESeSS_PATH,
                  RUN_LOCAL,
-                 DERIVATIVE=0):
+                 DERIVATIVE=0,
+                 CAP_P=False):
 
         assert os.path.exists(TS_PATH), "Time series file not found"
         assert os.path.exists(NAME_PATH), "Name file not found"
@@ -2343,6 +2382,10 @@ class xgModels:
         self.PARTITION = PARTITION
         self.RUN_LOCAL = RUN_LOCAL
         self.DERIVATIVE = DERIVATIVE
+        if CAP_P:
+            self.p = ' -P '
+        else:
+            self.p = ' -p '
 
         if self.RUN_LOCAL:
             #Find the local copy of XgenESeSS binary
@@ -2385,10 +2428,10 @@ class xgModels:
             for INDEX in np.arange(INDICES):
                 xgstr= self.XgenESeSS_PATH +' -f ' + self.TS_PATH\
                  + " -k \"  :" + str(INDEX) +  " \"  -B " + str(self.BEG)\
-                 + "  -E " +str(self.END) + ' -n ' +str(self.NUM)+ ' -p '\
+                 + "  -E " +str(self.END) + ' -n ' +str(self.NUM)+ self.p\
                  + " ".join(str(x) for x in self.PARTITION) + ' -S -N '\
                  + self.NAME_PATH + ' -l ' + self.FILEPATH+str(INDEX)\
-                 + self.LOG_PATH + ' -u '+ str(self.DERIVATIVE) +' -m -g 0.005 -G 10000 -v 0 -A 1 -q -w '\
+                 + self.LOG_PATH + ' -u '+ str(self.DERIVATIVE) +' -m -g 0.01 -G 10000 -v 0 -A 1 -q -w '\
                  + self.FILEPATH+str(INDEX)
                 command_count += 1
                 commands.append([xgstr,command_count])
@@ -2402,10 +2445,10 @@ class xgModels:
                 for INDEX in np.arange(INDICES):
                     xgstr= self.XgenESeSS_PATH +' -f ' + self.TS_PATH\
                      + " -k \"  :" + str(INDEX) +  " \"  -B " + str(self.BEG)\
-                     + "  -E " +str(self.END) + ' -n ' +str(self.NUM)+ ' -p '\
+                     + "  -E " +str(self.END) + ' -n ' +str(self.NUM)+ self.p\
                      + " ".join(str(x) for x in self.PARTITION) + ' -S -N '\
                      + self.NAME_PATH + ' -l ' + self.FILEPATH+str(INDEX)\
-                     + self.LOG_PATH + ' -u '+ str(self.DERIVATIVE) +' -m -g 0.005 -G 10000 -v 0 -A 1 -q -w '\
+                     + self.LOG_PATH + ' -u '+ str(self.DERIVATIVE) +' -m -g 0.01 -G 10000 -v 0 -A 1 -q -w '\
                      + self.FILEPATH+str(INDEX)
                     file.write(xgstr + '\n')
 
@@ -2535,7 +2578,7 @@ def alter_splitfiles(globpath, new_dir, theta=0.1,negative=False):
         negative(bool)- Whether to do a negative perturbation.
     '''
     split_files = glob.glob(globpath)
-    print(len(split_files))
+    #print(len(split_files))
     for file in split_files:
         newfile_name = new_dir + file.split('/')[-1]
         pertub_file(file, newfile_name, theta=theta, negative=negative)
@@ -2551,7 +2594,7 @@ def negative_alter_splitfiles(globpath, new_dir, theta=0.1):
         theta(float)- probability of zero events being converted to 1's.
     '''
     split_files = glob.glob(globpath)
-    print(len(split_files))
+    #print(len(split_files))
     for file in split_files:
         newfile_name = new_dir + file.split('/')[-1]
         negative_pertub_file(file, newfile_name, theta=theta)
