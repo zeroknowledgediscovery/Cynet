@@ -1279,8 +1279,8 @@ class simulateModel:
 			+ ' -w ' + self.DATA_PATH + ' -U ' + str(self.DERIVATIVE) + ' -s 1'
 		cyrstr_arg = shlex.split(cyrstr)
 		subprocess.check_call(cyrstr_arg, shell=False)
-		if not os.path.exists('chunks/'):
-			os.makedirs('chunks/')
+		# if not os.path.exists('chunks/'):
+		# 	os.makedirs('chunks/')
 		#subprocess.check_call('mv *.chk chunks/', shell=True)
 		with open(LOG_PATH,'r') as file:
 			content = file.readlines()[0]
@@ -1784,7 +1784,7 @@ def map_events_parallel(glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME
 		kwargs- other arguments for cynet and flexroc. See simulateModel class.
 	'''
 	models_files = glob.glob(glob_path)
-	models_files = [m.split('.')[0] for m in models_files]
+	models_files = [m.rstrip('.json') for m in models_files]
 
 	CYNET_PATH = os.path.dirname(sys.modules['cynet'].__file__) + '/bin/cynet'
 	FLEXROC_PATH = os.path.dirname(sys.modules['cynet'].__file__) + '/bin/flexroc'
@@ -2096,7 +2096,7 @@ def cynet_chunker(glob_path,model_nums,horizon, DATA_PATH, RUNLEN, VARNAME,RES_P
 				Phase = False,):
 
 	models_files = glob.glob(glob_path)
-	models_files = [m.split('.')[0] for m in models_files]
+	models_files = [m.rstrip('.json') for m in models_files]
 
 	#CYNET_PATH = './bin/cynet'
 	#FLEXROC_PATH = './bin/flexroc'
@@ -2287,7 +2287,7 @@ def test_model_nums(sample_size,glob_path,model_nums,horizon, DATA_PATH, RUNLEN,
 	'''
 	args = []
 	models_files = glob.glob(glob_path)
-	models_files = [m.split('.')[0] for m in models_files]
+	models_files = [m.rstrip('.json') for m in models_files]
 	CYNET_PATH = os.path.dirname(sys.modules['cynet'].__file__) + '/bin/cynet'
 	FLEXROC_PATH = os.path.dirname(sys.modules['cynet'].__file__) + '/bin/flexroc'
 
