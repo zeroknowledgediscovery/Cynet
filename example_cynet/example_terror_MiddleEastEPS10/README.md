@@ -10,4 +10,4 @@ The `pypi_end-to-end.ipynb` runs the following steps:
 - run machine learning prediction with the csvs;
 - generate simulation files and plot snapshot.
 
-After we run `pypi_end-to-end.ipynb` upto the point when triplet and split files are generated, we can run the `LSTM.ipynb` to RNN prediction.
+After we run `pypi_end-to-end.ipynb` upto the point when triplet and split files are generated, we can run the `LSTM.ipynb` to get RNN prediction.
