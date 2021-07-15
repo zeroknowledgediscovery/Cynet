@@ -28,8 +28,8 @@ echo __version__ = \'$VERSION\' > version.py
 ../gitscripts_/gitscript.sh $COMMENT
 git tag $VERSION -m $COMMENT
 git push --tags
-python setup.py sdist upload -r test
+python3 setup.py sdist upload -r test
 
 if [ $ONLYTEST -eq 0 ] ; then
-    python setup.py sdist upload -r pypi
+    python3 setup.py sdist upload -r pypi
 fi

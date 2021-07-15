@@ -34,7 +34,7 @@ setup(
     author='zed.uchicago.edu',
     author_email='ishanu@uchicago.edu',
     version = str(version['__version__']),
-    packages=['cynet','viscynet','bokeh_pipe'],
+    packages=['cynet','viscynet','bokeh_pipe','cynet_utils'],
     scripts=['bin/print_help.py'],
     url='https://github.com/zeroknowledgediscovery/',
     license='LICENSE.txt',
@@ -46,7 +46,7 @@ setup(
     install_requires=["numpy >= 1.6","pandas >= 0.22.0","matplotlib >= 2.0.2","scipy >= 0.18.1", \
     "tqdm >= 4.11.2","seaborn >= 0.8.0","sodapy >= 1.4.6","pyproj >= 1.9.5.1",\
     "pyshp >= 1.2.12","haversine >= 0.4.5","joblib >= 0.12.2"],
-    python_requires='==2.7.*',
+    python_requires='==3.*',
     classifiers=[\
     'Development Status :: 4 - Beta',
     "Intended Audience :: Developers",
@@ -54,7 +54,7 @@ setup(
     "Topic :: Scientific/Engineering :: Information Analysis",
     "Topic :: Software Development :: Libraries",
     "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 2.7"],
+    "Programming Language :: Python :: 3"],
     data_files=[('example_cynet/example2/',['example_cynet/example2/config_pypi.yaml','example_cynet/example2/terrortest_small.py']),
                 ('example_cynet/example2/models/',['example_cynet/example2/models/empty.txt']),
                 ('example_cynet/example2/triplet/',['example_cynet/example2/triplet/empty.txt']),
