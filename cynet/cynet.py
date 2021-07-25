@@ -45,6 +45,12 @@ import pylab as plt
 __DEBUG__=False
 PRECISION=5
 
+def pars_name_to_coord(string):
+    base = os.path.basename(string)
+    l = base.split('#')
+    pos = l[0].find('.')-2
+    return [float(l[0][pos: -1]), float(l[1]), float(l[2]), float(l[3])]
+
 class spatioTemporal:
 	"""
 	Utilities for spatio temporal analysis
@@ -144,7 +150,10 @@ class spatioTemporal:
 			# but all bets are off here, b/d date column can be called anything
 			# Assuming that date column will be 'Date' as per the DATE variable, but must either have
 			# user confirm or force 'Date'
-			df = pd.read_pickle(log_store)
+			if os.path.isfile(log_store):
+				df = pd.read_pickle(log_store)
+			else:
+				df=None
 
 		self._logdf = df
 		self._spatial_tiles = None
@@ -192,23 +201,23 @@ class spatioTemporal:
 		# grid stores directions on how to create the grid indexes for the
 		# final pandas df
 		self._grid = None
-		assert grid is not None, "Error: no grid parameter specified."
-		if isinstance(grid, dict):
-			self._grid = {}
-			assert(self._coord1 in grid)
-			assert(self._coord2 in grid)
-			assert('Eps' in grid)
+		if grid is not None:
+			if isinstance(grid, dict):
+				self._grid = {}
+				assert(self._coord1 in grid)
+				assert(self._coord2 in grid)
+				assert('Eps' in grid)
 			# constructing private variable self._grid in the desired format
-			# with the values taken from the input grid
-			self._grid[self._coord1]=grid[self._coord1]
-			self._grid[self._coord2]=grid[self._coord2]
-			self._grid['Eps']=grid['Eps']
-			self._grid_type = "auto"
-		elif isinstance(grid, list):
-			self._grid = grid
-			self._grid_type = "custom"
-		else:
-			raise TypeError("Unsupported grid type.")
+				# with the values taken from the input grid
+				self._grid[self._coord1]=grid[self._coord1]
+				self._grid[self._coord2]=grid[self._coord2]
+				self._grid['Eps']=grid['Eps']
+				self._grid_type = "auto"
+			elif isinstance(grid, list):
+				self._grid = grid
+				self._grid_type = "custom"
+			else:
+				raise TypeError("Unsupported grid type.")
 
 		self._trng = pd.date_range(start=self._INIT,
 								   end=self._END,freq=self._FREQ)
@@ -329,8 +338,50 @@ class spatioTemporal:
 			out = pd.DataFrame(ts, columns=[TS_NAME],
 							index=trng[:-1]).transpose()
 		return out
+            
+	def swap_split_file(self,old_split_file, _types, new_path = None, pars_func=pars_name_to_coord, local_func=len):
+		freq=None
+		tile = pars_func(old_split_file)
+		base = os.path.basename(old_split_file)
 
+		TS_NAME = old_split_file
 
+		df = self._logdf
+		lat_ = tile[0:2]
+		lon_ = tile[2:4]
+
+		df = df.loc[(df[self._coord1] > lat_[0])
+					& (df[self._coord1] <= lat_[1])
+					& (df[self._coord2] > lon_[0])
+					& (df[self._coord2] <= lon_[1])]
+
+		# make the DATE the index and keep only the event col
+		if self.selvar is not None:
+			for key in list(self.selvar.keys()):
+				df=df[df[key]==self.selvar[key]]
+				TS_NAME=TS_NAME+str(self.selvar[key])
+                
+		df=df[[self._EVENT]]
+		ts = []
+		for i in range(len(self._trng) - 1):
+			start = self._trng[i]
+			end = self._trng[i + 1]
+			sub = df[(df.index >= start) & (df.index < end)]
+			ts.append(local_func(sub.values))
+		out = pd.DataFrame(ts, columns=[TS_NAME],index=self._trng[:-1]).transpose()
+		if new_path is not None:
+			f_name = os.path.join(new_path,base)
+		else:
+			f_name = old_split_file  
+		print(out)
+		out.to_csv(f_name,sep = ' ', header = False, index=False)
+
+	def swap_splits(self, glob_to_files, new_data, _types, new_path=None, pars_func=pars_name_to_coord):
+		self._logdf = new_data
+		files = glob.glob(glob_to_files)
+		for f in files:
+			self.swap_split_file(f, _types, new_path = new_path, pars_func=pars_name_to_coord)
+         
 	def get_rand_tiles(self,tiles=None,LAT=None,LON=None,
 					   EPS=None,_types=None,poly_tile=False,num_tiles=20):
 		'''
@@ -645,6 +696,7 @@ class spatioTemporal:
 								auto_adjust_time=auto_adjust_time,
 								incr=incr,max_incr=max_incr,poly_tile=poly_tile,
 								num_tiles=num_tiles)
+			self._logdf = None
 			return
 
 
@@ -724,8 +776,7 @@ class spatioTemporal:
 		if store:
 			assert out_fname is not None, "Out filename not specified"
 			self._logdf.to_pickle(out_fname)
-
-
+            
 def stringify(List):
 	"""
 	Utility function
@@ -843,6 +894,8 @@ def splitTS(TSfile,dirname='./',prefix="@",
 							   header=None,index=None,sep=" ")
 
 	return
+
+
 
 
 class uNetworkModels:
@@ -1719,7 +1772,7 @@ def single_map(arguments):
 		M.setVarname()
 		M.augmentDistance()
 
-		if varname is not 'ALL':
+		if varname != 'ALL':
 			M.select(var='src_var',equal=varname,inplace=True)
 
 		M.select(var='delay',inplace=True,low=Horizon)
@@ -1878,7 +1931,7 @@ def parallel_process(arguments):
 			M.setVarname()
 			M.augmentDistance()
 
-			if varname is not 'ALL':
+			if varname != 'ALL':
 				M.select(var='src_var',equal=varname,inplace=True)
 
 			M.select(var='delay',inplace=True,low=Horizon)
@@ -2166,7 +2219,7 @@ def chunk_single(arguments):
 		if M.models != None:
 			M.setVarname()
 			M.augmentDistance()
-			if varname is not 'ALL':
+			if varname != 'ALL':
 				M.select(var='src_var',equal=varname,inplace=True)
 
 			M.select(var='delay',inplace=True,low=Horizon)
@@ -2453,7 +2506,7 @@ class xgModels:
 		else:
 			self.XgenESeSS_PATH = XgenESeSS_PATH
 
-	def run_oneXG(self,command):
+	def run_oneXG(command):
 		'''
 		This function is intended to be called by the run method in xgModels. This
 		function uses the subprocess module to execute a XgenESeSS command
@@ -2462,13 +2515,13 @@ class xgModels:
 			command(str): the XgenESeSS command to be executed.
 			command_count(int): the command number of this command.
 		'''
-		print("XgenESeSS Command {} has started".format(command[1]))
+		#print("XgenESeSS Command {} has started".format(command[1]))
 		args = shlex.split(command[0])
 		subprocess.check_output(args, shell=False)
-		print("XgenESeSS Command {} has finished".format(command[1]))
+		#print("XgenESeSS Command {} has finished".format(command[1]))
 
 
-	def run(self, calls_name='program_calls.txt', workers = 4):
+	def run(self, calls_name='program_calls.txt', workers = 4, mpi=False):
 		'''
 		Here we run XgenESeSS. This either happens locally or this function
 		will output the program calls text file to run on a cluster.
@@ -2494,9 +2547,14 @@ class xgModels:
 				command_count += 1
 				commands.append([xgstr,command_count])
 			#Parallel of XgenESeSS
-			Parallel(n_jobs = workers, verbose = 1, backend = 'threading')\
-			(list(map(delayed(self.run_oneXG), commands)))
-			print("Processing on XgenESeSS finished.")
+			if mpi:
+				from mpi4py.futures import MPIPoolExecutor
+				with MPIPoolExecutor() as executor:
+					image = executor.map(run_oneXG, commands)
+			else:
+				Parallel(n_jobs = workers, verbose = 1, backend = 'threading')\
+				(list(map(delayed(run_oneXG), commands)))
+				print("Processing on XgenESeSS finished.")
 
 		else:
 			with open(calls_name, 'w') as file:
@@ -2510,6 +2568,19 @@ class xgModels:
 					 + self.FILEPATH+str(INDEX)
 					file.write(xgstr + '\n')
 
+def run_oneXG(command):
+	'''
+	This function is intended to be called by the run method in xgModels. This
+	function uses the subprocess module to execute a XgenESeSS command
+	and wait for its completion.
+	Input-
+		command(str): the XgenESeSS command to be executed.
+		command_count(int): the command number of this command.
+	'''
+	#print("XgenESeSS Command {} has started".format(command[1]))
+	args = shlex.split(command[0])
+	subprocess.check_output(args, shell=False)
+	#print("XgenESeSS Command {} has finished".format(command[1]))
 
 class mapped_events:
 	'''
