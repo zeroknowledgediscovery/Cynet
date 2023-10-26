@@ -827,7 +827,9 @@ def readTS(TSfile,csvNAME='TS1',BEG=None,END=None):
 			if dfts is None:
 				dfts=pd.read_csv(tsfile,sep=" ",index_col=0)
 			else:
-				dfts=dfts.append(pd.read_csv(tsfile,sep=" ",index_col=0))
+				#dfts=dfts.append(pd.read_csv(tsfile,sep=" ",index_col=0))
+                                dfts = pd.concat([dfts, pd.read_csv(tsfile, sep=" ", index_col=0)])
+
 	else:
 		dfts=pd.read_csv(TSfile,sep=" ",index_col=0)
 
