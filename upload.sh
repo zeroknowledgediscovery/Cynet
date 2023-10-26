@@ -1,35 +1,29 @@
 #!/bin/bash
 
-COMMENT=" updated "
-
-ONLYTEST=0
-
-
-if [ $# -gt 0 ] ; then
-    COMMENT=$1
+if [ $# -lt 1 ] ; then
+    COMMENT=" updated "
 else
-    echo "USAGE: ./upload.sh <comment> <only_test>"
-    echo "if only_test is 1, then upload to only test"
-    exit
-fi
-if [ $# -gt 1 ] ; then
-    ONLYTEST=$2
+    COMMENT=$1
 fi
 
 a=$((`awk -F= '{print $2}' version.py  | sed "s/\s*'//g" | awk -F. '{print $NF}'` + 1))
-VERSION=`awk -F= '{print $2}' version.py  | sed "s/\s*'//g" | awk -F. 'BEGIN{OFS="."}{print $1,$2}'`.$a
-
+VERSION=`awk -F= '{print $2}' version.py  | sed "s/\s*'//g"`
+NEW_VERSION=`awk -F= '{print $2}' version.py  | sed "s/\s*'//g" | awk -F. 'BEGIN{OFS="."}{print $1,$2}'`.$a
 
 echo __version__ = \'$VERSION\'
-#exit
 
-echo __version__ = \'$VERSION\' > version.py
+rm -rf dist
+python3 setup.py sdist
+python3 setup.py bdist_wheel
 
-../gitscripts_/gitscript.sh $COMMENT
-git tag $VERSION -m $COMMENT
+git add ./* -v
+git commit -m "$COMMENT"
+git push
+
+git tag $VERSION -m "$COMMENT"
 git push --tags
-python3 setup.py sdist upload -r test
 
-if [ $ONLYTEST -eq 0 ] ; then
-    python3 setup.py sdist upload -r pypi
-fi
+twine check dist/*
+twine upload dist/* --verbose
+
+echo __version__ = \'$NEW_VERSION\' > version.py
