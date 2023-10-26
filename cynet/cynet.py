@@ -880,7 +880,8 @@ def splitTS(TSfile,dirname='./',prefix="@",
 			if dfts is None:
 				dfts=pd.read_csv(tsfile,sep=" ",index_col=0)
 			else:
-				dfts=dfts.append(pd.read_csv(tsfile,sep=" ",index_col=0))
+				#dfts=dfts.append(pd.read_csv(tsfile,sep=" ",index_col=0))
+                                dfts = pd.concat([dfts, pd.read_csv(tsfile, sep=" ", index_col=0)])
 	else:
 		dfts=pd.read_csv(TSfile,sep=" ",index_col=0)
 	dfts.columns = pd.to_datetime(dfts.columns)
