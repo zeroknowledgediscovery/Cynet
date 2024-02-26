@@ -6,6 +6,7 @@ Spatio temporal analysis for inferrence of statistical causality
 import numpy as np
 import pandas as pd
 import random
+import hashlib
 
 try:
 	import pickle as pickle
@@ -253,7 +254,8 @@ class spatioTemporal:
 
 		assert(self._END is not None)
 		if not self.name_override:
-			TS_NAME = ('#'.join(str(x) for x in tile))+"#"+stringify(_types)
+			hashed_types = hashlib.sha1(bytearray(stringify(_types).encode('utf-8'))).hexdigest()
+			TS_NAME = ('#'.join(str(x) for x in tile))+"#"+hashed_types
 		else:
 			TS_NAME = ('#'.join(str(x) for x in tile))+"#"+ self.name_override
 
@@ -536,10 +538,7 @@ class spatioTemporal:
 		"""
 
 		if THRESHOLD is None:
-			if self._THRESHOLD is None:
-				THRESHOLD=0.1
-			else:
-				THRESHOLD=self._THRESHOLD
+			THRESHOLD = 0.1 if self._THRESHOLD is None else self._THRESHOLD
 
 		if self._trng is None:
 			self._trng = pd.date_range(start=self._INIT,
@@ -560,7 +559,6 @@ class spatioTemporal:
 											freq=opt_freq,poly_tile=poly_tile,\
 											local_func=self.local_func) for coord_set in tqdm(tiles)])
 			else:
-
 				_TS = pd.concat([self.getTS(tile=coord_set,_types=_types,poly_tile=poly_tile,\
 											local_func=self.local_func)\
 								for coord_set in tqdm(tiles)])
@@ -652,52 +650,31 @@ class spatioTemporal:
 
 		assert(self._END is not None)
 
+		args = {
+			# "CSVfile": csvPREF+stringify(key)+'.csv',
+			"CSVfile": csvPREF+'.csv',
+			"THRESHOLD": THRESHOLD,
+			"auto_adjust_time": auto_adjust_time,
+			"incr": incr,
+			"max_incr": max_incr,
+			"poly_tile": poly_tile,
+			"num_tiles": num_tiles
+		}
+		if self._grid_type == "auto":
+			args.update({'LAT': self._grid[self._coord1], 'LON': self._grid[self._coord2], 'EPS': self._grid['Eps']})
+		else:
+			args.update({'tiles': self._grid})
+
 		if self._types is not None:
 			for key in self._types:
-				if self._grid_type == "auto":
-					self.timeseries(LAT=self._grid[self._coord1],
-									LON=self._grid[self._coord2],
-									EPS=self._grid['Eps'],
-									_types=key,
-									#CSVfile=csvPREF+stringify(key)+'.csv',
-									CSVfile=csvPREF+'.csv',
-									THRESHOLD=THRESHOLD,
-									auto_adjust_time=auto_adjust_time,
-									incr=incr,max_incr=max_incr,poly_tile=poly_tile,
-									num_tiles=num_tiles)
-				else:
-					self.timeseries(tiles=self._grid,
-									_types=key,
-									#CSVfile=csvPREF+stringify(key)+'.csv',
-									CSVfile=csvPREF+'.csv',
-									THRESHOLD=THRESHOLD,
-									auto_adjust_time=auto_adjust_time,
-									incr=incr,max_incr=max_incr,poly_tile=poly_tile,
-									num_tiles=num_tiles)
-			return
+				args['_types'] = key
+				self.timeseries(**args)
 		else:
 			assert(self._value_limits is not None), \
 			"Error: Neither value_limits nor _types has been defined."
-			if self._grid_type == "auto":
-				self.timeseries(LAT=self._grid[self._coord1],
-								LON=self._grid[self._coord2],
-								EPS=self._grid['Eps'],
-								_types=None,
-								CSVfile=csvPREF+'.csv',
-								THRESHOLD=THRESHOLD,
-								auto_adjust_time=auto_adjust_time,
-								incr=incr,max_incr=max_incr,poly_tile=poly_tile,
-								num_tiles=num_tiles)
-			else:
-				self.timeseries(tiles=self._grid,
-								_types=None,
-								CSVfile=csvPREF+'.csv',
-								THRESHOLD=THRESHOLD,
-								auto_adjust_time=auto_adjust_time,
-								incr=incr,max_incr=max_incr,poly_tile=poly_tile,
-								num_tiles=num_tiles)
+			args['_types'] = None
+			self.timeseries(**args)
 			self._logdf = None
-			return
 
 
 	def getGrid(self):
@@ -821,18 +798,13 @@ def readTS(TSfile,csvNAME='TS1',BEG=None,END=None):
 	"""
 	# adjustment to make readTS oeprate on a list of input files
 	# instead of just one
-	dfts = None
+	dfts = []
 	if isinstance(TSfile, list):
 		for tsfile in TSfile:
-			if dfts is None:
-				dfts=pd.read_csv(tsfile,sep=" ",index_col=0)
-			else:
-				#dfts=dfts.append(pd.read_csv(tsfile,sep=" ",index_col=0))
-                                dfts = pd.concat([dfts, pd.read_csv(tsfile, sep=" ", index_col=0)])
-
+			dfts.append(pd.read_csv(tsfile,sep=" ",index_col=0))
+		dfts = pd.concat(dfts)
 	else:
 		dfts=pd.read_csv(TSfile,sep=" ",index_col=0)
-
 
 	dfts.columns = pd.to_datetime(dfts.columns)
 	cols=dfts.columns[np.logical_and(dfts.columns >= pd.to_datetime(BEG),
@@ -876,14 +848,11 @@ def splitTS(TSfile,dirname='./',prefix="@",
 		(No output)
 	"""
 
-	dfts = None
+	dfts = []
 	if isinstance(TSfile, list):
 		for tsfile in TSfile:
-			if dfts is None:
-				dfts=pd.read_csv(tsfile,sep=" ",index_col=0)
-			else:
-				#dfts=dfts.append(pd.read_csv(tsfile,sep=" ",index_col=0))
-                                dfts = pd.concat([dfts, pd.read_csv(tsfile, sep=" ", index_col=0)])
+			dfts.append(pd.read_csv(tsfile,sep=" ",index_col=0))
+		dfts = pd.concat(dfts)
 	else:
 		dfts=pd.read_csv(TSfile,sep=" ",index_col=0)
 	dfts.columns = pd.to_datetime(dfts.columns)
